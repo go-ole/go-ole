@@ -13,6 +13,7 @@ var (
 	procCoInitializeEx, _     = syscall.GetProcAddress(modole32, "CoInitializeEx")
 	procCoCreateInstance, _   = syscall.GetProcAddress(modole32, "CoCreateInstance")
 	procCLSIDFromProgID, _    = syscall.GetProcAddress(modole32, "CLSIDFromProgID")
+	procCLSIDFromString, _    = syscall.GetProcAddress(modole32, "CLSIDFromString")
 	procGetUserDefaultLCID, _ = syscall.GetProcAddress(modkernel32, "GetUserDefaultLCID")
 	procCopyMemory, _         = syscall.GetProcAddress(modkernel32, "RtlMoveMemory")
 	procVariantInit, _        = syscall.GetProcAddress(modoleaut32, "VariantInit")
@@ -177,13 +178,30 @@ func CLSIDFromProgID(progId string) (clsid *GUID, err os.Error) {
 	return
 }
 
-func CreateInstance(clsid *GUID) (unk *IUnknown, err os.Error) {
+func CLSIDFromString(str string) (clsid *GUID, err os.Error) {
+	var guid GUID
+	hr, _, _ := syscall.Syscall(
+		uintptr(procCLSIDFromString),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(str))),
+		uintptr(unsafe.Pointer(&guid)),
+		0)
+	if hr != 0 {
+		err = os.NewError(syscall.Errstr(int(hr)))
+	}
+	clsid = &guid
+	return
+}
+
+func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
+	if iid == nil {
+		iid = IID_IUnknown
+	}
 	hr, _, _ := syscall.Syscall6(
 		uintptr(procCoCreateInstance),
 		uintptr(unsafe.Pointer(clsid)),
 		0,
-		CLSCTX_ALL,
-		uintptr(unsafe.Pointer(IID_IUnknown)),
+		CLSCTX_SERVER,
+		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&unk)),
 		0)
 	if hr != 0 {
