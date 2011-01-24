@@ -52,3 +52,22 @@ func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 	result, err = disp.Invoke(dispid[0], ole.DISPATCH_PROPERTYPUT, params...)
 	return
 }
+
+func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, dest *ole.IUnknown) (err os.Error) {
+	unknown, err := disp.QueryInterface(ole.IID_IConnectionPointContainer)
+	if err != nil {
+		return
+	}
+
+	container := (*ole.IConnectionPointContainer)(unsafe.Pointer(unknown))
+	var point *ole.IDispatch
+	result, err := container.FindConnectionPoint(iid, &point)
+	if err != nil {
+		return
+	}
+
+	var cookie uint32
+	result, err = CallMethod(point, "Advise", dest, &cookie)
+	println(result)
+	return
+}

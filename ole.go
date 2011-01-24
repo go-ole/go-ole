@@ -52,6 +52,20 @@ const (
 	DISPATCH_PROPERTYPUTREF = 8
 )
 
+const (
+	E_UNEXPECTED   = 0x8000FFFF
+	E_NOTIMPL      = 0x80004001
+	E_OUTOFMEMORY  = 0x8007000E
+	E_INVALIDARG   = 0x80070057
+	E_NOINTERFACE  = 0x80004002
+	E_POINTER      = 0x80004003
+	E_HANDLE       = 0x80070006
+	E_ABORT        = 0x80004004
+	E_FAIL         = 0x80004005
+	E_ACCESSDENIED = 0x80070005
+	E_PENDING      = 0x8000000A
+)
+
 type DISPPARAMS struct {
 	rgvarg            uintptr
 	rgdispidNamedArgs uintptr
@@ -133,6 +147,44 @@ func (v *IDispatch) Invoke(dispid int32, dispatch int16, params ...interface{}) 
 	result, err = invoke(v, dispid, dispatch, params...)
 	return
 }
+
+type IConnectionPointContainer struct {
+	lpVtbl *pIConnectionPointContainerVtbl
+}
+
+type pIConnectionPointContainerVtbl struct {
+	pQueryInterface       uintptr
+	pAddRef               uintptr
+	pRelease              uintptr
+	pEnumConnectionPoints uintptr
+	pFindConnectionPoint  uintptr
+}
+
+func (v *IConnectionPointContainer) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
+	return
+}
+
+func (v *IConnectionPointContainer) AddRef() int32 {
+	return addRef((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *IConnectionPointContainer) Release() int32 {
+	return release((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *IConnectionPointContainer) EnumConnectionPoints(points interface{}) (err os.Error) {
+	//err = os.NewError(syscall.Errstr(int(E_NOTIMPL)))
+	err = os.NewError("not implemented")
+	return
+}
+
+func (v *IConnectionPointContainer) FindConnectionPoint(iid *GUID, point **interface{}) (result *VARIANT, err os.Error) {
+	//err = os.NewError(syscall.Errstr(int(E_NOTIMPL)))
+	err = os.NewError("not implemented")
+	return
+}
+
 
 type VARIANT struct {
 	VT         uint16 //  2
