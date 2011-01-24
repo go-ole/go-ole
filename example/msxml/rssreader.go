@@ -24,7 +24,7 @@ func main() {
 	for n := 0; n < int(result.Val); n++ {
 		result, _ := oleutil.GetProperty(items, "item", n)
 		item := result.ToIDispatch()
-		
+
 		result, _ = oleutil.CallMethod(item, "selectSingleNode", "title")
 		title := result.ToIDispatch()
 		result, _ = oleutil.GetProperty(title, "text")
