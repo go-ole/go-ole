@@ -4,7 +4,7 @@ import "ole"
 import "os"
 import "unsafe"
 
-func CreateDispatch(progId string) (dispatch *ole.IDispatch, err os.Error) {
+func CreateObject(progId string) (dispatch *ole.IDispatch, err os.Error) {
 	var clsid *ole.GUID
 	clsid, err = ole.CLSIDFromProgID(progId)
 	if err != nil {

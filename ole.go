@@ -21,9 +21,10 @@ var (
 	procSysFreeString, _      = syscall.GetProcAddress(modoleaut32, "SysFreeString")
 	procSysStringLen, _       = syscall.GetProcAddress(modoleaut32, "SysStringLen")
 
-	IID_NULL      = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
-	IID_IUnknown  = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
-	IID_IDispatch = &GUID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+	IID_NULL                      = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
+	IID_IUnknown                  = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+	IID_IDispatch                 = &GUID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
+	IID_IConnectionPointContainer = &GUID{0xB196B284, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
 )
 
 const (
@@ -416,47 +417,47 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 					vargs[n] = VARIANT{VT_BOOL, 0, 0, 0, 0}
 				}
 			case *bool:
-				vargs[n] = VARIANT{VT_BOOL|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*bool))))}
+				vargs[n] = VARIANT{VT_BOOL | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*bool))))}
 			case byte:
 				vargs[n] = VARIANT{VT_I1, 0, 0, 0, int64(v.(byte))}
 			case *byte:
-				vargs[n] = VARIANT{VT_I1|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*byte))))}
+				vargs[n] = VARIANT{VT_I1 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*byte))))}
 			case int16:
 				vargs[n] = VARIANT{VT_I2, 0, 0, 0, int64(v.(int16))}
 			case *int16:
-				vargs[n] = VARIANT{VT_I2|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int16))))}
+				vargs[n] = VARIANT{VT_I2 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int16))))}
 			case uint16:
 				vargs[n] = VARIANT{VT_UI2, 0, 0, 0, int64(v.(int16))}
 			case *uint16:
-				vargs[n] = VARIANT{VT_UI2|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint16))))}
+				vargs[n] = VARIANT{VT_UI2 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint16))))}
 			case int, int32:
 				vargs[n] = VARIANT{VT_UI4, 0, 0, 0, int64(v.(int))}
 			case *int, *int32:
-				vargs[n] = VARIANT{VT_I4|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int))))}
+				vargs[n] = VARIANT{VT_I4 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int))))}
 			case uint, uint32:
 				vargs[n] = VARIANT{VT_UI4, 0, 0, 0, int64(v.(uint))}
 			case *uint, *uint32:
-				vargs[n] = VARIANT{VT_UI4|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint))))}
+				vargs[n] = VARIANT{VT_UI4 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint))))}
 			case int64:
 				vargs[n] = VARIANT{VT_I8, 0, 0, 0, v.(int64)}
 			case *int64:
-				vargs[n] = VARIANT{VT_I8|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int64))))}
+				vargs[n] = VARIANT{VT_I8 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int64))))}
 			case uint64:
 				vargs[n] = VARIANT{VT_UI8, 0, 0, 0, int64(v.(uint64))}
 			case *uint64:
-				vargs[n] = VARIANT{VT_UI8|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint64))))}
+				vargs[n] = VARIANT{VT_UI8 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint64))))}
 			case float32:
 				vargs[n] = VARIANT{VT_R4, 0, 0, 0, int64(v.(float32))}
 			case *float32:
-				vargs[n] = VARIANT{VT_R4|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*float32))))}
+				vargs[n] = VARIANT{VT_R4 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*float32))))}
 			case float64:
 				vargs[n] = VARIANT{VT_R8, 0, 0, 0, int64(v.(float64))}
 			case *float64:
-				vargs[n] = VARIANT{VT_R8|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*float64))))}
+				vargs[n] = VARIANT{VT_R8 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*float64))))}
 			case string:
 				vargs[n] = VARIANT{VT_BSTR, 0, 0, 0, int64(uintptr(unsafe.Pointer(SysAllocString(v.(string)))))}
 			case *string:
-				vargs[n] = VARIANT{VT_BSTR|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*string))))}
+				vargs[n] = VARIANT{VT_BSTR | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*string))))}
 			case *IDispatch:
 				vargs[n] = VARIANT{VT_DISPATCH, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*IDispatch))))}
 			case **IDispatch:
