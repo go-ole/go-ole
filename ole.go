@@ -416,7 +416,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			case *uint16:
 				vargs[n] = VARIANT{VT_UI2|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint16))))}
 			case int, int32:
-				vargs[n] = VARIANT{VT_UI4, 0, 0, 0, int64(v.(uint))}
+				vargs[n] = VARIANT{VT_UI4, 0, 0, 0, int64(v.(int))}
 			case *int, *int32:
 				vargs[n] = VARIANT{VT_I4|VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int))))}
 			case uint, uint32:
