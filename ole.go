@@ -19,6 +19,7 @@ var (
 	procVariantInit, _        = syscall.GetProcAddress(modoleaut32, "VariantInit")
 	procSysAllocString, _     = syscall.GetProcAddress(modoleaut32, "SysAllocString")
 	procSysFreeString, _      = syscall.GetProcAddress(modoleaut32, "SysFreeString")
+	procSysStringLen, _       = syscall.GetProcAddress(modoleaut32, "SysStringLen")
 
 	IID_NULL      = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
 	IID_IUnknown  = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
@@ -146,6 +147,10 @@ func (v *VARIANT) ToIUnknown() *IUnknown {
 
 func (v *VARIANT) ToIDispatch() *IDispatch {
 	return (*IDispatch)(unsafe.Pointer(uintptr(v.Val)))
+}
+
+func (v *VARIANT) ToString() string {
+	return syscall.UTF16ToString((*[256]uint16)(unsafe.Pointer(uintptr(v.Val)))[:])
 }
 
 func CoInitialize(p uintptr) (err os.Error) {
@@ -296,7 +301,7 @@ func SysAllocString(v string) (ss *int16) {
 
 func SysFreeString(v *int16) (err os.Error) {
 	hr, _, _ := syscall.Syscall(
-		uintptr(procSysAllocString),
+		uintptr(procSysFreeString),
 		uintptr(unsafe.Pointer(v)),
 		0,
 		0)
@@ -304,6 +309,15 @@ func SysFreeString(v *int16) (err os.Error) {
 		err = os.NewError(syscall.Errstr(int(hr)))
 	}
 	return
+}
+
+func SysStringLen(v *int16) uint {
+	l, _, _ := syscall.Syscall(
+		uintptr(procSysStringLen),
+		uintptr(unsafe.Pointer(v)),
+		0,
+		0)
+	return uint(l)
 }
 
 func copyMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
