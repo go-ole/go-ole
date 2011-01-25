@@ -3,28 +3,37 @@ package ole
 import "syscall"
 import "unsafe"
 import "os"
+import "utf16"
 
 var (
 	modkernel32, _ = syscall.LoadLibrary("kernel32.dll")
 	modole32, _    = syscall.LoadLibrary("ole32.dll")
 	modoleaut32, _ = syscall.LoadLibrary("oleaut32.dll")
+	modmsvcrt, _   = syscall.LoadLibrary("msvcrt.dll")
 
 	procCoInitialize, _       = syscall.GetProcAddress(modole32, "CoInitialize")
 	procCoInitializeEx, _     = syscall.GetProcAddress(modole32, "CoInitializeEx")
 	procCoCreateInstance, _   = syscall.GetProcAddress(modole32, "CoCreateInstance")
 	procCLSIDFromProgID, _    = syscall.GetProcAddress(modole32, "CLSIDFromProgID")
 	procCLSIDFromString, _    = syscall.GetProcAddress(modole32, "CLSIDFromString")
+	procStringFromCLSID, _    = syscall.GetProcAddress(modole32, "StringFromCLSID")
+	procStringFromIID, _      = syscall.GetProcAddress(modole32, "StringFromIID")
+	procIIDFromString, _      = syscall.GetProcAddress(modole32, "IIDFromString")
 	procGetUserDefaultLCID, _ = syscall.GetProcAddress(modkernel32, "GetUserDefaultLCID")
 	procCopyMemory, _         = syscall.GetProcAddress(modkernel32, "RtlMoveMemory")
 	procVariantInit, _        = syscall.GetProcAddress(modoleaut32, "VariantInit")
 	procSysAllocString, _     = syscall.GetProcAddress(modoleaut32, "SysAllocString")
 	procSysFreeString, _      = syscall.GetProcAddress(modoleaut32, "SysFreeString")
 	procSysStringLen, _       = syscall.GetProcAddress(modoleaut32, "SysStringLen")
+	procMemCmp, _             = syscall.GetProcAddress(modmsvcrt, "memcmp")
+	procWcsCpy, _             = syscall.GetProcAddress(modmsvcrt, "wcscpy")
+	procWcsLen, _             = syscall.GetProcAddress(modmsvcrt, "wcslen")
 
 	IID_NULL                      = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
 	IID_IUnknown                  = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 	IID_IDispatch                 = &GUID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 	IID_IConnectionPointContainer = &GUID{0xB196B284, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
+	IID_IConnectionPoint          = &GUID{0xB196B286, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
 )
 
 const (
@@ -53,6 +62,7 @@ const (
 )
 
 const (
+	S_OK           = 0x00000000
 	E_UNEXPECTED   = 0x8000FFFF
 	E_NOTIMPL      = 0x80004001
 	E_OUTOFMEMORY  = 0x8007000E
@@ -82,8 +92,6 @@ type GUID struct {
 
 type IUnknown struct {
 	lpVtbl   *pIUnknownVtbl
-	pAddRef  uintptr
-	pRelease uintptr
 }
 
 type pIUnknownVtbl struct {
@@ -174,17 +182,65 @@ func (v *IConnectionPointContainer) Release() int32 {
 }
 
 func (v *IConnectionPointContainer) EnumConnectionPoints(points interface{}) (err os.Error) {
-	//err = os.NewError(syscall.Errstr(int(E_NOTIMPL)))
 	err = os.NewError("not implemented")
 	return
 }
 
-func (v *IConnectionPointContainer) FindConnectionPoint(iid *GUID, point **interface{}) (result *VARIANT, err os.Error) {
-	//err = os.NewError(syscall.Errstr(int(E_NOTIMPL)))
-	err = os.NewError("not implemented")
+func (v *IConnectionPointContainer) FindConnectionPoint(iid *GUID, point **IConnectionPoint) (err os.Error) {
+	hr, _, _ := syscall.Syscall(
+		uintptr(v.lpVtbl.pFindConnectionPoint),
+		uintptr(unsafe.Pointer(v)),
+		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(point)))
+	if hr != 0 {
+		err = os.NewError(syscall.Errstr(int(hr)))
+	}
 	return
 }
 
+type IConnectionPoint struct {
+	lpVtbl *pIConnectionPointVtbl
+}
+
+type pIConnectionPointVtbl struct {
+	pQueryInterface              uintptr
+	pAddRef                      uintptr
+	pRelease                     uintptr
+	pGetConnectionInterface      uintptr
+	pGetConnectionPointContainer uintptr
+	pAdvise                      uintptr
+	pUnadvise                    uintptr
+	pEnumConnections             uintptr
+}
+
+func (v *IConnectionPoint) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
+	return
+}
+
+func (v *IConnectionPoint) AddRef() int32 {
+	return addRef((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *IConnectionPoint) Release() int32 {
+	return release((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *IConnectionPoint) GetConnectionInterface(piid **GUID) int32 {
+	return release((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *IConnectionPoint) Advise(unknown *IUnknown) (cookie uint32, err os.Error) {
+	hr, _, _ := syscall.Syscall(
+		uintptr(v.lpVtbl.pAdvise),
+		uintptr(unsafe.Pointer(v)),
+		uintptr(unsafe.Pointer(unknown)),
+		uintptr(unsafe.Pointer(&cookie)))
+	if hr != 0 {
+		err = os.NewError(syscall.Errstr(int(hr)))
+	}
+	return
+}
 
 type VARIANT struct {
 	VT         uint16 //  2
@@ -192,6 +248,21 @@ type VARIANT struct {
 	wReserved2 uint16 //  6
 	wReserved3 uint16 //  8
 	Val        int64  // 16
+}
+
+func UTF16PtrToString(p *uint16) string {
+	l, _, _ := syscall.Syscall(
+		uintptr(procWcsLen),
+		uintptr(unsafe.Pointer(p)),
+		0,
+		0)
+	s := make([]uint16, l)
+	l, _, _ = syscall.Syscall(
+		uintptr(procWcsCpy),
+		uintptr(unsafe.Pointer(&s[0])),
+		uintptr(unsafe.Pointer(p)),
+		16)
+	return string(utf16.Decode(s))
 }
 
 func (v *VARIANT) ToIUnknown() *IUnknown {
@@ -203,7 +274,7 @@ func (v *VARIANT) ToIDispatch() *IDispatch {
 }
 
 func (v *VARIANT) ToString() string {
-	return syscall.UTF16ToString((*[256]uint16)(unsafe.Pointer(uintptr(v.Val)))[:])
+	return UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(v.Val))))
 }
 
 func CoInitialize(p uintptr) (err os.Error) {
@@ -247,6 +318,48 @@ func CLSIDFromString(str string) (clsid *GUID, err os.Error) {
 		err = os.NewError(syscall.Errstr(int(hr)))
 	}
 	clsid = &guid
+	return
+}
+
+func StringFromCLSID(clsid *GUID) (str string, err os.Error) {
+	var p *uint16
+	hr, _, _ := syscall.Syscall(
+		uintptr(procStringFromCLSID),
+		uintptr(unsafe.Pointer(clsid)),
+		uintptr(unsafe.Pointer(&p)),
+		0)
+	if hr != 0 {
+		err = os.NewError(syscall.Errstr(int(hr)))
+	}
+	str = UTF16PtrToString(p)
+	return
+}
+
+func IIDFromString(progId string) (clsid *GUID, err os.Error) {
+	var guid GUID
+	hr, _, _ := syscall.Syscall(
+		uintptr(procIIDFromString),
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(progId))),
+		uintptr(unsafe.Pointer(&guid)),
+		0)
+	if hr != 0 {
+		err = os.NewError(syscall.Errstr(int(hr)))
+	}
+	clsid = &guid
+	return
+}
+
+func StringFromIID(iid *GUID) (str string, err os.Error) {
+	var p *uint16
+	hr, _, _ := syscall.Syscall(
+		uintptr(procStringFromIID),
+		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(&p)),
+		0)
+	if hr != 0 {
+		err = os.NewError(syscall.Errstr(int(hr)))
+	}
+	str = UTF16PtrToString(p)
 	return
 }
 
@@ -541,12 +654,12 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 	if hr != 0 {
 		err = os.NewError(syscall.Errstr(int(hr)))
 		if excepInfo.bstrDescription != nil {
-			bs := syscall.UTF16ToString((*[256]uint16)(unsafe.Pointer(excepInfo.bstrDescription))[:])
+			bs := UTF16PtrToString(excepInfo.bstrDescription)
 			println(bs)
 		}
 	}
 	for _, varg := range vargs {
-		if varg.VT == VT_BSTR {
+		if varg.VT == VT_BSTR && varg.Val != 0 {
 			SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
 		}
 	}
@@ -562,4 +675,13 @@ func GetUserDefaultLCID() (lcid uint32) {
 		0)
 	lcid = uint32(ret)
 	return
+}
+
+func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
+	ret, _, _ := syscall.Syscall(
+		uintptr(procMemCmp),
+		uintptr(unsafe.Pointer(guid1)),
+		uintptr(unsafe.Pointer(guid2)),
+		16)
+	return ret == 0
 }
