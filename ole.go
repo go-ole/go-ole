@@ -282,8 +282,8 @@ type SAFEARRAY struct {
     FFeatures uint16
     CbElements uint32
     CLocks uint32
-    Data uintptr
-    RgsaBound []SAFEARRAYBOUND
+    PvData uint32
+    RgsaBound SAFEARRAYBOUND
 }
 
 func BytePtrToString(p *byte) string {
@@ -554,7 +554,7 @@ type METHODDATA struct {
 }
 
 type INTERFACEDATA struct {
-	MethodData []METHODDATA
+	MethodData *METHODDATA
 	CMembers   uint32
 }
 
