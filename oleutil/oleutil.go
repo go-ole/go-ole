@@ -1,10 +1,10 @@
 package oleutil
 
 import "ole"
-import "os"
 import "unsafe"
+import "os"
 
-func CreateObject(progId string) (dispatch *ole.IDispatch, err os.Error) {
+func CreateObject(progId string) (unknown *ole.IUnknown, err os.Error) {
 	var clsid *ole.GUID
 	clsid, err = ole.CLSIDFromProgID(progId)
 	if err != nil {
@@ -14,12 +14,10 @@ func CreateObject(progId string) (dispatch *ole.IDispatch, err os.Error) {
 		}
 	}
 
-	var unknown *ole.IUnknown
-	unknown, err = ole.CreateInstance(clsid, ole.IID_IDispatch)
+	unknown, err = ole.CreateInstance(clsid, ole.IID_IUnknown)
 	if err != nil {
 		return
 	}
-	dispatch = (*ole.IDispatch)(unsafe.Pointer(unknown))
 	return
 }
 
@@ -66,7 +64,8 @@ func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, dest *ole.IUnknown) (cook
 		return
 	}
 	cookie, err = point.Advise(dest)
-	container.Release()
+	//container.Release()
+	point.Release()
 	if err != nil {
 		return
 	}

@@ -6,7 +6,8 @@ import "syscall"
 
 func main() {
 	ole.CoInitialize(0)
-	xmlhttp, _ := oleutil.CreateObject("Microsoft.XMLHTTP")
+	unknown, _ := oleutil.CreateObject("Microsoft.XMLHTTP")
+	xmlhttp, _ := unknown.QueryInterface(ole.IID_IDispatch)
 	oleutil.CallMethod(xmlhttp, "open", "GET", "http://rss.slashdot.org/Slashdot/slashdot", false)
 	oleutil.CallMethod(xmlhttp, "send", nil)
 	state := -1

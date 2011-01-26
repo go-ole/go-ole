@@ -6,7 +6,8 @@ import "syscall"
 
 func main() {
 	ole.CoInitialize(0)
-	excel, _ := oleutil.CreateObject("Excel.Application")
+	unknown, _ := oleutil.CreateObject("Excel.Application")
+	excel, _ := unknown.QueryInterface(ole.IID_IDispatch)
 	oleutil.PutProperty(excel, "Visible", true)
 	result, _ := oleutil.GetProperty(excel, "Workbooks")
 	workbooks := result.ToIDispatch()

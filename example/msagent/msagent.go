@@ -6,7 +6,8 @@ import "syscall"
 
 func main() {
 	ole.CoInitialize(0)
-	agent, _ := oleutil.CreateObject("Agent.Control.1")
+	unknown, _ := oleutil.CreateObject("Agent.Control.1")
+	agent, _ := unknown.QueryInterface(ole.IID_IDispatch)
 	oleutil.PutProperty(agent, "Connected", true)
 	result, _ := oleutil.GetProperty(agent, "Characters")
 	characters := result.ToIDispatch()
