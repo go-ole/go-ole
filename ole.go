@@ -211,6 +211,7 @@ func (v *IConnectionPointContainer) EnumConnectionPoints(points interface{}) (er
 func (v *IConnectionPointContainer) FindConnectionPoint(iid *GUID, point **IConnectionPoint) (err os.Error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(v.lpVtbl.pFindConnectionPoint),
+		3,
 		uintptr(unsafe.Pointer(v)),
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(point)))
@@ -255,6 +256,7 @@ func (v *IConnectionPoint) GetConnectionInterface(piid **GUID) int32 {
 func (v *IConnectionPoint) Advise(unknown *IUnknown) (cookie uint32, err os.Error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(v.lpVtbl.pAdvise),
+		3,
 		uintptr(unsafe.Pointer(v)),
 		uintptr(unsafe.Pointer(unknown)),
 		uintptr(unsafe.Pointer(&cookie)))
@@ -289,12 +291,14 @@ type SAFEARRAY struct {
 func BytePtrToString(p *byte) string {
 	l, _, _ := syscall.Syscall(
 		uintptr(procStrLen),
+		1,
 		uintptr(unsafe.Pointer(p)),
 		0,
 		0)
 	s := make([]byte, l)
 	l, _, _ = syscall.Syscall(
 		uintptr(procStrCpy),
+		3,
 		uintptr(unsafe.Pointer(&s[0])),
 		uintptr(unsafe.Pointer(p)),
 		16)
@@ -302,18 +306,12 @@ func BytePtrToString(p *byte) string {
 }
 
 func UTF16PtrToString(p *uint16) string {
-	l, _, _ := syscall.Syscall(
-		uintptr(procWcsLen),
-		uintptr(unsafe.Pointer(p)),
-		0,
-		0)
-	s := make([]uint16, l)
-	l, _, _ = syscall.Syscall(
-		uintptr(procStrCpy),
-		uintptr(unsafe.Pointer(&s[0])),
-		uintptr(unsafe.Pointer(p)),
-		16)
-	return string(utf16.Decode(s))
+	a := (*[10000]uint16)(unsafe.Pointer(p))
+	i := 0
+	for a[i] != 0 {
+		i++
+	}
+	return string(utf16.Decode(a[:i]))
 }
 
 func (v *VARIANT) ToIUnknown() *IUnknown {
@@ -325,11 +323,11 @@ func (v *VARIANT) ToIDispatch() *IDispatch {
 }
 
 func (v *VARIANT) ToString() string {
-	return UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(v.Val))))
+	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
 
 func CoInitialize(p uintptr) (err os.Error) {
-	hr, _, _ := syscall.Syscall(uintptr(procCoInitialize), p, 0, 0)
+	hr, _, _ := syscall.Syscall(uintptr(procCoInitialize), 1, p, 0, 0)
 	if hr != 0 {
 		err = NewError(hr)
 	}
@@ -337,7 +335,7 @@ func CoInitialize(p uintptr) (err os.Error) {
 }
 
 func CoInitializeEx(p uintptr, coinit uint32) (err os.Error) {
-	hr, _, _ := syscall.Syscall(uintptr(procCoInitializeEx), p, uintptr(coinit), 0)
+	hr, _, _ := syscall.Syscall(uintptr(procCoInitializeEx), 2, p, uintptr(coinit), 0)
 	if hr != 0 {
 		err = NewError(hr)
 	}
@@ -348,6 +346,7 @@ func CLSIDFromProgID(progId string) (clsid *GUID, err os.Error) {
 	var guid GUID
 	hr, _, _ := syscall.Syscall(
 		uintptr(procCLSIDFromProgID),
+		2,
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(progId))),
 		uintptr(unsafe.Pointer(&guid)),
 		0)
@@ -362,6 +361,7 @@ func CLSIDFromString(str string) (clsid *GUID, err os.Error) {
 	var guid GUID
 	hr, _, _ := syscall.Syscall(
 		uintptr(procCLSIDFromString),
+		2,
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(str))),
 		uintptr(unsafe.Pointer(&guid)),
 		0)
@@ -376,6 +376,7 @@ func StringFromCLSID(clsid *GUID) (str string, err os.Error) {
 	var p *uint16
 	hr, _, _ := syscall.Syscall(
 		uintptr(procStringFromCLSID),
+		2,
 		uintptr(unsafe.Pointer(clsid)),
 		uintptr(unsafe.Pointer(&p)),
 		0)
@@ -390,6 +391,7 @@ func IIDFromString(progId string) (clsid *GUID, err os.Error) {
 	var guid GUID
 	hr, _, _ := syscall.Syscall(
 		uintptr(procIIDFromString),
+		2,
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(progId))),
 		uintptr(unsafe.Pointer(&guid)),
 		0)
@@ -404,6 +406,7 @@ func StringFromIID(iid *GUID) (str string, err os.Error) {
 	var p *uint16
 	hr, _, _ := syscall.Syscall(
 		uintptr(procStringFromIID),
+		2,
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&p)),
 		0)
@@ -420,6 +423,7 @@ func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
 	}
 	hr, _, _ := syscall.Syscall6(
 		uintptr(procCoCreateInstance),
+		5,
 		uintptr(unsafe.Pointer(clsid)),
 		0,
 		CLSCTX_SERVER,
@@ -435,6 +439,7 @@ func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
 func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err os.Error) {
 	hr, _, _ := syscall.Syscall(
 		unk.lpVtbl.pQueryInterface,
+		3,
 		uintptr(unsafe.Pointer(unk)),
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&disp)))
@@ -447,6 +452,7 @@ func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err os.Error) {
 func addRef(unk *IUnknown) int32 {
 	ret, _, _ := syscall.Syscall(
 		unk.lpVtbl.pAddRef,
+		1,
 		uintptr(unsafe.Pointer(unk)),
 		0,
 		0)
@@ -456,6 +462,7 @@ func addRef(unk *IUnknown) int32 {
 func release(unk *IUnknown) int32 {
 	ret, _, _ := syscall.Syscall(
 		unk.lpVtbl.pRelease,
+		1,
 		uintptr(unsafe.Pointer(unk)),
 		0,
 		0)
@@ -470,6 +477,7 @@ func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err os.Error
 	}
 	hr, _, _ := syscall.Syscall6(
 		disp.lpVtbl.pGetIDsOfNames,
+		6,
 		uintptr(unsafe.Pointer(disp)),
 		uintptr(unsafe.Pointer(IID_NULL)),
 		uintptr(unsafe.Pointer(&wnames[0])),
@@ -497,6 +505,7 @@ type EXCEPINFO struct {
 func VariantInit(v *VARIANT) (err os.Error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(procVariantInit),
+		1,
 		uintptr(unsafe.Pointer(v)),
 		0,
 		0)
@@ -509,6 +518,7 @@ func VariantInit(v *VARIANT) (err os.Error) {
 func SysAllocString(v string) (ss *int16) {
 	pss, _, _ := syscall.Syscall(
 		uintptr(procSysAllocString),
+		1,
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(v))),
 		0,
 		0)
@@ -519,6 +529,7 @@ func SysAllocString(v string) (ss *int16) {
 func SysFreeString(v *int16) (err os.Error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(procSysFreeString),
+		1,
 		uintptr(unsafe.Pointer(v)),
 		0,
 		0)
@@ -528,13 +539,14 @@ func SysFreeString(v *int16) (err os.Error) {
 	return
 }
 
-func SysStringLen(v *int16) uint {
+func SysStringLen(v *int16) uint32 {
 	l, _, _ := syscall.Syscall(
 		uintptr(procSysStringLen),
+		1,
 		uintptr(unsafe.Pointer(v)),
 		0,
 		0)
-	return uint(l)
+	return uint32(l)
 }
 
 type PARAMDATA struct {
@@ -575,6 +587,7 @@ const (
 func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispatch, err os.Error) {
 	hr, _, _ := syscall.Syscall6(
 		uintptr(procCreateStdDispatch),
+		4,
 		uintptr(unsafe.Pointer(unk)),
 		v,
 		uintptr(unsafe.Pointer(ptinfo)),
@@ -590,6 +603,7 @@ func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispa
 func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err os.Error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(procCreateDispTypeInfo),
+		3,
 		uintptr(unsafe.Pointer(idata)),
 		uintptr(GetUserDefaultLCID()),
 		uintptr(unsafe.Pointer(&pptinfo)))
@@ -602,6 +616,7 @@ func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err os.Error) 
 func copyMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
 	syscall.Syscall(
 		uintptr(procCopyMemory),
+		3,
 		uintptr(dest),
 		uintptr(src),
 		uintptr(length))
@@ -717,11 +732,11 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			case *uint, *uint32:
 				vargs[n] = VARIANT{VT_UI4 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint))))}
 			case int64:
-				vargs[n] = VARIANT{VT_I8, 0, 0, 0, v.(int64)}
+				vargs[n] = VARIANT{VT_I8, 0, 0, 0, int64(v.(int64))}
 			case *int64:
 				vargs[n] = VARIANT{VT_I8 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*int64))))}
 			case uint64:
-				vargs[n] = VARIANT{VT_UI8, 0, 0, 0, int64(v.(uint64))}
+				vargs[n] = VARIANT{VT_UI8, 0, 0, 0, v.(int64)}
 			case *uint64:
 				vargs[n] = VARIANT{VT_UI8 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*uint64))))}
 			case float32:
@@ -752,18 +767,19 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		dispparams.cArgs = uint32(len(params))
 	}
 
-	var ret VARIANT
+	result = new(VARIANT)
 	var excepInfo EXCEPINFO
-	VariantInit(&ret)
+	VariantInit(result)
 	hr, _, _ := syscall.Syscall9(
 		disp.lpVtbl.pInvoke,
+		9,
 		uintptr(unsafe.Pointer(disp)),
 		uintptr(dispid),
 		uintptr(unsafe.Pointer(IID_NULL)),
 		uintptr(GetUserDefaultLCID()),
 		uintptr(dispatch),
 		uintptr(unsafe.Pointer(&dispparams)),
-		uintptr(unsafe.Pointer(&ret)),
+		uintptr(unsafe.Pointer(result)),
 		uintptr(unsafe.Pointer(&excepInfo)),
 		0)
 	if hr != 0 {
@@ -775,7 +791,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 	}
 	for _, varg := range vargs {
 		if varg.VT == VT_BSTR && varg.Val != 0 {
-			SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
+			//SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
 		}
 		/*
 		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
@@ -784,13 +800,13 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		}
 		*/
 	}
-	result = &ret
 	return
 }
 
 func GetUserDefaultLCID() (lcid uint32) {
 	ret, _, _ := syscall.Syscall(
 		uintptr(procGetUserDefaultLCID),
+		0,
 		0,
 		0,
 		0)
@@ -801,6 +817,7 @@ func GetUserDefaultLCID() (lcid uint32) {
 func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
 	ret, _, _ := syscall.Syscall(
 		uintptr(procMemCmp),
+		3,
 		uintptr(unsafe.Pointer(guid1)),
 		uintptr(unsafe.Pointer(guid2)),
 		16)
@@ -822,7 +839,7 @@ type Msg struct {
 }
 
 func GetMessage(msg *Msg, hwnd uint32, MsgFilterMin uint32, MsgFilterMax uint32) (ret int32, errno int) {
-	r0, _, e1 := syscall.Syscall6(uintptr(procGetMessageW), uintptr(unsafe.Pointer(msg)), uintptr(hwnd), uintptr(MsgFilterMin), uintptr(MsgFilterMax), 0, 0)
+	r0, _, e1 := syscall.Syscall6(uintptr(procGetMessageW), 4, uintptr(unsafe.Pointer(msg)), uintptr(hwnd), uintptr(MsgFilterMin), uintptr(MsgFilterMax), 0, 0)
 	ret = int32(r0)
 	if ret == -1 {
 		if e1 != 0 {
@@ -837,7 +854,7 @@ func GetMessage(msg *Msg, hwnd uint32, MsgFilterMin uint32, MsgFilterMax uint32)
 }
 
 func DispatchMessage(msg *Msg) (ret int32) {
-	r0, _, _ := syscall.Syscall(uintptr(procDispatchMessageW), uintptr(unsafe.Pointer(msg)), 0, 0)
+	r0, _, _ := syscall.Syscall(uintptr(procDispatchMessageW), 1, uintptr(unsafe.Pointer(msg)), 0, 0)
 	ret = int32(r0)
 	return
 }

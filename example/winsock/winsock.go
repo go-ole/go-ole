@@ -8,7 +8,7 @@ import "os"
 
 type EventReceiver struct {
 	lpVtbl *EventReceiverVtbl
-	ref int
+	ref int32
 	host *ole.IDispatch
 }
 
@@ -22,69 +22,72 @@ type EventReceiverVtbl struct {
 	pInvoke           uintptr
 }
 
-func QueryInterface(args *uintptr) uintptr {
-	p := (*[3]int32)(unsafe.Pointer(args))
-	this := (*ole.IUnknown)(unsafe.Pointer(uintptr(p[0])))
-	iid := (*ole.GUID)(unsafe.Pointer(uintptr(p[1])))
-	punk := (**ole.IUnknown)(unsafe.Pointer(uintptr(p[2])))
+func QueryInterface(this int32, iid uint32, punk **ole.IUnknown) uint32 {
+	//p := (*[3]int32)(unsafe.Pointer(args))
+	//this := (*ole.IUnknown)(unsafe.Pointer(uintptr(p[0])))
+	//iid := (*ole.GUID)(unsafe.Pointer(uintptr(p[1])))
+	//punk := (**ole.IUnknown)(unsafe.Pointer(uintptr(p[2])))
 	//s, _ := ole.StringFromCLSID(iid)
 	//println(s)
 	*punk = nil
-	if ole.IsEqualGUID(iid, ole.IID_IUnknown) ||
-		ole.IsEqualGUID(iid, ole.IID_IDispatch) {
-		this.AddRef()
-		*punk = this
-		return uintptr(ole.S_OK)
+	if ole.IsEqualGUID((*ole.GUID)(unsafe.Pointer(uintptr(iid))), ole.IID_IUnknown) ||
+		ole.IsEqualGUID((*ole.GUID)(unsafe.Pointer(uintptr(iid))), ole.IID_IDispatch) {
+		//this.AddRef()
+		//*punk = this
+		return ole.S_OK
 	}
-	return uintptr(ole.E_NOINTERFACE)
+	return ole.E_NOINTERFACE
 }
 
-func AddRef(args *uintptr) uintptr {
-	p := (*[1]int32)(unsafe.Pointer(args))
-	this := (*EventReceiver)(unsafe.Pointer(uintptr(p[0])))
-	this.ref++
-	return uintptr(this.ref)
+func AddRef(this *ole.IUnknown) int32 {
+	//p := (*[1]int32)(unsafe.Pointer(args))
+	//this := (*EventReceiver)(unsafe.Pointer(uintptr(p[0])))
+	pthis := (*EventReceiver)(unsafe.Pointer(this))
+	pthis.ref++
+	return pthis.ref
 }
 
-func Release(args *uintptr) uintptr {
-	p := (*[1]int32)(unsafe.Pointer(args))
-	this := (*EventReceiver)(unsafe.Pointer(uintptr(p[0])))
-	this.ref--
-	return uintptr(this.ref)
+func Release(this *ole.IUnknown) int32 {
+	//p := (*[1]int32)(unsafe.Pointer(args))
+	//this := (*EventReceiver)(unsafe.Pointer(uintptr(p[0])))
+	pthis := (*EventReceiver)(unsafe.Pointer(this))
+	pthis.ref--
+	return pthis.ref
 }
 
-func GetIDsOfNames(args *uintptr) uintptr {
-	p := (*[6]int32)(unsafe.Pointer(args))
+func GetIDsOfNames(this *ole.IUnknown, iid *ole.GUID, wnames []*uint16, namelen int, lcid int, pdisp []int32) uintptr {
+	//p := (*[6]int32)(unsafe.Pointer(args))
 	//this := (*ole.IDispatch)(unsafe.Pointer(uintptr(p[0])))
 	//iid := (*ole.GUID)(unsafe.Pointer(uintptr(p[1])))
 	//wnames := *(*[]*uint16)(unsafe.Pointer(uintptr(p[2])))
-	namelen := int(uintptr(p[3]))
+	//namelen := int(uintptr(p[3]))
 	//lcid := int(uintptr(p[4]))
-	pdisp := *(*[]int32)(unsafe.Pointer(uintptr(p[5])))
+	//pdisp := *(*[]int32)(unsafe.Pointer(uintptr(p[5])))
 	for n := 0; n < namelen; n++ {
 		pdisp[n] = int32(n)
 	}
 	return uintptr(ole.S_OK)
 }
 
-func GetTypeInfoCount(args *uintptr) uintptr {
-	p := (*[2]int32)(unsafe.Pointer(args))
+func GetTypeInfoCount(pcount *int) uintptr {
+	//p := (*[2]int32)(unsafe.Pointer(args))
 	//this := (*ole.IDispatch)(unsafe.Pointer(uintptr(p[0])))
-	pcount := (*int)(unsafe.Pointer(uintptr(p[1])))
+	//pcount := (*int)(unsafe.Pointer(uintptr(p[1])))
 	if pcount != nil {
 		*pcount = 0
 	}
 	return uintptr(ole.S_OK)
 }
 
-func GetTypeInfo(args *uintptr) uintptr {
+func GetTypeInfo(ptypeif *uintptr) uintptr {
 	return uintptr(ole.E_NOTIMPL)
 }
 
-func Invoke(args *uintptr) uintptr {
-	p := (*[9]int32)(unsafe.Pointer(args))
-	this := (*ole.IDispatch)(unsafe.Pointer(uintptr(p[0])))
-	dispid := int(p[1])
+func Invoke(this *ole.IDispatch, dispid int, riid *ole.GUID, lcid int, flags int16, dispparams *ole.DISPPARAMS, result *ole.VARIANT, pexcepinfo *ole.EXCEPINFO, nerr *uint) uintptr {
+
+	//p := (*[9]int32)(unsafe.Pointer(args))
+	//this := (*ole.IDispatch)(unsafe.Pointer(uintptr(p[0])))
+	//dispid := int(p[1])
 
 	switch dispid {
 	case 0:
@@ -122,13 +125,13 @@ func main() {
 
 	dest := &EventReceiver{}
 	dest.lpVtbl = &EventReceiverVtbl{}
-	dest.lpVtbl.pQueryInterface = syscall.NewCallback(QueryInterface, 3).ExtFnEntry()
-	dest.lpVtbl.pAddRef = syscall.NewCallback(AddRef, 1).ExtFnEntry()
-	dest.lpVtbl.pRelease = syscall.NewCallback(Release, 1).ExtFnEntry()
-	dest.lpVtbl.pGetTypeInfoCount = syscall.NewCallback(GetTypeInfoCount, 2).ExtFnEntry()
-	dest.lpVtbl.pGetTypeInfo = syscall.NewCallback(GetTypeInfo, 4).ExtFnEntry()
-	dest.lpVtbl.pGetIDsOfNames = syscall.NewCallback(GetIDsOfNames, 6).ExtFnEntry()
-	dest.lpVtbl.pInvoke = syscall.NewCallback(Invoke, 9).ExtFnEntry()
+	dest.lpVtbl.pQueryInterface = syscall.NewCallback(QueryInterface)
+	dest.lpVtbl.pAddRef = syscall.NewCallback(AddRef)
+	dest.lpVtbl.pRelease = syscall.NewCallback(Release)
+	dest.lpVtbl.pGetTypeInfoCount = syscall.NewCallback(GetTypeInfoCount)
+	dest.lpVtbl.pGetTypeInfo = syscall.NewCallback(GetTypeInfo)
+	dest.lpVtbl.pGetIDsOfNames = syscall.NewCallback(GetIDsOfNames)
+	dest.lpVtbl.pInvoke = syscall.NewCallback(Invoke)
 	dest.host = winsock
 
 	oleutil.ConnectObject(winsock, iid, (*ole.IUnknown)(unsafe.Pointer(dest)))

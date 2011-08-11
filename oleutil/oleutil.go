@@ -1,6 +1,6 @@
 package oleutil
 
-import "ole"
+import "github.com/mattn/go-ole"
 import "unsafe"
 import "os"
 

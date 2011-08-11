@@ -1,7 +1,7 @@
 package main
 
-import "ole"
-import "ole/oleutil"
+import "github.com/mattn/go-ole"
+import "github.com/mattn/go-ole/oleutil"
 import "syscall"
 
 func main() {
