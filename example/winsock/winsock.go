@@ -95,6 +95,8 @@ func Invoke(this *ole.IDispatch, dispid int, riid *ole.GUID, lcid int, flags int
 	case 5:
 		log.Println("Close")
 		this.Release()
+	case 6:
+		log.Fatal("Error")
 	default:
 		log.Println(dispid)
 	}
