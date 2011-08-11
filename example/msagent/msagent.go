@@ -9,11 +9,9 @@ func main() {
 	unknown, _ := oleutil.CreateObject("Agent.Control.1")
 	agent, _ := unknown.QueryInterface(ole.IID_IDispatch)
 	oleutil.PutProperty(agent, "Connected", true)
-	result, _ := oleutil.GetProperty(agent, "Characters")
-	characters := result.ToIDispatch()
+	characters := oleutil.MustGetProperty(agent, "Characters").ToIDispatch()
 	oleutil.CallMethod(characters, "Load", "Merlin", "c:\\windows\\msagent\\chars\\Merlin.acs")
-	result, _ = oleutil.CallMethod(characters, "Character", "Merlin")
-	character := result.ToIDispatch()
+	character := oleutil.MustCallMethod(characters, "Character", "Merlin").ToIDispatch()
 	oleutil.CallMethod(character, "Show")
 	oleutil.CallMethod(character, "Speak", "こんにちわ世界")
 

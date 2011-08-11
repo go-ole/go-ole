@@ -35,6 +35,11 @@ func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result
 	return
 }
 
+func MustCallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
+	r, _ := CallMethod(disp, name, params ...)
+	return r
+}
+
 func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err os.Error) {
 	var dispid []int32
 	dispid, err = disp.GetIDsOfName([]string{name})
@@ -45,6 +50,11 @@ func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 	return
 }
 
+func MustGetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
+	r, _ := GetProperty(disp, name, params ...)
+	return r
+}
+
 func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err os.Error) {
 	var dispid []int32
 	dispid, err = disp.GetIDsOfName([]string{name})
@@ -53,6 +63,11 @@ func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 	}
 	result, err = disp.Invoke(dispid[0], ole.DISPATCH_PROPERTYPUT, params...)
 	return
+}
+
+func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
+	r, _ := GetProperty(disp, name, params ...)
+	return r
 }
 
 type stdDispatch struct {

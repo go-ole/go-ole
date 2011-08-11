@@ -12,29 +12,21 @@ func main() {
 	oleutil.CallMethod(xmlhttp, "send", nil)
 	state := -1
 	for state != 4 {
-		result, _ := oleutil.GetProperty(xmlhttp, "readyState")
-		state = int(result.Val)
+		state = int(oleutil.MustGetProperty(xmlhttp, "readyState").Val)
 		syscall.Sleep(10000000)
 	}
-	result, _ := oleutil.GetProperty(xmlhttp, "responseXml")
-	responseXml := result.ToIDispatch()
-	result, _ = oleutil.CallMethod(responseXml, "selectNodes", "rdf:RDF/item")
-	items := result.ToIDispatch()
-	result, _ = oleutil.GetProperty(items, "length")
+	responseXml := oleutil.MustGetProperty(xmlhttp, "responseXml").ToIDispatch()
+	items := oleutil.MustCallMethod(responseXml, "selectNodes", "rdf:RDF/item").ToIDispatch()
+	length := int(oleutil.MustGetProperty(items, "length").Val)
 
-	for n := 0; n < int(result.Val); n++ {
-		result, _ := oleutil.GetProperty(items, "item", n)
-		item := result.ToIDispatch()
+	for n := 0; n < length; n++ {
+		item := oleutil.MustGetProperty(items, "item", n).ToIDispatch()
 
-		result, _ = oleutil.CallMethod(item, "selectSingleNode", "title")
-		title := result.ToIDispatch()
-		result, _ = oleutil.GetProperty(title, "text")
-		println(result.ToString())
+		title := oleutil.MustCallMethod(item, "selectSingleNode", "title").ToIDispatch()
+		println(oleutil.MustGetProperty(title, "text").ToString())
 
-		result, _ = oleutil.CallMethod(item, "selectSingleNode", "link")
-		link := result.ToIDispatch()
-		result, _ = oleutil.GetProperty(link, "text")
-		println("  " + result.ToString())
+		link := oleutil.MustCallMethod(item, "selectSingleNode", "link").ToIDispatch()
+		println("  " + oleutil.MustGetProperty(link, "text").ToString())
 
 		title.Release()
 		link.Release()
