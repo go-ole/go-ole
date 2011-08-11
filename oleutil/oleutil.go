@@ -64,7 +64,7 @@ func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, dest *ole.IUnknown) (cook
 		return
 	}
 	cookie, err = point.Advise(dest)
-	//container.Release()
+	container.Release()
 	point.Release()
 	if err != nil {
 		return
