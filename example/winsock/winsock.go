@@ -1,15 +1,17 @@
 package main
 
-import "ole"
-import "ole/oleutil"
-import "unsafe"
-import "syscall"
-import "os"
+import (
+	"github.com/mattn/go-ole"
+	"github.com/mattn/go-ole/oleutil"
+	"log"
+	"unsafe"
+	"syscall"
+)
 
 type EventReceiver struct {
 	lpVtbl *EventReceiverVtbl
-	ref int32
-	host *ole.IDispatch
+	ref    int32
+	host   *ole.IDispatch
 }
 
 type EventReceiverVtbl struct {
@@ -22,47 +24,36 @@ type EventReceiverVtbl struct {
 	pInvoke           uintptr
 }
 
-func QueryInterface(this int32, iid uint32, punk **ole.IUnknown) uint32 {
-	//p := (*[3]int32)(unsafe.Pointer(args))
-	//this := (*ole.IUnknown)(unsafe.Pointer(uintptr(p[0])))
-	//iid := (*ole.GUID)(unsafe.Pointer(uintptr(p[1])))
-	//punk := (**ole.IUnknown)(unsafe.Pointer(uintptr(p[2])))
-	//s, _ := ole.StringFromCLSID(iid)
-	//println(s)
+func QueryInterface(this *ole.IUnknown, iid *ole.GUID, punk **ole.IUnknown) uint32 {
+	s, _ := ole.StringFromCLSID(iid)
 	*punk = nil
-	if ole.IsEqualGUID((*ole.GUID)(unsafe.Pointer(uintptr(iid))), ole.IID_IUnknown) ||
-		ole.IsEqualGUID((*ole.GUID)(unsafe.Pointer(uintptr(iid))), ole.IID_IDispatch) {
-		//this.AddRef()
-		//*punk = this
+	if ole.IsEqualGUID(iid, ole.IID_IUnknown) ||
+		ole.IsEqualGUID(iid, ole.IID_IDispatch) {
+		this.AddRef()
+		*punk = this
+		return ole.S_OK
+	}
+	if s == "{248DD893-BB45-11CF-9ABC-0080C7E7B78D}" {
+		this.AddRef()
+		*punk = this
 		return ole.S_OK
 	}
 	return ole.E_NOINTERFACE
 }
 
 func AddRef(this *ole.IUnknown) int32 {
-	//p := (*[1]int32)(unsafe.Pointer(args))
-	//this := (*EventReceiver)(unsafe.Pointer(uintptr(p[0])))
 	pthis := (*EventReceiver)(unsafe.Pointer(this))
 	pthis.ref++
 	return pthis.ref
 }
 
 func Release(this *ole.IUnknown) int32 {
-	//p := (*[1]int32)(unsafe.Pointer(args))
-	//this := (*EventReceiver)(unsafe.Pointer(uintptr(p[0])))
 	pthis := (*EventReceiver)(unsafe.Pointer(this))
 	pthis.ref--
 	return pthis.ref
 }
 
 func GetIDsOfNames(this *ole.IUnknown, iid *ole.GUID, wnames []*uint16, namelen int, lcid int, pdisp []int32) uintptr {
-	//p := (*[6]int32)(unsafe.Pointer(args))
-	//this := (*ole.IDispatch)(unsafe.Pointer(uintptr(p[0])))
-	//iid := (*ole.GUID)(unsafe.Pointer(uintptr(p[1])))
-	//wnames := *(*[]*uint16)(unsafe.Pointer(uintptr(p[2])))
-	//namelen := int(uintptr(p[3]))
-	//lcid := int(uintptr(p[4]))
-	//pdisp := *(*[]int32)(unsafe.Pointer(uintptr(p[5])))
 	for n := 0; n < namelen; n++ {
 		pdisp[n] = int32(n)
 	}
@@ -70,9 +61,6 @@ func GetIDsOfNames(this *ole.IUnknown, iid *ole.GUID, wnames []*uint16, namelen 
 }
 
 func GetTypeInfoCount(pcount *int) uintptr {
-	//p := (*[2]int32)(unsafe.Pointer(args))
-	//this := (*ole.IDispatch)(unsafe.Pointer(uintptr(p[0])))
-	//pcount := (*int)(unsafe.Pointer(uintptr(p[1])))
 	if pcount != nil {
 		*pcount = 0
 	}
@@ -84,34 +72,31 @@ func GetTypeInfo(ptypeif *uintptr) uintptr {
 }
 
 func Invoke(this *ole.IDispatch, dispid int, riid *ole.GUID, lcid int, flags int16, dispparams *ole.DISPPARAMS, result *ole.VARIANT, pexcepinfo *ole.EXCEPINFO, nerr *uint) uintptr {
-
-	//p := (*[9]int32)(unsafe.Pointer(args))
-	//this := (*ole.IDispatch)(unsafe.Pointer(uintptr(p[0])))
-	//dispid := int(p[1])
-
 	switch dispid {
 	case 0:
-		println("DataArrival")
+		log.Println("DataArrival")
 		winsock := (*EventReceiver)(unsafe.Pointer(this)).host
 		var data ole.VARIANT
 		ole.VariantInit(&data)
 		oleutil.CallMethod(winsock, "GetData", &data)
 		array := (*ole.SAFEARRAY)(unsafe.Pointer(uintptr(data.Val)))
 		s := ole.BytePtrToString((*byte)(unsafe.Pointer(uintptr(array.PvData))))
+		println()
 		println(s)
+		println()
 	case 1:
-		println("Connected")
+		log.Println("Connected")
 		winsock := (*EventReceiver)(unsafe.Pointer(this)).host
 		oleutil.CallMethod(winsock, "SendData", "GET / HTTP/1.0\r\n\r\n")
 	case 3:
-		println("SendProgress")
+		log.Println("SendProgress")
 	case 4:
-		println("SendComplete")
+		log.Println("SendComplete")
 	case 5:
-		println("Close")
+		log.Println("Close")
 		this.Release()
 	default:
-		println(dispid)
+		log.Println(dispid)
 	}
 	return ole.E_NOTIMPL
 }
@@ -137,8 +122,7 @@ func main() {
 	oleutil.ConnectObject(winsock, iid, (*ole.IUnknown)(unsafe.Pointer(dest)))
 	_, err := oleutil.CallMethod(winsock, "Connect", "127.0.0.1", 80)
 	if err != nil {
-		println(err.String())
-		os.Exit(0)
+		log.Fatal(err.String())
 	}
 
 	var m ole.Msg

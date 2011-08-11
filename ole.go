@@ -289,20 +289,12 @@ type SAFEARRAY struct {
 }
 
 func BytePtrToString(p *byte) string {
-	l, _, _ := syscall.Syscall(
-		uintptr(procStrLen),
-		1,
-		uintptr(unsafe.Pointer(p)),
-		0,
-		0)
-	s := make([]byte, l)
-	l, _, _ = syscall.Syscall(
-		uintptr(procStrCpy),
-		3,
-		uintptr(unsafe.Pointer(&s[0])),
-		uintptr(unsafe.Pointer(p)),
-		16)
-	return string(s)
+	a := (*[10000]uint8)(unsafe.Pointer(p))
+	i := 0
+	for a[i] != 0 {
+		i++
+	}
+	return string(a[:i])
 }
 
 func UTF16PtrToString(p *uint16) string {
@@ -815,6 +807,7 @@ func GetUserDefaultLCID() (lcid uint32) {
 }
 
 func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
+	/*
 	ret, _, _ := syscall.Syscall(
 		uintptr(procMemCmp),
 		3,
@@ -822,6 +815,18 @@ func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
 		uintptr(unsafe.Pointer(guid2)),
 		16)
 	return ret == 0
+	*/
+	return guid1.Data1 == guid2.Data1 &&
+		guid1.Data2 == guid2.Data2 &&
+		guid1.Data3 == guid2.Data3 &&
+		guid1.Data4[0] == guid2.Data4[0] &&
+		guid1.Data4[1] == guid2.Data4[1] &&
+		guid1.Data4[2] == guid2.Data4[2] &&
+		guid1.Data4[3] == guid2.Data4[3] &&
+		guid1.Data4[4] == guid2.Data4[4] &&
+		guid1.Data4[5] == guid2.Data4[5] &&
+		guid1.Data4[6] == guid2.Data4[6] &&
+		guid1.Data4[7] == guid2.Data4[7]
 }
 
 type Point struct {
