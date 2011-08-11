@@ -29,12 +29,12 @@ func QueryInterface(this *ole.IUnknown, iid *ole.GUID, punk **ole.IUnknown) uint
 	*punk = nil
 	if ole.IsEqualGUID(iid, ole.IID_IUnknown) ||
 		ole.IsEqualGUID(iid, ole.IID_IDispatch) {
-		this.AddRef()
+		AddRef(this)
 		*punk = this
 		return ole.S_OK
 	}
 	if s == "{248DD893-BB45-11CF-9ABC-0080C7E7B78D}" {
-		this.AddRef()
+		AddRef(this)
 		*punk = this
 		return ole.S_OK
 	}
@@ -121,7 +121,7 @@ func main() {
 	dest.lpVtbl.pInvoke = syscall.NewCallback(Invoke)
 	dest.host = winsock
 
-	oleutil.ConnectObject(winsock, iid, dest)
+	oleutil.ConnectObject(winsock, iid, (*ole.IUnknown)(unsafe.Pointer(dest)))
 	_, err := oleutil.CallMethod(winsock, "Connect", "127.0.0.1", 80)
 	if err != nil {
 		log.Fatal(err.String())

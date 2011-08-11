@@ -180,12 +180,12 @@ func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, idisp interface{}) (cooki
 		cookie, err = point.Advise((*ole.IUnknown)(unsafe.Pointer(dest)))
 		container.Release()
 		if err != nil {
+			point.Release()
 			return
 		}
 	}
 
 	container.Release()
-	point.Release()
 
 	return 0, ole.NewError(ole.E_INVALIDARG)
 }
