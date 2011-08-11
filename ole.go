@@ -28,11 +28,6 @@ var (
 	procSysStringLen, _       = syscall.GetProcAddress(modoleaut32, "SysStringLen")
 	procCreateDispTypeInfo, _ = syscall.GetProcAddress(modoleaut32, "CreateDispTypeInfo")
 	procCreateStdDispatch, _  = syscall.GetProcAddress(modoleaut32, "CreateStdDispatch")
-	procMemCmp, _             = syscall.GetProcAddress(modmsvcrt, "memcmp")
-	procStrLen, _             = syscall.GetProcAddress(modmsvcrt, "strlen")
-	procStrCpy, _             = syscall.GetProcAddress(modmsvcrt, "strcpy")
-	procWcsCpy, _             = syscall.GetProcAddress(modmsvcrt, "wcscpy")
-	procWcsLen, _             = syscall.GetProcAddress(modmsvcrt, "wcslen")
 
 	procGetMessageW, _      = syscall.GetProcAddress(moduser32, "GetMessageW")
 	procDispatchMessageW, _ = syscall.GetProcAddress(moduser32, "DispatchMessageW")
@@ -275,17 +270,17 @@ type VARIANT struct {
 }
 
 type SAFEARRAYBOUND struct {
-    CElements uint32
-    LLbound int32
+	CElements uint32
+	LLbound   int32
 }
 
 type SAFEARRAY struct {
-    CDims uint16
-    FFeatures uint16
-    CbElements uint32
-    CLocks uint32
-    PvData uint32
-    RgsaBound SAFEARRAYBOUND
+	CDims      uint16
+	FFeatures  uint16
+	CbElements uint32
+	CLocks     uint32
+	PvData     uint32
+	RgsaBound  SAFEARRAYBOUND
 }
 
 func BytePtrToString(p *byte) string {
@@ -783,13 +778,13 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 	}
 	for _, varg := range vargs {
 		if varg.VT == VT_BSTR && varg.Val != 0 {
-			//SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
+			SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
 		}
 		/*
-		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
-			*(params[n].(*string)) = UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(varg.Val))))
-			println(*(params[n].(*string)))
-		}
+			if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
+				*(params[n].(*string)) = UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(varg.Val))))
+				println(*(params[n].(*string)))
+			}
 		*/
 	}
 	return
@@ -807,15 +802,6 @@ func GetUserDefaultLCID() (lcid uint32) {
 }
 
 func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
-	/*
-	ret, _, _ := syscall.Syscall(
-		uintptr(procMemCmp),
-		3,
-		uintptr(unsafe.Pointer(guid1)),
-		uintptr(unsafe.Pointer(guid2)),
-		16)
-	return ret == 0
-	*/
 	return guid1.Data1 == guid2.Data1 &&
 		guid1.Data2 == guid2.Data2 &&
 		guid1.Data3 == guid2.Data3 &&
