@@ -121,7 +121,7 @@ func main() {
 	dest.lpVtbl.pInvoke = syscall.NewCallback(Invoke)
 	dest.host = winsock
 
-	oleutil.ConnectObject(winsock, iid, (*ole.IUnknown)(unsafe.Pointer(dest)))
+	oleutil.ConnectObject(winsock, iid, dest)
 	_, err := oleutil.CallMethod(winsock, "Connect", "127.0.0.1", 80)
 	if err != nil {
 		log.Fatal(err.String())

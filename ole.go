@@ -1,9 +1,11 @@
 package ole
 
-import "syscall"
-import "unsafe"
-import "utf16"
-import "os"
+import (
+	"syscall"
+	"unsafe"
+	"utf16"
+	"os"
+)
 
 var (
 	modkernel32, _ = syscall.LoadLibrary("kernel32.dll")
@@ -37,6 +39,7 @@ var (
 	IID_IDispatch                 = &GUID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 	IID_IConnectionPointContainer = &GUID{0xB196B284, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
 	IID_IConnectionPoint          = &GUID{0xB196B286, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
+	IID_IProvideClassInfo         = &GUID{0xb196b283, 0xbab4, 0x101a, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
 )
 
 const (
@@ -458,10 +461,10 @@ func release(unk *IUnknown) int32 {
 
 func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err os.Error) {
 	wnames := make([]*uint16, len(names))
-	dispid = make([]int32, len(names))
 	for i := 0; i < len(names); i++ {
 		wnames[i] = syscall.StringToUTF16Ptr(names[i])
 	}
+	dispid = make([]int32, len(names))
 	hr, _, _ := syscall.Syscall6(
 		disp.lpVtbl.pGetIDsOfNames,
 		6,
@@ -848,4 +851,47 @@ func DispatchMessage(msg *Msg) (ret int32) {
 	r0, _, _ := syscall.Syscall(uintptr(procDispatchMessageW), 1, uintptr(unsafe.Pointer(msg)), 0, 0)
 	ret = int32(r0)
 	return
+}
+
+const (
+	TKIND_ENUM = 1
+	TKIND_RECORD = 2
+	TKIND_MODULE = 3
+	TKIND_INTERFACE = 4
+	TKIND_DISPATCH = 5
+	TKIND_COCLASS = 6
+	TKIND_ALIAS = 7
+	TKIND_UNION = 8
+	TKIND_MAX = 9
+)
+
+type TYPEDESC struct {
+	Hreftype uint32
+	VT uint16
+}
+
+type IDLDESC struct {
+	dwReserved uint32
+	wIDLFlags uint16
+}
+
+type TYPEATTR struct {
+	guid GUID
+	lcid uint32
+	dwReserved uint32
+	memidConstructor int32
+	memidDestructor int32
+	lpstrSchema *uint16
+	cbSizeInstance uint32
+	typekind int32
+	cFuncs uint16
+	cVars uint16
+	cImplTypes uint16
+	cbSizeVft uint16
+	cbAlignment uint16
+	wTypeFlags uint16
+	wMajorVerNum uint16
+	wMinorVerNum uint16
+	tdescAlias TYPEDESC
+	idldescType IDLDESC
 }
