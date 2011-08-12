@@ -132,6 +132,11 @@ func (v *IUnknown) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
 	return
 }
 
+func (v *IUnknown) MustQueryInterface(iid *GUID) (disp *IDispatch) {
+	disp, _ = queryInterface(v, iid)
+	return
+}
+
 func (v *IUnknown) AddRef() int32 {
 	return addRef(v)
 }
@@ -159,6 +164,11 @@ func (v *IDispatch) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
 	return
 }
 
+func (v *IDispatch) MustQueryInterface(iid *GUID) (disp *IDispatch) {
+	disp, _ = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
+	return
+}
+
 func (v *IDispatch) AddRef() int32 {
 	return addRef((*IUnknown)(unsafe.Pointer(v)))
 }
@@ -174,6 +184,71 @@ func (v *IDispatch) GetIDsOfName(names []string) (dispid []int32, err os.Error) 
 
 func (v *IDispatch) Invoke(dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err os.Error) {
 	result, err = invoke(v, dispid, dispatch, params...)
+	return
+}
+
+func (v *IDispatch) GetTypeInfoCount() (c uint32, err os.Error) {
+	c, err = getTypeInfoCount(v)
+	return
+}
+
+func (v *IDispatch) GetTypeInfo() (tinfo *ITypeInfo, err os.Error) {
+	tinfo, err = getTypeInfo(v)
+	return
+}
+
+type ITypeInfo struct {
+	lpVtbl *pITypeInfoVtbl
+}
+
+type pITypeInfoVtbl struct {
+	pQueryInterface       uintptr
+	pAddRef               uintptr
+	pRelease              uintptr
+	pGetTypeAttr          uintptr
+	pGetTypeComp          uintptr
+	pGetFuncDesc          uintptr
+	pGetVarDesc           uintptr
+	pGetNames             uintptr
+	pGetRefTypeOfImplType uintptr
+	pGetImplTypeFlags     uintptr
+	pGetIDsOfNames        uintptr
+	pInvoke               uintptr
+	pGetDocumentation     uintptr
+	pGetDllEntry          uintptr
+	pGetRefTypeInfo       uintptr
+	pAddressOfMember      uintptr
+	pCreateInstance       uintptr
+	pGetMops              uintptr
+	pGetContainingTypeLib uintptr
+	pReleaseTypeAttr      uintptr
+	pReleaseFuncDesc      uintptr
+	pReleaseVarDesc       uintptr
+}
+
+func (v *ITypeInfo) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
+	return
+}
+
+func (v *ITypeInfo) AddRef() int32 {
+	return addRef((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *ITypeInfo) Release() int32 {
+	return release((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err os.Error) {
+	hr, _, _ := syscall.Syscall(
+		uintptr(v.lpVtbl.pGetTypeAttr),
+		2,
+		uintptr(unsafe.Pointer(v)),
+		uintptr(unsafe.Pointer(&tattr)),
+		0)
+	if hr != 0 {
+		err = NewError(hr)
+	}
 	return
 }
 
@@ -220,6 +295,35 @@ func (v *IConnectionPointContainer) FindConnectionPoint(iid *GUID, point **IConn
 	return
 }
 
+type IProvideClassInfo struct {
+	lpVtbl *pIProvideClassInfoVtbl
+}
+
+type pIProvideClassInfoVtbl struct {
+	pQueryInterface uintptr
+	pAddRef         uintptr
+	pRelease        uintptr
+	pGetClassInfo   uintptr
+}
+
+func (v *IProvideClassInfo) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
+	return
+}
+
+func (v *IProvideClassInfo) AddRef() int32 {
+	return addRef((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *IProvideClassInfo) Release() int32 {
+	return release((*IUnknown)(unsafe.Pointer(v)))
+}
+
+func (v *IProvideClassInfo) GetClassInfo() (cinfo *ITypeInfo, err os.Error) {
+	cinfo, err = getClassInfo(v)
+	return
+}
+
 type IConnectionPoint struct {
 	lpVtbl *pIConnectionPointVtbl
 }
@@ -263,6 +367,23 @@ func (v *IConnectionPoint) Advise(unknown *IUnknown) (cookie uint32, err os.Erro
 		err = NewError(hr)
 	}
 	return
+}
+
+func (v *IConnectionPoint) Unadvise(cookie uint32) (err os.Error) {
+	hr, _, _ := syscall.Syscall(
+		uintptr(v.lpVtbl.pAdvise),
+		2,
+		uintptr(unsafe.Pointer(v)),
+		uintptr(cookie),
+		0)
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func (v *IConnectionPoint) EnumConnections(p *unsafe.Pointer) (err os.Error) {
+	return NewError(E_NOTIMPL)
 }
 
 type VARIANT struct {
@@ -491,6 +612,45 @@ func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err os.Error
 		uintptr(len(names)),
 		uintptr(GetUserDefaultLCID()),
 		uintptr(unsafe.Pointer(&dispid[0])))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func getTypeInfoCount(disp *IDispatch) (c uint32, err os.Error) {
+	hr, _, _ := syscall.Syscall(
+		disp.lpVtbl.pGetTypeInfoCount,
+		2,
+		uintptr(unsafe.Pointer(disp)),
+		uintptr(unsafe.Pointer(&c)),
+		0)
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func getTypeInfo(disp *IDispatch) (tinfo *ITypeInfo, err os.Error) {
+	hr, _, _ := syscall.Syscall(
+		disp.lpVtbl.pGetTypeInfo,
+		3,
+		uintptr(unsafe.Pointer(disp)),
+		uintptr(GetUserDefaultLCID()),
+		uintptr(unsafe.Pointer(&tinfo)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func getClassInfo(disp *IProvideClassInfo) (tinfo *ITypeInfo, err os.Error) {
+	hr, _, _ := syscall.Syscall(
+		disp.lpVtbl.pGetClassInfo,
+		2,
+		uintptr(unsafe.Pointer(disp)),
+		uintptr(unsafe.Pointer(&tinfo)),
+		0)
 	if hr != 0 {
 		err = NewError(hr)
 	}
@@ -871,44 +1031,44 @@ func DispatchMessage(msg *Msg) (ret int32) {
 }
 
 const (
-	TKIND_ENUM = 1
-	TKIND_RECORD = 2
-	TKIND_MODULE = 3
+	TKIND_ENUM      = 1
+	TKIND_RECORD    = 2
+	TKIND_MODULE    = 3
 	TKIND_INTERFACE = 4
-	TKIND_DISPATCH = 5
-	TKIND_COCLASS = 6
-	TKIND_ALIAS = 7
-	TKIND_UNION = 8
-	TKIND_MAX = 9
+	TKIND_DISPATCH  = 5
+	TKIND_COCLASS   = 6
+	TKIND_ALIAS     = 7
+	TKIND_UNION     = 8
+	TKIND_MAX       = 9
 )
 
 type TYPEDESC struct {
 	Hreftype uint32
-	VT uint16
+	VT       uint16
 }
 
 type IDLDESC struct {
-	dwReserved uint32
-	wIDLFlags uint16
+	DwReserved uint32
+	WIDLFlags  uint16
 }
 
 type TYPEATTR struct {
-	guid GUID
-	lcid uint32
-	dwReserved uint32
-	memidConstructor int32
-	memidDestructor int32
-	lpstrSchema *uint16
-	cbSizeInstance uint32
-	typekind int32
-	cFuncs uint16
-	cVars uint16
-	cImplTypes uint16
-	cbSizeVft uint16
-	cbAlignment uint16
-	wTypeFlags uint16
-	wMajorVerNum uint16
-	wMinorVerNum uint16
-	tdescAlias TYPEDESC
-	idldescType IDLDESC
+	Guid             GUID
+	Lcid             uint32
+	dwReserved       uint32
+	MemidConstructor int32
+	MemidDestructor  int32
+	LpstrSchema      *uint16
+	CbSizeInstance   uint32
+	Typekind         int32
+	CFuncs           uint16
+	CVars            uint16
+	CImplTypes       uint16
+	CbSizeVft        uint16
+	CbAlignment      uint16
+	WTypeFlags       uint16
+	WMajorVerNum     uint16
+	WMinorVerNum     uint16
+	TdescAlias       TYPEDESC
+	IdldescType      IDLDESC
 }
