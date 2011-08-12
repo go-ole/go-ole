@@ -25,6 +25,23 @@ func CreateObject(progId string) (unknown *ole.IUnknown, err os.Error) {
 	return
 }
 
+func GetActiveObject(progId string) (unknown *ole.IUnknown, err os.Error) {
+	var clsid *ole.GUID
+	clsid, err = ole.CLSIDFromProgID(progId)
+	if err != nil {
+		clsid, err = ole.CLSIDFromString(progId)
+		if err != nil {
+			return
+		}
+	}
+
+	unknown, err = ole.GetActiveObject(clsid, ole.IID_IUnknown)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err os.Error) {
 	var dispid []int32
 	dispid, err = disp.GetIDsOfName([]string{name})

@@ -30,6 +30,7 @@ var (
 	procSysStringLen, _       = syscall.GetProcAddress(modoleaut32, "SysStringLen")
 	procCreateDispTypeInfo, _ = syscall.GetProcAddress(modoleaut32, "CreateDispTypeInfo")
 	procCreateStdDispatch, _  = syscall.GetProcAddress(modoleaut32, "CreateStdDispatch")
+	procGetActiveObject, _    = syscall.GetProcAddress(modoleaut32, "GetActiveObject")
 
 	procGetMessageW, _      = syscall.GetProcAddress(moduser32, "GetMessageW")
 	procDispatchMessageW, _ = syscall.GetProcAddress(moduser32, "DispatchMessageW")
@@ -420,6 +421,22 @@ func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&unk)),
 		0)
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
+	if iid == nil {
+		iid = IID_IUnknown
+	}
+	hr, _, _ := syscall.Syscall(
+		uintptr(procGetActiveObject),
+		3,
+		uintptr(unsafe.Pointer(clsid)),
+		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(&unk)))
 	if hr != 0 {
 		err = NewError(hr)
 	}
