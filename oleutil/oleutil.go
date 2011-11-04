@@ -2,13 +2,12 @@ package oleutil
 
 import (
 	"github.com/mattn/go-ole"
-	"unsafe"
 	"reflect"
 	"syscall"
-	"os"
+	"unsafe"
 )
 
-func CreateObject(progId string) (unknown *ole.IUnknown, err os.Error) {
+func CreateObject(progId string) (unknown *ole.IUnknown, err error) {
 	var clsid *ole.GUID
 	clsid, err = ole.CLSIDFromProgID(progId)
 	if err != nil {
@@ -25,7 +24,7 @@ func CreateObject(progId string) (unknown *ole.IUnknown, err os.Error) {
 	return
 }
 
-func GetActiveObject(progId string) (unknown *ole.IUnknown, err os.Error) {
+func GetActiveObject(progId string) (unknown *ole.IUnknown, err error) {
 	var clsid *ole.GUID
 	clsid, err = ole.CLSIDFromProgID(progId)
 	if err != nil {
@@ -42,7 +41,7 @@ func GetActiveObject(progId string) (unknown *ole.IUnknown, err os.Error) {
 	return
 }
 
-func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err os.Error) {
+func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err error) {
 	var dispid []int32
 	dispid, err = disp.GetIDsOfName([]string{name})
 	if err != nil {
@@ -53,11 +52,11 @@ func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result
 }
 
 func MustCallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := CallMethod(disp, name, params ...)
+	r, _ := CallMethod(disp, name, params...)
 	return r
 }
 
-func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err os.Error) {
+func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err error) {
 	var dispid []int32
 	dispid, err = disp.GetIDsOfName([]string{name})
 	if err != nil {
@@ -68,11 +67,11 @@ func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 }
 
 func MustGetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := GetProperty(disp, name, params ...)
+	r, _ := GetProperty(disp, name, params...)
 	return r
 }
 
-func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err os.Error) {
+func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err error) {
 	var dispid []int32
 	dispid, err = disp.GetIDsOfName([]string{name})
 	if err != nil {
@@ -83,7 +82,7 @@ func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 }
 
 func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := GetProperty(disp, name, params ...)
+	r, _ := GetProperty(disp, name, params...)
 	return r
 }
 
@@ -177,7 +176,7 @@ func dispInvoke(this *ole.IDispatch, dispid int32, riid *ole.GUID, lcid int, fla
 	return ole.E_NOTIMPL
 }
 
-func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, idisp interface{}) (cookie uint32, err os.Error) {
+func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, idisp interface{}) (cookie uint32, err error) {
 	unknown, err := disp.QueryInterface(ole.IID_IConnectionPointContainer)
 	if err != nil {
 		return

@@ -4,7 +4,6 @@ import (
 	"syscall"
 	"unsafe"
 	"utf16"
-	"os"
 )
 
 var (
@@ -93,7 +92,7 @@ func (v OleError) Code() uintptr {
 	return uintptr(v)
 }
 
-func (v OleError) String() string {
+func (v OleError) Error() string {
 	return syscall.Errstr(int(v))
 }
 
@@ -122,12 +121,12 @@ type pIUnknownVtbl struct {
 }
 
 type UnknownLike interface {
-	QueryInterface(iid *GUID) (disp *IDispatch, err os.Error)
+	QueryInterface(iid *GUID) (disp *IDispatch, err error)
 	AddRef() int32
 	Release() int32
 }
 
-func (v *IUnknown) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+func (v *IUnknown) QueryInterface(iid *GUID) (disp *IDispatch, err error) {
 	disp, err = queryInterface(v, iid)
 	return
 }
@@ -159,7 +158,7 @@ type pIDispatchVtbl struct {
 	pInvoke           uintptr
 }
 
-func (v *IDispatch) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+func (v *IDispatch) QueryInterface(iid *GUID) (disp *IDispatch, err error) {
 	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
 	return
 }
@@ -177,22 +176,22 @@ func (v *IDispatch) Release() int32 {
 	return release((*IUnknown)(unsafe.Pointer(v)))
 }
 
-func (v *IDispatch) GetIDsOfName(names []string) (dispid []int32, err os.Error) {
+func (v *IDispatch) GetIDsOfName(names []string) (dispid []int32, err error) {
 	dispid, err = getIDsOfName(v, names)
 	return
 }
 
-func (v *IDispatch) Invoke(dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err os.Error) {
+func (v *IDispatch) Invoke(dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
 	result, err = invoke(v, dispid, dispatch, params...)
 	return
 }
 
-func (v *IDispatch) GetTypeInfoCount() (c uint32, err os.Error) {
+func (v *IDispatch) GetTypeInfoCount() (c uint32, err error) {
 	c, err = getTypeInfoCount(v)
 	return
 }
 
-func (v *IDispatch) GetTypeInfo() (tinfo *ITypeInfo, err os.Error) {
+func (v *IDispatch) GetTypeInfo() (tinfo *ITypeInfo, err error) {
 	tinfo, err = getTypeInfo(v)
 	return
 }
@@ -226,7 +225,7 @@ type pITypeInfoVtbl struct {
 	pReleaseVarDesc       uintptr
 }
 
-func (v *ITypeInfo) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+func (v *ITypeInfo) QueryInterface(iid *GUID) (disp *IDispatch, err error) {
 	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
 	return
 }
@@ -239,7 +238,7 @@ func (v *ITypeInfo) Release() int32 {
 	return release((*IUnknown)(unsafe.Pointer(v)))
 }
 
-func (v *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err os.Error) {
+func (v *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(v.lpVtbl.pGetTypeAttr),
 		2,
@@ -264,7 +263,7 @@ type pIConnectionPointContainerVtbl struct {
 	pFindConnectionPoint  uintptr
 }
 
-func (v *IConnectionPointContainer) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+func (v *IConnectionPointContainer) QueryInterface(iid *GUID) (disp *IDispatch, err error) {
 	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
 	return
 }
@@ -277,12 +276,12 @@ func (v *IConnectionPointContainer) Release() int32 {
 	return release((*IUnknown)(unsafe.Pointer(v)))
 }
 
-func (v *IConnectionPointContainer) EnumConnectionPoints(points interface{}) (err os.Error) {
+func (v *IConnectionPointContainer) EnumConnectionPoints(points interface{}) (err error) {
 	err = NewError(E_NOTIMPL)
 	return
 }
 
-func (v *IConnectionPointContainer) FindConnectionPoint(iid *GUID, point **IConnectionPoint) (err os.Error) {
+func (v *IConnectionPointContainer) FindConnectionPoint(iid *GUID, point **IConnectionPoint) (err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(v.lpVtbl.pFindConnectionPoint),
 		3,
@@ -306,7 +305,7 @@ type pIProvideClassInfoVtbl struct {
 	pGetClassInfo   uintptr
 }
 
-func (v *IProvideClassInfo) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+func (v *IProvideClassInfo) QueryInterface(iid *GUID) (disp *IDispatch, err error) {
 	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
 	return
 }
@@ -319,7 +318,7 @@ func (v *IProvideClassInfo) Release() int32 {
 	return release((*IUnknown)(unsafe.Pointer(v)))
 }
 
-func (v *IProvideClassInfo) GetClassInfo() (cinfo *ITypeInfo, err os.Error) {
+func (v *IProvideClassInfo) GetClassInfo() (cinfo *ITypeInfo, err error) {
 	cinfo, err = getClassInfo(v)
 	return
 }
@@ -339,7 +338,7 @@ type pIConnectionPointVtbl struct {
 	pEnumConnections             uintptr
 }
 
-func (v *IConnectionPoint) QueryInterface(iid *GUID) (disp *IDispatch, err os.Error) {
+func (v *IConnectionPoint) QueryInterface(iid *GUID) (disp *IDispatch, err error) {
 	disp, err = queryInterface((*IUnknown)(unsafe.Pointer(v)), iid)
 	return
 }
@@ -356,7 +355,7 @@ func (v *IConnectionPoint) GetConnectionInterface(piid **GUID) int32 {
 	return release((*IUnknown)(unsafe.Pointer(v)))
 }
 
-func (v *IConnectionPoint) Advise(unknown *IUnknown) (cookie uint32, err os.Error) {
+func (v *IConnectionPoint) Advise(unknown *IUnknown) (cookie uint32, err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(v.lpVtbl.pAdvise),
 		3,
@@ -369,7 +368,7 @@ func (v *IConnectionPoint) Advise(unknown *IUnknown) (cookie uint32, err os.Erro
 	return
 }
 
-func (v *IConnectionPoint) Unadvise(cookie uint32) (err os.Error) {
+func (v *IConnectionPoint) Unadvise(cookie uint32) (err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(v.lpVtbl.pAdvise),
 		2,
@@ -382,7 +381,7 @@ func (v *IConnectionPoint) Unadvise(cookie uint32) (err os.Error) {
 	return
 }
 
-func (v *IConnectionPoint) EnumConnections(p *unsafe.Pointer) (err os.Error) {
+func (v *IConnectionPoint) EnumConnections(p *unsafe.Pointer) (err error) {
 	return NewError(E_NOTIMPL)
 }
 
@@ -438,7 +437,7 @@ func (v *VARIANT) ToString() string {
 	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
 
-func CoInitialize(p uintptr) (err os.Error) {
+func CoInitialize(p uintptr) (err error) {
 	hr, _, _ := syscall.Syscall(uintptr(procCoInitialize), 1, p, 0, 0)
 	if hr != 0 {
 		err = NewError(hr)
@@ -446,7 +445,7 @@ func CoInitialize(p uintptr) (err os.Error) {
 	return
 }
 
-func CoInitializeEx(p uintptr, coinit uint32) (err os.Error) {
+func CoInitializeEx(p uintptr, coinit uint32) (err error) {
 	hr, _, _ := syscall.Syscall(uintptr(procCoInitializeEx), 2, p, uintptr(coinit), 0)
 	if hr != 0 {
 		err = NewError(hr)
@@ -454,7 +453,7 @@ func CoInitializeEx(p uintptr, coinit uint32) (err os.Error) {
 	return
 }
 
-func CLSIDFromProgID(progId string) (clsid *GUID, err os.Error) {
+func CLSIDFromProgID(progId string) (clsid *GUID, err error) {
 	var guid GUID
 	hr, _, _ := syscall.Syscall(
 		uintptr(procCLSIDFromProgID),
@@ -469,7 +468,7 @@ func CLSIDFromProgID(progId string) (clsid *GUID, err os.Error) {
 	return
 }
 
-func CLSIDFromString(str string) (clsid *GUID, err os.Error) {
+func CLSIDFromString(str string) (clsid *GUID, err error) {
 	var guid GUID
 	hr, _, _ := syscall.Syscall(
 		uintptr(procCLSIDFromString),
@@ -484,7 +483,7 @@ func CLSIDFromString(str string) (clsid *GUID, err os.Error) {
 	return
 }
 
-func StringFromCLSID(clsid *GUID) (str string, err os.Error) {
+func StringFromCLSID(clsid *GUID) (str string, err error) {
 	var p *uint16
 	hr, _, _ := syscall.Syscall(
 		uintptr(procStringFromCLSID),
@@ -499,7 +498,7 @@ func StringFromCLSID(clsid *GUID) (str string, err os.Error) {
 	return
 }
 
-func IIDFromString(progId string) (clsid *GUID, err os.Error) {
+func IIDFromString(progId string) (clsid *GUID, err error) {
 	var guid GUID
 	hr, _, _ := syscall.Syscall(
 		uintptr(procIIDFromString),
@@ -514,7 +513,7 @@ func IIDFromString(progId string) (clsid *GUID, err os.Error) {
 	return
 }
 
-func StringFromIID(iid *GUID) (str string, err os.Error) {
+func StringFromIID(iid *GUID) (str string, err error) {
 	var p *uint16
 	hr, _, _ := syscall.Syscall(
 		uintptr(procStringFromIID),
@@ -529,7 +528,7 @@ func StringFromIID(iid *GUID) (str string, err os.Error) {
 	return
 }
 
-func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
+func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
 	if iid == nil {
 		iid = IID_IUnknown
 	}
@@ -548,7 +547,7 @@ func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
 	return
 }
 
-func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
+func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
 	if iid == nil {
 		iid = IID_IUnknown
 	}
@@ -564,7 +563,7 @@ func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err os.Error) {
 	return
 }
 
-func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err os.Error) {
+func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err error) {
 	hr, _, _ := syscall.Syscall(
 		unk.lpVtbl.pQueryInterface,
 		3,
@@ -597,7 +596,7 @@ func release(unk *IUnknown) int32 {
 	return int32(ret)
 }
 
-func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err os.Error) {
+func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {
 	wnames := make([]*uint16, len(names))
 	for i := 0; i < len(names); i++ {
 		wnames[i] = syscall.StringToUTF16Ptr(names[i])
@@ -618,7 +617,7 @@ func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err os.Error
 	return
 }
 
-func getTypeInfoCount(disp *IDispatch) (c uint32, err os.Error) {
+func getTypeInfoCount(disp *IDispatch) (c uint32, err error) {
 	hr, _, _ := syscall.Syscall(
 		disp.lpVtbl.pGetTypeInfoCount,
 		2,
@@ -631,7 +630,7 @@ func getTypeInfoCount(disp *IDispatch) (c uint32, err os.Error) {
 	return
 }
 
-func getTypeInfo(disp *IDispatch) (tinfo *ITypeInfo, err os.Error) {
+func getTypeInfo(disp *IDispatch) (tinfo *ITypeInfo, err error) {
 	hr, _, _ := syscall.Syscall(
 		disp.lpVtbl.pGetTypeInfo,
 		3,
@@ -644,7 +643,7 @@ func getTypeInfo(disp *IDispatch) (tinfo *ITypeInfo, err os.Error) {
 	return
 }
 
-func getClassInfo(disp *IProvideClassInfo) (tinfo *ITypeInfo, err os.Error) {
+func getClassInfo(disp *IProvideClassInfo) (tinfo *ITypeInfo, err error) {
 	hr, _, _ := syscall.Syscall(
 		disp.lpVtbl.pGetClassInfo,
 		2,
@@ -669,7 +668,7 @@ type EXCEPINFO struct {
 	scode             int32
 }
 
-func VariantInit(v *VARIANT) (err os.Error) {
+func VariantInit(v *VARIANT) (err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(procVariantInit),
 		1,
@@ -693,7 +692,7 @@ func SysAllocString(v string) (ss *int16) {
 	return
 }
 
-func SysFreeString(v *int16) (err os.Error) {
+func SysFreeString(v *int16) (err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(procSysFreeString),
 		1,
@@ -751,7 +750,7 @@ const (
 	CC_MAX = CC_MPWPASCAL
 )
 
-func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispatch, err os.Error) {
+func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispatch, err error) {
 	hr, _, _ := syscall.Syscall6(
 		uintptr(procCreateStdDispatch),
 		4,
@@ -767,7 +766,7 @@ func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispa
 	return
 }
 
-func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err os.Error) {
+func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(procCreateDispTypeInfo),
 		3,
@@ -854,7 +853,7 @@ const (
 	DISPID_COLLECT     = -8
 )
 
-func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err os.Error) {
+func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
 	var dispparams DISPPARAMS
 
 	if dispatch&DISPATCH_PROPERTYPUT != 0 {

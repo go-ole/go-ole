@@ -124,7 +124,7 @@ func main() {
 	oleutil.ConnectObject(winsock, iid, (*ole.IUnknown)(unsafe.Pointer(dest)))
 	_, err := oleutil.CallMethod(winsock, "Connect", "127.0.0.1", 80)
 	if err != nil {
-		log.Fatal(err.String())
+		log.Fatal(err)
 	}
 
 	var m ole.Msg
