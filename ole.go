@@ -15,6 +15,7 @@ var (
 
 	procCoInitialize, _       = syscall.GetProcAddress(modole32, "CoInitialize")
 	procCoInitializeEx, _     = syscall.GetProcAddress(modole32, "CoInitializeEx")
+	procCoUninitialize, _     = syscall.GetProcAddress(modole32, "CoUninitialize")
 	procCoCreateInstance, _   = syscall.GetProcAddress(modole32, "CoCreateInstance")
 	procCLSIDFromProgID, _    = syscall.GetProcAddress(modole32, "CLSIDFromProgID")
 	procCLSIDFromString, _    = syscall.GetProcAddress(modole32, "CLSIDFromString")
@@ -451,6 +452,10 @@ func CoInitializeEx(p uintptr, coinit uint32) (err error) {
 		err = NewError(hr)
 	}
 	return
+}
+
+func CoUninitialize() {
+	syscall.Syscall(uintptr(procCoUninitialize), 0, 0, 0, 0)
 }
 
 func CLSIDFromProgID(progId string) (clsid *GUID, err error) {
