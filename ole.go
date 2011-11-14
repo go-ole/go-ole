@@ -2,8 +2,8 @@ package ole
 
 import (
 	"syscall"
+	"unicode/utf16"
 	"unsafe"
-	"utf16"
 )
 
 var (
