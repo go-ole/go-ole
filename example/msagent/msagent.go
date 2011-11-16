@@ -1,8 +1,10 @@
 package main
 
-import "github.com/mattn/go-ole"
+import (
+	"github.com/mattn/go-ole"
+	"time"
+)
 import "github.com/mattn/go-ole/oleutil"
-import "syscall"
 
 func main() {
 	ole.CoInitialize(0)
@@ -15,5 +17,5 @@ func main() {
 	oleutil.CallMethod(character, "Show")
 	oleutil.CallMethod(character, "Speak", "こんにちわ世界")
 
-	syscall.Sleep(4000000000)
+	time.Sleep(4000000000)
 }

@@ -1,6 +1,7 @@
 package ole
 
 import (
+	"fmt"
 	"syscall"
 	"unicode/utf16"
 	"unsafe"
@@ -85,6 +86,20 @@ const (
 
 type OleError uintptr
 
+func errstr(errno int) string {
+	// ask windows for the remaining errors
+	var flags uint32 = syscall.FORMAT_MESSAGE_FROM_SYSTEM | syscall.FORMAT_MESSAGE_ARGUMENT_ARRAY | syscall.FORMAT_MESSAGE_IGNORE_INSERTS
+	b := make([]uint16, 300)
+	n, err := syscall.FormatMessage(flags, 0, uint32(errno), 0, b, nil)
+	if err != nil {
+		return fmt.Sprintf("error %d (FormatMessage failed with: %v)", errno, err)
+	}
+	// trim terminating \r and \n
+	for ; n > 0 && (b[n-1] == '\n' || b[n-1] == '\r'); n-- {
+	}
+	return string(utf16.Decode(b[:n]))
+}
+
 func NewError(hr uintptr) OleError {
 	return OleError(hr)
 }
@@ -94,7 +109,7 @@ func (v OleError) Code() uintptr {
 }
 
 func (v OleError) Error() string {
-	return syscall.Errstr(int(v))
+	return errstr(int(v))
 }
 
 type DISPPARAMS struct {
@@ -1020,7 +1035,7 @@ func GetMessage(msg *Msg, hwnd uint32, MsgFilterMin uint32, MsgFilterMax uint32)
 		if e1 != 0 {
 			errno = int(e1)
 		} else {
-			errno = syscall.EINVAL
+			errno = int(syscall.EINVAL)
 		}
 	} else {
 		errno = 0

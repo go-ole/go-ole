@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/mattn/go-ole"
 	"github.com/mattn/go-ole/oleutil"
-	"syscall"
+	"time"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 		}
 	}
 
-	syscall.Sleep(1e9)
+	time.Sleep(1e9)
 
 	document := oleutil.MustGetProperty(ie, "document").ToIDispatch()
 	window := oleutil.MustGetProperty(document, "parentWindow").ToIDispatch()

@@ -1,8 +1,10 @@
 package main
 
-import "github.com/mattn/go-ole"
+import (
+	"github.com/mattn/go-ole"
+	"time"
+)
 import "github.com/mattn/go-ole/oleutil"
-import "syscall"
 
 func main() {
 	ole.CoInitialize(0)
@@ -15,7 +17,7 @@ func main() {
 	cell := oleutil.MustGetProperty(Worksheets, "Cells", 1, 1).ToIDispatch()
 	oleutil.PutProperty(cell, "Value", 12345)
 
-	syscall.Sleep(2000000000)
+	time.Sleep(2000000000)
 
 	oleutil.PutProperty(workbook, "Saved", true)
 	oleutil.CallMethod(excel, "Quit")

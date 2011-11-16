@@ -1,8 +1,10 @@
 package main
 
-import "github.com/mattn/go-ole"
+import (
+	"github.com/mattn/go-ole"
+	"time"
+)
 import "github.com/mattn/go-ole/oleutil"
-import "syscall"
 
 func main() {
 	ole.CoInitialize(0)
@@ -13,7 +15,7 @@ func main() {
 	state := -1
 	for state != 4 {
 		state = int(oleutil.MustGetProperty(xmlhttp, "readyState").Val)
-		syscall.Sleep(10000000)
+		time.Sleep(10000000)
 	}
 	responseXml := oleutil.MustGetProperty(xmlhttp, "responseXml").ToIDispatch()
 	items := oleutil.MustCallMethod(responseXml, "selectNodes", "rdf:RDF/item").ToIDispatch()
