@@ -7,6 +7,58 @@ import (
 	"unsafe"
 )
 
+var (
+	procSafeArrayAccessData, _ = modoleaut32.FindProc("SafeArrayAccessData")
+	procSafeArrayAllocData, _ = modoleaut32.FindProc("SafeArrayAllocData")
+	procSafeArrayAllocDescriptor, _ = modoleaut32.FindProc("SafeArrayAllocDescriptor")
+	procSafeArrayAllocDescriptorEx, _ = modoleaut32.FindProc("SafeArrayAllocDescriptorEx")
+	procSafeArrayCopy, _ = modoleaut32.FindProc("SafeArrayCopy")
+	procSafeArrayCopyData, _ = modoleaut32.FindProc("SafeArrayCopyData")
+	procSafeArrayCreate, _ = modoleaut32.FindProc("SafeArrayCreate")
+	procSafeArrayCreateEx, _ = modoleaut32.FindProc("SafeArrayCreateEx")
+	procSafeArrayCreateVector, _ = modoleaut32.FindProc("SafeArrayCreateVector")
+	procSafeArrayCreateVectorEx, _ = modoleaut32.FindProc("SafeArrayCreateVectorEx")
+	procSafeArrayDestroy, _ = modoleaut32.FindProc("SafeArrayDestroy")
+	procSafeArrayDestroyData, _ = modoleaut32.FindProc("SafeArrayDestroyData")
+	procSafeArrayDestroyDescriptor, _ = modoleaut32.FindProc("SafeArrayDestroyDescriptor")
+	procSafeArrayGetDim, _ = modoleaut32.FindProc("SafeArrayGetDim")
+	procSafeArrayGetElement, _ = modoleaut32.FindProc("SafeArrayGetElement")
+	procSafeArrayGetElemsize, _ = modoleaut32.FindProc("SafeArrayGetElemsize")
+	procSafeArrayGetIID, _ = modoleaut32.FindProc("SafeArrayGetIID")
+	procSafeArrayGetLBound, _ = modoleaut32.FindProc("SafeArrayGetLBound")
+	procSafeArrayGetRecordInfo, _ = modoleaut32.FindProc("SafeArrayGetRecordInfo")
+	procSafeArrayGetUBound, _ = modoleaut32.FindProc("SafeArrayGetUBound")
+	procSafeArrayGetVartype, _ = modoleaut32.FindProc("SafeArrayGetVartype")
+	procSafeArrayLock, _ = modoleaut32.FindProc("SafeArrayLock")
+	procSafeArrayPtrOfIndex, _ = modoleaut32.FindProc("SafeArrayPtrOfIndex")
+	procSafeArrayPutElement, _ = modoleaut32.FindProc("SafeArrayPutElement")
+	procSafeArrayRedim, _ = modoleaut32.FindProc("SafeArrayRedim")
+	procSafeArraySetIID, _ = modoleaut32.FindProc("SafeArraySetIID")
+	procSafeArraySetRecordInfo, _ = modoleaut32.FindProc("SafeArraySetRecordInfo")
+	procSafeArrayUnaccessData, _ = modoleaut32.FindProc("SafeArrayUnaccessData")
+	procSafeArrayUnlock, _ = modoleaut32.FindProc("SafeArrayUnlock")
+)
+
+// Returns Raw Array
+// Todo: Test
+func safeArrayAccessData(sa *SAFEARRAY) (elem uintptr, err error) {
+	hr, _, _ := procSafeArrayAccessData.Call(
+		uintptr(unsafe.Pointer(sa)),
+		uintptr(unsafe.Pointer(&elem)) )
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func safeArrayAllocData(sa *SAFEARRAY) (err error) {
+	hr, _, _ := procSafeArrayAllocData.Call(uintptr(unsafe.Pointer(sa)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
 type SAFEARRAYBOUND struct {
 	CElements uint32
 	LLbound   int32
