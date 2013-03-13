@@ -7,43 +7,6 @@ import (
 	"unsafe"
 )
 
-var (
-	modkernel32, _ = syscall.LoadLibrary("kernel32.dll")
-	modole32, _    = syscall.LoadLibrary("ole32.dll")
-	modoleaut32, _ = syscall.LoadLibrary("oleaut32.dll")
-	modmsvcrt, _   = syscall.LoadLibrary("msvcrt.dll")
-	moduser32, _   = syscall.LoadLibrary("user32.dll")
-
-	procCoInitialize, _       = syscall.GetProcAddress(modole32, "CoInitialize")
-	procCoInitializeEx, _     = syscall.GetProcAddress(modole32, "CoInitializeEx")
-	procCoUninitialize, _     = syscall.GetProcAddress(modole32, "CoUninitialize")
-	procCoCreateInstance, _   = syscall.GetProcAddress(modole32, "CoCreateInstance")
-	procCLSIDFromProgID, _    = syscall.GetProcAddress(modole32, "CLSIDFromProgID")
-	procCLSIDFromString, _    = syscall.GetProcAddress(modole32, "CLSIDFromString")
-	procStringFromCLSID, _    = syscall.GetProcAddress(modole32, "StringFromCLSID")
-	procStringFromIID, _      = syscall.GetProcAddress(modole32, "StringFromIID")
-	procIIDFromString, _      = syscall.GetProcAddress(modole32, "IIDFromString")
-	procGetUserDefaultLCID, _ = syscall.GetProcAddress(modkernel32, "GetUserDefaultLCID")
-	procCopyMemory, _         = syscall.GetProcAddress(modkernel32, "RtlMoveMemory")
-	procVariantInit, _        = syscall.GetProcAddress(modoleaut32, "VariantInit")
-	procSysAllocString, _     = syscall.GetProcAddress(modoleaut32, "SysAllocString")
-	procSysFreeString, _      = syscall.GetProcAddress(modoleaut32, "SysFreeString")
-	procSysStringLen, _       = syscall.GetProcAddress(modoleaut32, "SysStringLen")
-	procCreateDispTypeInfo, _ = syscall.GetProcAddress(modoleaut32, "CreateDispTypeInfo")
-	procCreateStdDispatch, _  = syscall.GetProcAddress(modoleaut32, "CreateStdDispatch")
-	procGetActiveObject, _    = syscall.GetProcAddress(modoleaut32, "GetActiveObject")
-
-	procGetMessageW, _      = syscall.GetProcAddress(moduser32, "GetMessageW")
-	procDispatchMessageW, _ = syscall.GetProcAddress(moduser32, "DispatchMessageW")
-
-	IID_NULL                      = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
-	IID_IUnknown                  = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
-	IID_IDispatch                 = &GUID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
-	IID_IConnectionPointContainer = &GUID{0xB196B284, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
-	IID_IConnectionPoint          = &GUID{0xB196B286, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
-	IID_IProvideClassInfo         = &GUID{0xb196b283, 0xbab4, 0x101a, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
-)
-
 type OleError uintptr
 
 func errstr(errno int) string {
@@ -77,13 +40,6 @@ type DISPPARAMS struct {
 	rgdispidNamedArgs uintptr
 	cArgs             uint32
 	cNamedArgs        uint32
-}
-
-type GUID struct {
-	Data1 uint32
-	Data2 uint16
-	Data3 uint16
-	Data4 [8]byte
 }
 
 type IUnknown struct {
@@ -413,136 +369,6 @@ func (v *VARIANT) ToString() string {
 	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
 
-func CoInitialize(p uintptr) (err error) {
-	hr, _, _ := syscall.Syscall(uintptr(procCoInitialize), 1, p, 0, 0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func CoInitializeEx(p uintptr, coinit uint32) (err error) {
-	hr, _, _ := syscall.Syscall(uintptr(procCoInitializeEx), 2, p, uintptr(coinit), 0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func CoUninitialize() {
-	syscall.Syscall(uintptr(procCoUninitialize), 0, 0, 0, 0)
-}
-
-func CLSIDFromProgID(progId string) (clsid *GUID, err error) {
-	var guid GUID
-	hr, _, _ := syscall.Syscall(
-		uintptr(procCLSIDFromProgID),
-		2,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(progId))),
-		uintptr(unsafe.Pointer(&guid)),
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	clsid = &guid
-	return
-}
-
-func CLSIDFromString(str string) (clsid *GUID, err error) {
-	var guid GUID
-	hr, _, _ := syscall.Syscall(
-		uintptr(procCLSIDFromString),
-		2,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(str))),
-		uintptr(unsafe.Pointer(&guid)),
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	clsid = &guid
-	return
-}
-
-func StringFromCLSID(clsid *GUID) (str string, err error) {
-	var p *uint16
-	hr, _, _ := syscall.Syscall(
-		uintptr(procStringFromCLSID),
-		2,
-		uintptr(unsafe.Pointer(clsid)),
-		uintptr(unsafe.Pointer(&p)),
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	str = UTF16PtrToString(p)
-	return
-}
-
-func IIDFromString(progId string) (clsid *GUID, err error) {
-	var guid GUID
-	hr, _, _ := syscall.Syscall(
-		uintptr(procIIDFromString),
-		2,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(progId))),
-		uintptr(unsafe.Pointer(&guid)),
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	clsid = &guid
-	return
-}
-
-func StringFromIID(iid *GUID) (str string, err error) {
-	var p *uint16
-	hr, _, _ := syscall.Syscall(
-		uintptr(procStringFromIID),
-		2,
-		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(&p)),
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	str = UTF16PtrToString(p)
-	return
-}
-
-func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
-	if iid == nil {
-		iid = IID_IUnknown
-	}
-	hr, _, _ := syscall.Syscall6(
-		uintptr(procCoCreateInstance),
-		5,
-		uintptr(unsafe.Pointer(clsid)),
-		0,
-		CLSCTX_SERVER,
-		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(&unk)),
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
-	if iid == nil {
-		iid = IID_IUnknown
-	}
-	hr, _, _ := syscall.Syscall(
-		uintptr(procGetActiveObject),
-		3,
-		uintptr(unsafe.Pointer(clsid)),
-		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(&unk)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
 func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err error) {
 	hr, _, _ := syscall.Syscall(
 		unk.lpVtbl.pQueryInterface,
@@ -648,53 +474,6 @@ type EXCEPINFO struct {
 	scode             int32
 }
 
-func VariantInit(v *VARIANT) (err error) {
-	hr, _, _ := syscall.Syscall(
-		uintptr(procVariantInit),
-		1,
-		uintptr(unsafe.Pointer(v)),
-		0,
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func SysAllocString(v string) (ss *int16) {
-	pss, _, _ := syscall.Syscall(
-		uintptr(procSysAllocString),
-		1,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(v))),
-		0,
-		0)
-	ss = (*int16)(unsafe.Pointer(pss))
-	return
-}
-
-func SysFreeString(v *int16) (err error) {
-	hr, _, _ := syscall.Syscall(
-		uintptr(procSysFreeString),
-		1,
-		uintptr(unsafe.Pointer(v)),
-		0,
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func SysStringLen(v *int16) uint32 {
-	l, _, _ := syscall.Syscall(
-		uintptr(procSysStringLen),
-		1,
-		uintptr(unsafe.Pointer(v)),
-		0,
-		0)
-	return uint32(l)
-}
-
 type PARAMDATA struct {
 	Name *int16
 	Vt   uint16
@@ -714,44 +493,6 @@ type METHODDATA struct {
 type INTERFACEDATA struct {
 	MethodData *METHODDATA
 	CMembers   uint32
-}
-
-func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispatch, err error) {
-	hr, _, _ := syscall.Syscall6(
-		uintptr(procCreateStdDispatch),
-		4,
-		uintptr(unsafe.Pointer(unk)),
-		v,
-		uintptr(unsafe.Pointer(ptinfo)),
-		uintptr(unsafe.Pointer(&disp)),
-		0,
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
-	hr, _, _ := syscall.Syscall(
-		uintptr(procCreateDispTypeInfo),
-		3,
-		uintptr(unsafe.Pointer(idata)),
-		uintptr(GetUserDefaultLCID()),
-		uintptr(unsafe.Pointer(&pptinfo)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func copyMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
-	syscall.Syscall(
-		uintptr(procCopyMemory),
-		3,
-		uintptr(dest),
-		uintptr(src),
-		uintptr(length))
 }
 
 func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
@@ -870,17 +611,6 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 	return
 }
 
-func GetUserDefaultLCID() (lcid uint32) {
-	ret, _, _ := syscall.Syscall(
-		uintptr(procGetUserDefaultLCID),
-		0,
-		0,
-		0,
-		0)
-	lcid = uint32(ret)
-	return
-}
-
 func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
 	return guid1.Data1 == guid2.Data1 &&
 		guid1.Data2 == guid2.Data2 &&
@@ -907,27 +637,6 @@ type Msg struct {
 	Lparam  int32
 	Time    uint32
 	Pt      Point
-}
-
-func GetMessage(msg *Msg, hwnd uint32, MsgFilterMin uint32, MsgFilterMax uint32) (ret int32, errno int) {
-	r0, _, e1 := syscall.Syscall6(uintptr(procGetMessageW), 4, uintptr(unsafe.Pointer(msg)), uintptr(hwnd), uintptr(MsgFilterMin), uintptr(MsgFilterMax), 0, 0)
-	ret = int32(r0)
-	if ret == -1 {
-		if e1 != 0 {
-			errno = int(e1)
-		} else {
-			errno = int(syscall.EINVAL)
-		}
-	} else {
-		errno = 0
-	}
-	return
-}
-
-func DispatchMessage(msg *Msg) (ret int32) {
-	r0, _, _ := syscall.Syscall(uintptr(procDispatchMessageW), 1, uintptr(unsafe.Pointer(msg)), 0, 0)
-	ret = int32(r0)
-	return
 }
 
 type TYPEDESC struct {
