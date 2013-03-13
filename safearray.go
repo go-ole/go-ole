@@ -1,10 +1,6 @@
 package ole
 
 import (
-	"fmt"
-	"syscall"
-	"unicode/utf16"
-	"unsafe"
 )
 
 type SAFEARRAYBOUND struct {
