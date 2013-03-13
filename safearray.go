@@ -1,7 +1,6 @@
 package ole
 
-import (
-)
+import ()
 
 type SAFEARRAYBOUND struct {
 	CElements uint32
