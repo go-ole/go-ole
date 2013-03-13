@@ -325,38 +325,6 @@ type VARIANT struct {
 	Val        int64  // 16
 }
 
-type SAFEARRAYBOUND struct {
-	CElements uint32
-	LLbound   int32
-}
-
-type SAFEARRAY struct {
-	CDims      uint16
-	FFeatures  uint16
-	CbElements uint32
-	CLocks     uint32
-	PvData     uint32
-	RgsaBound  SAFEARRAYBOUND
-}
-
-func BytePtrToString(p *byte) string {
-	a := (*[10000]uint8)(unsafe.Pointer(p))
-	i := 0
-	for a[i] != 0 {
-		i++
-	}
-	return string(a[:i])
-}
-
-func UTF16PtrToString(p *uint16) string {
-	a := (*[10000]uint16)(unsafe.Pointer(p))
-	i := 0
-	for a[i] != 0 {
-		i++
-	}
-	return string(utf16.Decode(a[:i]))
-}
-
 func (v *VARIANT) ToIUnknown() *IUnknown {
 	return (*IUnknown)(unsafe.Pointer(uintptr(v.Val)))
 }
@@ -609,20 +577,6 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		*/
 	}
 	return
-}
-
-func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
-	return guid1.Data1 == guid2.Data1 &&
-		guid1.Data2 == guid2.Data2 &&
-		guid1.Data3 == guid2.Data3 &&
-		guid1.Data4[0] == guid2.Data4[0] &&
-		guid1.Data4[1] == guid2.Data4[1] &&
-		guid1.Data4[2] == guid2.Data4[2] &&
-		guid1.Data4[3] == guid2.Data4[3] &&
-		guid1.Data4[4] == guid2.Data4[4] &&
-		guid1.Data4[5] == guid2.Data4[5] &&
-		guid1.Data4[6] == guid2.Data4[6] &&
-		guid1.Data4[7] == guid2.Data4[7]
 }
 
 type Point struct {
