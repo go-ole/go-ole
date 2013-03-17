@@ -24,7 +24,7 @@ var (
 	procSafeArrayGetElement, _        = modoleaut32.FindProc("SafeArrayGetElement")
 	procSafeArrayGetElemsize, _       = modoleaut32.FindProc("SafeArrayGetElemsize")
 	procSafeArrayGetIID, _            = modoleaut32.FindProc("SafeArrayGetIID")
-	procSafeArrayGetLBound, _         = modoleaut32.FindProc("SafeArrayGetLBound")
+	procSafeArrayGetLBound, _         = modoleaut32.FindProc("SafeArrayGetLBound") // TODO
 	procSafeArrayGetRecordInfo, _     = modoleaut32.FindProc("SafeArrayGetRecordInfo")
 	procSafeArrayGetUBound, _         = modoleaut32.FindProc("SafeArrayGetUBound")
 	procSafeArrayGetVartype, _        = modoleaut32.FindProc("SafeArrayGetVartype")
@@ -40,7 +40,7 @@ var (
 
 // Returns Raw Array
 // Todo: Test
-func safeArrayAccessData(safearray *SAFEARRAY) (elem uintptr, err error) {
+func safeArrayAccessData(safearray *SafeArray) (elem uintptr, err error) {
 	err = convertHresultToError(
 		procSafeArrayAccessData.Call(
 			uintptr(unsafe.Pointer(safearray)),
@@ -48,18 +48,18 @@ func safeArrayAccessData(safearray *SAFEARRAY) (elem uintptr, err error) {
 	return
 }
 
-func safeArrayAllocData(safearray *SAFEARRAY) (err error) {
+func safeArrayAllocData(safearray *SafeArray) (err error) {
 	err = convertHresultToError(procSafeArrayAllocData.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
-func safeArrayAllocDescriptor(dimensions uint32) (safearray *SAFEARRAY, err error) {
+func safeArrayAllocDescriptor(dimensions uint32) (safearray *SafeArray, err error) {
 	err = convertHresultToError(
 		procSafeArrayAllocDescriptor.Call(uintptr(dimensions), uintptr(unsafe.Pointer(&safearray))))
 	return
 }
 
-func safeArrayAllocDescriptorEx(variantType uint16, dimensions uint32) (safearray *SAFEARRAY, err error) {
+func safeArrayAllocDescriptorEx(variantType uint16, dimensions uint32) (safearray *SafeArray, err error) {
 	err = convertHresultToError(
 		procSafeArrayAllocDescriptorEx.Call(
 			uintptr(variantType),
@@ -68,7 +68,7 @@ func safeArrayAllocDescriptorEx(variantType uint16, dimensions uint32) (safearra
 	return
 }
 
-func safeArrayCopy(original *SAFEARRAY) (safearray *SAFEARRAY, err error) {
+func safeArrayCopy(original *SafeArray) (safearray *SafeArray, err error) {
 	err = convertHresultToError(
 		procSafeArrayCopy.Call(
 			uintptr(unsafe.Pointer(original)),
@@ -76,7 +76,7 @@ func safeArrayCopy(original *SAFEARRAY) (safearray *SAFEARRAY, err error) {
 	return
 }
 
-func safeArrayCopyData(original *SAFEARRAY, duplicate *SAFEARRAY) (err error) {
+func safeArrayCopyData(original *SafeArray, duplicate *SafeArray) (err error) {
 	err = convertHresultToError(
 		procSafeArrayCopyData.Call(
 			uintptr(unsafe.Pointer(original)),
@@ -84,73 +84,73 @@ func safeArrayCopyData(original *SAFEARRAY, duplicate *SAFEARRAY) (err error) {
 	return
 }
 
-func safeArrayCreate(variantType uint16, dimensions uint32, bounds *SAFEARRAYBOUND) (safearray *SAFEARRAY, err error) {
+func safeArrayCreate(variantType uint16, dimensions uint32, bounds *SafeArrayBound) (safearray *SafeArray, err error) {
 	sa, _, err = procSafeArrayCreate.Call(
 			uintptr(variantType),
 			uintptr(dimensions),
 			uintptr(unsafe.Pointer(bounds))))
-	safearray = (*SAFEARRAY)(unsafe.Pointer(sa))
+	safearray = (*SafeArray)(unsafe.Pointer(sa))
 	return
 }
 
-func safeArrayCreateEx(variantType uint16, dimensions uint32, bounds *SAFEARRAYBOUND, extra uintptr) (safearray *SAFEARRAY, err error) {
+func safeArrayCreateEx(variantType uint16, dimensions uint32, bounds *SafeArrayBound, extra uintptr) (safearray *SafeArray, err error) {
 	sa, _, err = procSafeArrayCreateEx.Call(
 			uintptr(variantType),
 			uintptr(dimensions),
 			uintptr(unsafe.Pointer(bounds)),
 			extra))
-	safearray = (*SAFEARRAY)(unsafe.Pointer(sa))
+	safearray = (*SafeArray)(unsafe.Pointer(sa))
 	return
 }
 
-func safeArrayCreateVector(variantType uint16, lowerBound int32, length uint32) (safearray *SAFEARRAY, err error) {
+func safeArrayCreateVector(variantType uint16, lowerBound int32, length uint32) (safearray *SafeArray, err error) {
 	sa, _, err = procSafeArrayCreateVector.Call(
 		uintptr(variantType),
 		uintptr(lowerBound),
 		uintptr(length)))
-	safearray = (*SAFEARRAY)(unsafe.Pointer(sa))
+	safearray = (*SafeArray)(unsafe.Pointer(sa))
 	return
 }
 
-func safeArrayCreateVectorEx(variantType uint16, lowerBound int32, length uint32, extra uintptr) (safearray *SAFEARRAY, err error) {
+func safeArrayCreateVectorEx(variantType uint16, lowerBound int32, length uint32, extra uintptr) (safearray *SafeArray, err error) {
 	sa, _, err = procSafeArrayCreateVectorEx.Call(
 		uintptr(variantType),
 		uintptr(lowerBound),
 		uintptr(length),
 		extra)
-	safearray = (*SAFEARRAY)(unsafe.Pointer(sa))
+	safearray = (*SafeArray)(unsafe.Pointer(sa))
 	return
 }
 
-func safeArrayDestroy(safearray *SAFEARRAY) (err error) {
+func safeArrayDestroy(safearray *SafeArray) (err error) {
 	err = convertHresultToError(procSafeArrayDestroy.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
-func safeArrayDestroyData(safearray *SAFEARRAY) (err error) {
+func safeArrayDestroyData(safearray *SafeArray) (err error) {
 	err = convertHresultToError(procSafeArrayDestroyData.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
-func safeArrayDestroyDescriptor(safearray *SAFEARRAY) (err error) {
+func safeArrayDestroyDescriptor(safearray *SafeArray) (err error) {
 	err = convertHresultToError(procSafeArrayDestroyDescriptor.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
-func safeArrayGetDim(safearray *SAFEARRAY) (dimensions *uint32, err error) {
+func safeArrayGetDim(safearray *SafeArray) (dimensions *uint32, err error) {
 	l, _, err = procSafeArrayGetDim.Call(uintptr(unsafe.Pointer(safearray)))
 	dimensions = (*uint32)(unsafe.Pointer(l))
 	return
 }
 
-func safeArrayGetElementSize(safearray *SAFEARRAY) (length *uint32, err error) {
+func safeArrayGetElementSize(safearray *SafeArray) (length *uint32, err error) {
 	l, _, err = procSafeArrayGetElemsize.Call(uintptr(unsafe.Pointer(safearray)))
 	length = (*uint32)(unsafe.Pointer(l))
 	return
 }
 
 // This is probably wrong.
-func safeArrayGetElement(safearray *SAFEARRAY, index int32) (variant *VARIANT, err error) {
+func safeArrayGetElement(safearray *SafeArray, index int32) (variant *VARIANT, err error) {
 	err = convertHresultToError(
 		procSafeArrayGetElement.Call(
 			uintptr(unsafe.Pointer(safearray)),
@@ -159,7 +159,7 @@ func safeArrayGetElement(safearray *SAFEARRAY, index int32) (variant *VARIANT, e
 	return
 }
 
-func safeArrayGetIID(safearray *SAFEARRAY) (guid *GUID, err error) {
+func safeArrayGetIID(safearray *SafeArray) (guid *GUID, err error) {
 	err = convertHresultToError(
 		procSafeArrayGetIID.Call(
 			uintptr(unsafe.Pointer(safearray)),
@@ -167,16 +167,16 @@ func safeArrayGetIID(safearray *SAFEARRAY) (guid *GUID, err error) {
 	return
 }
 
-type SAFEARRAYBOUND struct {
+type SafeArrayBound struct {
 	CElements uint32
 	LLbound   int32
 }
 
-type SAFEARRAY struct {
+type SafeArray struct {
 	CDims      uint16
 	FFeatures  uint16
 	CbElements uint32
 	CLocks     uint32
 	PvData     uint32
-	RgsaBound  SAFEARRAYBOUND
+	RgsaBound  SafeArrayBound
 }
