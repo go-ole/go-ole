@@ -333,6 +333,10 @@ func (v *VARIANT) ToIDispatch() *IDispatch {
 	return (*IDispatch)(unsafe.Pointer(uintptr(v.Val)))
 }
 
+func (v *VARIANT) ToSafeArray() *SafeArray {
+	return (*SafeArray)(unsafe.Pointer(uintptr(v.Val)))
+}
+
 func (v *VARIANT) ToString() string {
 	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
