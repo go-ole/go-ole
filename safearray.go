@@ -26,7 +26,7 @@ var (
 	procSafeArrayGetElemsize, _       = modoleaut32.FindProc("SafeArrayGetElemsize")
 	procSafeArrayGetIID, _            = modoleaut32.FindProc("SafeArrayGetIID")
 	procSafeArrayGetLBound, _         = modoleaut32.FindProc("SafeArrayGetLBound")
-	procSafeArrayGetRecordInfo, _     = modoleaut32.FindProc("SafeArrayGetRecordInfo") // TODO
+	//procSafeArrayGetRecordInfo, _     = modoleaut32.FindProc("SafeArrayGetRecordInfo") // TODO
 	procSafeArrayGetUBound, _         = modoleaut32.FindProc("SafeArrayGetUBound")
 	procSafeArrayGetVartype, _        = modoleaut32.FindProc("SafeArrayGetVartype")
 	procSafeArrayLock, _              = modoleaut32.FindProc("SafeArrayLock")
@@ -41,11 +41,11 @@ var (
 
 // Returns Raw Array
 // Todo: Test
-func safeArrayAccessData(safearray *SafeArray) (elem uintptr, err error) {
+func safeArrayAccessData(safearray *SafeArray) (element uintptr, err error) {
 	err = convertHresultToError(
 		procSafeArrayAccessData.Call(
 			uintptr(unsafe.Pointer(safearray)),
-			uintptr(unsafe.Pointer(&elem))))
+			uintptr(unsafe.Pointer(&element))))
 	return
 }
 
@@ -155,13 +155,24 @@ func safeArrayGetElementSize(safearray *SafeArray) (length *uint32, err error) {
 	return
 }
 
-// This is probably wrong.
-func safeArrayGetElement(safearray *SafeArray, index int32) (variant *VARIANT, err error) {
+func safeArrayGetElement(safearray *SafeArray, index int64) (element uintptr, err error) {
 	err = convertHresultToError(
 		procSafeArrayGetElement.Call(
 			uintptr(unsafe.Pointer(safearray)),
-			uintptr(index),
-			uintptr(unsafe.Pointer(&variant))))
+			uintptr(unsafe.Pointer(&index)),
+			uintptr(unsafe.Pointer(&element))))
+	return
+}
+
+func safeArrayGetElementString(safearray *SafeArray, index int64) (str string, err error) {
+	var element *int16
+	err = convertHresultToError(
+		procSafeArrayGetElement.Call(
+			uintptr(unsafe.Pointer(safearray)),
+			uintptr(unsafe.Pointer(&index)),
+			uintptr(unsafe.Pointer(&element))))
+	str = UTF16PtrToString(*(**uint16)(unsafe.Pointer(&element)))
+	SysFreeString(element)
 	return
 }
 
@@ -177,7 +188,7 @@ func safeArrayGetLBound(safearray *SafeArray, dimension uint32) (lowerBound int6
 	err = convertHresultToError(
 		procSafeArrayGetLBound.Call(
 			uintptr(unsafe.Pointer(safearray)),
-			uintptr(unsafe.Pointer(dimension)),
+			uintptr(dimension),
 			uintptr(unsafe.Pointer(&lowerBound))))
 	return
 }
@@ -186,7 +197,7 @@ func safeArrayGetUBound(safearray *SafeArray, dimension uint32) (upperBound int6
 	err = convertHresultToError(
 		procSafeArrayGetUBound.Call(
 			uintptr(unsafe.Pointer(safearray)),
-			uintptr(unsafe.Pointer(dimension)),
+			uintptr(dimension),
 			uintptr(unsafe.Pointer(&upperBound))))
 	return
 }
@@ -209,6 +220,7 @@ func safeArrayUnlock(safearray *SafeArray) (err error) {
 	return
 }
 
+/*
 // TODO: Must implement IRecordInfo interface for this to return.
 func safeArrayGetRecordInfo(safearray *SafeArray) (recordInfo interface{}, err error) {
 	err = convertHresultToError(
@@ -226,6 +238,7 @@ func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) (err e
 			uintptr(unsafe.Pointer(recordInfo))))
 	return
 }
+ */
 
 type SafeArrayBound struct {
 	Elements   uint32

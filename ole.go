@@ -333,7 +333,7 @@ func (v *VARIANT) ToIDispatch() *IDispatch {
 	return (*IDispatch)(unsafe.Pointer(uintptr(v.Val)))
 }
 
-func (v *VARIANT) ToSafeArray() *SafeArray {
+func (v *VARIANT) ToArray() *SafeArray {
 	return (*SafeArray)(unsafe.Pointer(uintptr(v.Val)))
 }
 
