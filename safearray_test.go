@@ -2,6 +2,8 @@ package ole
 
 import (
 	"testing"
+	"fmt"
+	_ "unsafe"
 )
 
 // This tests more than one function. It tests all of the functions needed in order to retrieve an
@@ -16,7 +18,7 @@ func TestGetSafeArrayString(t *testing.T) {
 		t.FailNow()
 	}
 
-	unknown, err := ole.CreateInstance(clsid, IID_IUnknown)
+	unknown, err := CreateInstance(clsid, IID_IUnknown)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -37,7 +39,7 @@ func TestGetSafeArrayString(t *testing.T) {
 	}
 
 	var result *VARIANT
-	_, err = d.dispatch.Invoke(dispid[0], DISPATCH_METHOD, "", "Test Application 1", 1)
+	_, err = dispatch.Invoke(dispid[0], DISPATCH_METHOD, "", "Test Application 1", 1)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -49,7 +51,7 @@ func TestGetSafeArrayString(t *testing.T) {
 		t.FailNow()
 	}
 
-	result, err = d.dispatch.Invoke(dispid[0], DISPATCH_METHOD, "", 2)
+	result, err = dispatch.Invoke(dispid[0], DISPATCH_METHOD, "", 2)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -63,24 +65,17 @@ func TestGetSafeArrayString(t *testing.T) {
 		t.FailNow()
 	}
 
-	result, err = d.dispatch.Invoke(dispid[0], DISPATCH_METHOD, ticket)
+	result, err = dispatch.Invoke(dispid[0], DISPATCH_PROPERTYGET, ticket)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
 	}
-	
+
 	// Where the real tests begin.
 	var qbXMLVersions *SafeArray
-	qbXMLVersions = result.ToSafeArray()
+	var qbXmlVersionStrings []string
+	qbXMLVersions = result.ToArray()
 
-	// Increment reference count
-	safeArrayDataPointer, err := safeArrayAccessData(qbXMLVersions)
-	if err != nil {
-		t.Log("Safe Array Access Data")
-		t.Log(err)
-		t.FailNow()
-	}
-	
 	// Get array bounds
 	var LowerBounds int64
 	var UpperBounds int64
@@ -92,7 +87,7 @@ func TestGetSafeArrayString(t *testing.T) {
 	}
 	t.Log("Lower Bounds:")
 	t.Log(LowerBounds)
-	
+
 	UpperBounds, err = safeArrayGetUBound(qbXMLVersions, 1)
 	if err != nil {
 		t.Log("Safe Array Get Lower Bound")
@@ -101,9 +96,15 @@ func TestGetSafeArrayString(t *testing.T) {
 	}
 	t.Log("Upper Bounds:")
 	t.Log(UpperBounds)
-	
-	// Decrement reference count
-	safeArrayUnaccessData(qbXMLVersions)
+
+	totalElements := UpperBounds - LowerBounds + 1;
+	fmt.Printf("Length of total Elements: %d\n", totalElements)
+	qbXmlVersionStrings = make([]string, totalElements)
+
+	for i := int64(0); i < totalElements; i++ {
+		qbXmlVersionStrings[int32(0)], _ = safeArrayGetElementString(qbXMLVersions, i)
+		fmt.Println(qbXmlVersionStrings[int32(0)])
+	}
 	
 	// Release Safe Array memory
 	safeArrayDestroy(qbXMLVersions)
@@ -114,7 +115,7 @@ func TestGetSafeArrayString(t *testing.T) {
 		t.FailNow()
 	}
 
-	_, err = d.dispatch.Invoke(dispid[0], DISPATCH_METHOD, ticket)
+	_, err = dispatch.Invoke(dispid[0], DISPATCH_METHOD, ticket)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -126,7 +127,7 @@ func TestGetSafeArrayString(t *testing.T) {
 		t.FailNow()
 	}
 
-	_, err = d.dispatch.Invoke(dispid[0], DISPATCH_METHOD)
+	_, err = dispatch.Invoke(dispid[0], DISPATCH_METHOD)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
