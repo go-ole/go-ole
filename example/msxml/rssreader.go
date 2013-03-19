@@ -18,7 +18,7 @@ func main() {
 		time.Sleep(10000000)
 	}
 	responseXml := oleutil.MustGetProperty(xmlhttp, "responseXml").ToIDispatch()
-	items := oleutil.MustCallMethod(responseXml, "selectNodes", "rdf:RDF/item").ToIDispatch()
+	items := oleutil.MustCallMethod(responseXml, "selectNodes", "//item").ToIDispatch()
 	length := int(oleutil.MustGetProperty(items, "length").Val)
 
 	for n := 0; n < length; n++ {
