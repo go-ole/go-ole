@@ -26,7 +26,11 @@ func (c *Connection) Create(progId string) (err error) {
 		}
 	}
 
-	c.Object, err = CreateInstance(clsid, IID_IUnknown)
+	unknown, err := CreateInstance(clsid, IID_IUnknown)
+	if err != nil {
+		return
+	}
+	c.Object = unknown
 
 	return
 }
