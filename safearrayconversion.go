@@ -8,11 +8,11 @@ type SafeArrayConversion struct {
 }
 
 func (sac *SafeArrayConversion) ToStringArray() (strings []string) {
-	totalElements := sac.TotalElements(0)
+	totalElements, _ := sac.TotalElements(0)
 	strings = make([]string, totalElements)
 
 	for i := int64(0); i < totalElements; i++ {
-		strings[int32(0)], _ = safeArrayGetElementString(sac.Array, i)
+		strings[int32(i)], _ = safeArrayGetElementString(sac.Array, i)
 	}
 
 	return
@@ -49,7 +49,7 @@ func (sac *SafeArrayConversion) TotalElements(index uint32) (totalElements int64
 		return
 	}
 
-	totalElements := UpperBounds - LowerBounds + 1
+	totalElements = UpperBounds - LowerBounds + 1
 	return
 }
 
