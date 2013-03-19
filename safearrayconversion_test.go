@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 	_ "unsafe"
+	"strings"
 )
 
 // This tests more than one function. It tests all of the functions needed in order to retrieve an
 // SafeArray populated with Strings.
-func TestGetSafeArrayString(t *testing.T) {
+func TestSafeArrayConversionString(t *testing.T) {
 	CoInitialize(0)
 	defer CoUninitialize()
 
@@ -72,42 +73,22 @@ func TestGetSafeArrayString(t *testing.T) {
 	}
 
 	// Where the real tests begin.
-	var qbXMLVersions *SafeArray
-	var qbXmlVersionStrings []string
-	qbXMLVersions = result.ToArray().Array
+	conversion := result.ToArray()
 
-	// Get array bounds
-	var LowerBounds int64
-	var UpperBounds int64
-	LowerBounds, err = safeArrayGetLBound(qbXMLVersions, 1)
-	if err != nil {
-		t.Log("Safe Array Get Lower Bound")
-		t.Log(err)
-		t.FailNow()
-	}
-	t.Log("Lower Bounds:")
-	t.Log(LowerBounds)
-
-	UpperBounds, err = safeArrayGetUBound(qbXMLVersions, 1)
-	if err != nil {
-		t.Log("Safe Array Get Lower Bound")
-		t.Log(err)
-		t.FailNow()
-	}
-	t.Log("Upper Bounds:")
-	t.Log(UpperBounds)
-
-	totalElements := UpperBounds - LowerBounds + 1
-	fmt.Printf("Length of total Elements: %d\n", totalElements)
-	qbXmlVersionStrings = make([]string, totalElements)
-
-	for i := int64(0); i < totalElements; i++ {
-		qbXmlVersionStrings[int32(0)], _ = safeArrayGetElementString(qbXMLVersions, i)
-		fmt.Println(qbXmlVersionStrings[int32(0)])
+	totalElements, _ := conversion.TotalElements(0)
+	if totalElements != 13 {
+		t.Log(fmt.Sprintf("%d total elements does not equal 13\n", totalElements))
+		t.Fail()
 	}
 
-	// Release Safe Array memory
-	safeArrayDestroy(qbXMLVersions)
+	versions := conversion.ToStringArray()
+	fmt.Printf("%s\n", strings.Join(versions, ", "))
+	if len(versions) != 13 {
+		t.Log(fmt.Sprintf("%s\n", strings.Join(versions, ", ")))
+		t.Fail()
+	}
+
+	conversion.Release()
 
 	dispid, err = dispatch.GetIDsOfName([]string{"EndSession"})
 	if err != nil {
