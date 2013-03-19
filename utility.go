@@ -36,3 +36,10 @@ func UTF16PtrToString(p *uint16) string {
 	}
 	return string(utf16.Decode(a[:i]))
 }
+
+func convertHresultToError(hr uintptr, r2 uintptr, ignore error) (err error) {
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
