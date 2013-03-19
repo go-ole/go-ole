@@ -1,6 +1,9 @@
 package ole
 
-import ()
+import (
+	"syscall"
+	"unsafe"
+)
 
 type IDispatch struct {
 	lpVtbl *pIDispatchVtbl

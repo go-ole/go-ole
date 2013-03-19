@@ -1,6 +1,9 @@
 package ole
 
-import ()
+import (
+	"syscall"
+	"unsafe"
+)
 
 type IProvideClassInfo struct {
 	lpVtbl *pIProvideClassInfoVtbl
