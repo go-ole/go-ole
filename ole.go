@@ -58,8 +58,9 @@ func (v *VARIANT) ToIDispatch() *IDispatch {
 	return (*IDispatch)(unsafe.Pointer(uintptr(v.Val)))
 }
 
-func (v *VARIANT) ToArray() *SafeArray {
-	return (*SafeArray)(unsafe.Pointer(uintptr(v.Val)))
+func (v *VARIANT) ToArray() *SafeArrayConversion {
+	var safeArray *SafeArray = (*SafeArray)(unsafe.Pointer(uintptr(v.Val)))
+	return &SafeArrayConversion{safeArray}
 }
 
 func (v *VARIANT) ToString() string {
