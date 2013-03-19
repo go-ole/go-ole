@@ -74,7 +74,7 @@ func TestGetSafeArrayString(t *testing.T) {
 	// Where the real tests begin.
 	var qbXMLVersions *SafeArray
 	var qbXmlVersionStrings []string
-	qbXMLVersions = result.ToArray()
+	qbXMLVersions = result.ToArray().Array
 
 	// Get array bounds
 	var LowerBounds int64
