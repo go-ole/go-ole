@@ -1,8 +1,8 @@
 package ole
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestComSetupAndShutDown(t *testing.T) {
@@ -12,7 +12,7 @@ func TestComSetupAndShutDown(t *testing.T) {
 			t.Fail()
 		}
 	}()
-	
+
 	coInitialize()
 	CoUninitialize()
 }
@@ -24,7 +24,7 @@ func TestComPublicSetupAndShutDown(t *testing.T) {
 			t.Fail()
 		}
 	}()
-	
+
 	CoInitialize(0)
 	CoUninitialize()
 }
@@ -36,7 +36,7 @@ func TestComPublicSetupAndShutDown_WithValue(t *testing.T) {
 			t.Fail()
 		}
 	}()
-	
+
 	CoInitialize(5)
 	CoUninitialize()
 }
@@ -48,7 +48,7 @@ func TestComExSetupAndShutDown(t *testing.T) {
 			t.Fail()
 		}
 	}()
-	
+
 	coInitializeEx(COINIT_MULTITHREADED)
 	CoUninitialize()
 }
@@ -60,7 +60,7 @@ func TestComPublicExSetupAndShutDown(t *testing.T) {
 			t.Fail()
 		}
 	}()
-	
+
 	CoInitializeEx(0, COINIT_MULTITHREADED)
 	CoUninitialize()
 }
@@ -72,7 +72,7 @@ func TestComPublicExSetupAndShutDown_WithValue(t *testing.T) {
 			t.Fail()
 		}
 	}()
-	
+
 	CoInitializeEx(5, COINIT_MULTITHREADED)
 	CoUninitialize()
 }
@@ -91,7 +91,7 @@ func TestClsidFromProgID_WindowsMediaNSSManager(t *testing.T) {
 	actual, err := CLSIDFromProgID("WMPNSSCI.NSSManager")
 	CoUninitialize()
 
-	if ! IsEqualGUID(expected, actual) {
+	if !IsEqualGUID(expected, actual) {
 		t.Log(err)
 		t.Log(fmt.Sprintf("Actual GUID: %+v\n", actual))
 		t.Fail()
@@ -112,7 +112,7 @@ func TestClsidFromString_WindowsMediaNSSManager(t *testing.T) {
 	actual, err := CLSIDFromString("{92498132-4D1A-4297-9B78-9E2E4BA99C07}")
 	CoUninitialize()
 
-	if ! IsEqualGUID(expected, actual) {
+	if !IsEqualGUID(expected, actual) {
 		t.Log(err)
 		t.Log(fmt.Sprintf("Actual GUID: %+v\n", actual))
 		t.Fail()

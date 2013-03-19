@@ -26,17 +26,17 @@ var (
 	procSafeArrayGetElemsize, _       = modoleaut32.FindProc("SafeArrayGetElemsize")
 	procSafeArrayGetIID, _            = modoleaut32.FindProc("SafeArrayGetIID")
 	procSafeArrayGetLBound, _         = modoleaut32.FindProc("SafeArrayGetLBound")
-	//procSafeArrayGetRecordInfo, _     = modoleaut32.FindProc("SafeArrayGetRecordInfo") // TODO
 	procSafeArrayGetUBound, _         = modoleaut32.FindProc("SafeArrayGetUBound")
 	procSafeArrayGetVartype, _        = modoleaut32.FindProc("SafeArrayGetVartype")
 	procSafeArrayLock, _              = modoleaut32.FindProc("SafeArrayLock")
 	procSafeArrayPtrOfIndex, _        = modoleaut32.FindProc("SafeArrayPtrOfIndex")
+	procSafeArrayUnaccessData, _      = modoleaut32.FindProc("SafeArrayUnaccessData")
+	procSafeArrayUnlock, _            = modoleaut32.FindProc("SafeArrayUnlock")
 	//procSafeArrayPutElement, _        = modoleaut32.FindProc("SafeArrayPutElement") // TODO
 	//procSafeArrayRedim, _             = modoleaut32.FindProc("SafeArrayRedim") // TODO
 	//procSafeArraySetIID, _            = modoleaut32.FindProc("SafeArraySetIID") // TODO
+	//procSafeArrayGetRecordInfo, _     = modoleaut32.FindProc("SafeArrayGetRecordInfo") // TODO
 	//procSafeArraySetRecordInfo, _     = modoleaut32.FindProc("SafeArraySetRecordInfo") // TODO
-	procSafeArrayUnaccessData, _      = modoleaut32.FindProc("SafeArrayUnaccessData")
-	procSafeArrayUnlock, _            = modoleaut32.FindProc("SafeArrayUnlock")
 )
 
 // Returns Raw Array
@@ -238,7 +238,7 @@ func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) (err e
 			uintptr(unsafe.Pointer(recordInfo))))
 	return
 }
- */
+*/
 
 type SafeArrayBound struct {
 	Elements   uint32

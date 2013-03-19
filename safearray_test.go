@@ -1,8 +1,8 @@
 package ole
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 	_ "unsafe"
 )
 
@@ -97,7 +97,7 @@ func TestGetSafeArrayString(t *testing.T) {
 	t.Log("Upper Bounds:")
 	t.Log(UpperBounds)
 
-	totalElements := UpperBounds - LowerBounds + 1;
+	totalElements := UpperBounds - LowerBounds + 1
 	fmt.Printf("Length of total Elements: %d\n", totalElements)
 	qbXmlVersionStrings = make([]string, totalElements)
 
@@ -105,7 +105,7 @@ func TestGetSafeArrayString(t *testing.T) {
 		qbXmlVersionStrings[int32(0)], _ = safeArrayGetElementString(qbXMLVersions, i)
 		fmt.Println(qbXmlVersionStrings[int32(0)])
 	}
-	
+
 	// Release Safe Array memory
 	safeArrayDestroy(qbXMLVersions)
 
@@ -133,4 +133,3 @@ func TestGetSafeArrayString(t *testing.T) {
 		t.FailNow()
 	}
 }
-
