@@ -82,7 +82,6 @@ func TestSafeArrayConversionString(t *testing.T) {
 	}
 
 	versions := conversion.ToStringArray()
-	fmt.Printf("%s\n", strings.Join(versions, ", "))
 	if len(versions) != 13 {
 		t.Log(fmt.Sprintf("%s\n", strings.Join(versions, ", ")))
 		t.Fail()
