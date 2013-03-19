@@ -1,14 +1,15 @@
 package ole
+
 import (
 	"fmt"
-	"testing"
 	"strings"
+	"testing"
 	_ "unsafe"
 )
 
 func TestConnectHelper_QuickBooks(t *testing.T) {
 	var err error
-	
+
 	connection := &Connection{nil}
 
 	err = connection.Initialize()
@@ -20,6 +21,9 @@ func TestConnectHelper_QuickBooks(t *testing.T) {
 
 	err = connection.Create("QBXMLRP2.RequestProcessor.1")
 	if err != nil {
+		if err.(OleError).Code() == CO_E_CLASSSTRING {
+			return
+		}
 		t.Log(err)
 		t.FailNow()
 	}
@@ -35,7 +39,7 @@ func TestConnectHelper_QuickBooks(t *testing.T) {
 
 func TestConnectHelperCallDispatch_QuickBooks(t *testing.T) {
 	var err error
-	
+
 	connection := &Connection{nil}
 
 	err = connection.Initialize()
@@ -47,6 +51,9 @@ func TestConnectHelperCallDispatch_QuickBooks(t *testing.T) {
 
 	err = connection.Create("QBXMLRP2.RequestProcessor.1")
 	if err != nil {
+		if err.(OleError).Code() == CO_E_CLASSSTRING {
+			return
+		}
 		t.Log(err)
 		t.FailNow()
 	}
@@ -90,7 +97,7 @@ func TestConnectHelperCallDispatch_QuickBooks(t *testing.T) {
 
 func TestConnectHelperDispatchProperty_QuickBooks(t *testing.T) {
 	var err error
-	
+
 	connection := &Connection{nil}
 
 	err = connection.Initialize()
@@ -102,6 +109,9 @@ func TestConnectHelperDispatchProperty_QuickBooks(t *testing.T) {
 
 	err = connection.Create("QBXMLRP2.RequestProcessor.1")
 	if err != nil {
+		if err.(OleError).Code() == CO_E_CLASSSTRING {
+			return
+		}
 		t.Log(err)
 		t.FailNow()
 	}

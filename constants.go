@@ -40,6 +40,8 @@ const (
 	E_FAIL         = 0x80004005
 	E_ACCESSDENIED = 0x80070005
 	E_PENDING      = 0x8000000A
+
+	CO_E_CLASSSTRING = 0x800401F3
 )
 
 const (
