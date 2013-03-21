@@ -54,6 +54,11 @@ func (c *Connection) Load(names ...string) (errors []error) {
 	}
 
 	copy(errors, tempErrors[0:numErrors])
+	
+	if numErrors == len(names) {
+		panic("Could not load any objects.")
+	}
+	
 	return
 }
 
