@@ -2,9 +2,9 @@ package ole
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	_ "unsafe"
-	"strings"
 )
 
 // This tests more than one function. It tests all of the functions needed in order to retrieve an
@@ -15,6 +15,9 @@ func TestSafeArrayConversionString(t *testing.T) {
 
 	clsid, err := CLSIDFromProgID("QBXMLRP2.RequestProcessor.1")
 	if err != nil {
+		if err.(OleError).Code() == CO_E_CLASSSTRING {
+			return
+		}
 		t.Log(err)
 		t.FailNow()
 	}

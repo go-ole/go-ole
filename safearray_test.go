@@ -14,6 +14,9 @@ func TestGetSafeArrayString(t *testing.T) {
 
 	clsid, err := CLSIDFromProgID("QBXMLRP2.RequestProcessor.1")
 	if err != nil {
+		if err.(OleError).Code() == CO_E_CLASSSTRING {
+			return
+		}
 		t.Log(err)
 		t.FailNow()
 	}
