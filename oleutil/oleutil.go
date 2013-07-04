@@ -82,7 +82,7 @@ func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 }
 
 func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := GetProperty(disp, name, params...)
+	r, _ := PutProperty(disp, name, params...)
 	return r
 }
 
