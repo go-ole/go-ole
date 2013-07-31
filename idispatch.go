@@ -200,10 +200,11 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		uintptr(unsafe.Pointer(&excepInfo)),
 		0)
 	if hr != 0 {
-		err = NewError(hr)
-		if excepInfo.bstrDescription != nil {
+		if excepInfo.bstrDescription == nil {
+			err = NewError(hr)
+		} else {
 			bs := UTF16PtrToString(excepInfo.bstrDescription)
-			println(bs)
+			err = NewErrorWithDescription(hr, bs)
 		}
 	}
 	for _, varg := range vargs {
@@ -214,6 +215,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
 				*(params[n].(*string)) = UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(varg.Val))))
 				println(*(params[n].(*string)))
+				fmt.Fprintln(os.Stderr, *(params[n].(*string)))
 			}
 		*/
 	}

@@ -7,7 +7,10 @@ import (
 	"unsafe"
 )
 
-type OleError uintptr
+type OleError struct {
+	hr uintptr
+	description string
+}
 
 func errstr(errno int) string {
 	// ask windows for the remaining errors
@@ -23,16 +26,24 @@ func errstr(errno int) string {
 	return string(utf16.Decode(b[:n]))
 }
 
-func NewError(hr uintptr) OleError {
-	return OleError(hr)
+func NewError(hr uintptr) *OleError {
+	return &OleError{hr, ""}
 }
 
-func (v OleError) Code() uintptr {
-	return uintptr(v)
+func NewErrorWithDescription(hr uintptr, desc string) *OleError {
+	return &OleError{hr, desc}
 }
 
-func (v OleError) Error() string {
-	return errstr(int(v))
+func (v *OleError) Code() uintptr {
+	return uintptr(v.hr)
+}
+
+func (v *OleError) Error() string {
+	return errstr(int(v.hr))
+}
+
+func (v *OleError) Description() string {
+	return v.description
 }
 
 type DISPPARAMS struct {
