@@ -30,12 +30,19 @@ func NewError(hr uintptr) *OleError {
 	return &OleError{hr, ""}
 }
 
-func NewErrorWithDescription(hr uintptr, desc string) *OleError {
-	return &OleError{hr, desc}
+func NewErrorWithDescription(hr uintptr, description string) *OleError {
+	return &OleError{hr, description}
 }
 
 func (v *OleError) Code() uintptr {
 	return uintptr(v.hr)
+}
+
+func (v *OleError) String() string {
+	if v.description != "" {
+		return errstr(int(v.hr)) + "(" + v.description + ")"
+	}
+	return errstr(int(v.hr))
 }
 
 func (v *OleError) Error() string {
