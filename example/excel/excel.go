@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/mattn/go-ole"
+	"github.com/mattn/go-ole/oleutil"
 	"time"
 )
-import "github.com/mattn/go-ole/oleutil"
 
 func main() {
 	ole.CoInitialize(0)
