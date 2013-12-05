@@ -8,7 +8,7 @@ import (
 )
 
 type OleError struct {
-	hr uintptr
+	hr          uintptr
 	description string
 }
 
