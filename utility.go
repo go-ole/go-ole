@@ -29,6 +29,9 @@ func BytePtrToString(p *byte) string {
 }
 
 func UTF16PtrToString(p *uint16) string {
+	if p == nil {
+		return ""
+	}
 	a := (*[10000]uint16)(unsafe.Pointer(p))
 	i := 0
 	for a[i] != 0 {
