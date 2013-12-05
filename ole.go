@@ -85,6 +85,18 @@ func (v *VARIANT) ToString() string {
 	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
 
+func (v *VARIANT) Value() interface{} {
+	switch v.VT {
+	case VT_I4:
+		// 4-byte signed integer value
+		// todo: need to manually clear upper 4-bytes?
+		return v.Val
+	case VT_BSTR:
+		return v.ToString()
+	}
+	return nil
+}
+
 type EXCEPINFO struct {
 	wCode             uint16
 	wReserved         uint16
