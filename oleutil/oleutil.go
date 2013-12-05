@@ -1,7 +1,7 @@
 package oleutil
 
 import (
-	"github.com/mattn/go-ole"
+	"github.com/mjibson/go-ole"
 	"reflect"
 	"syscall"
 	"unsafe"
