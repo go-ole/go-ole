@@ -4,7 +4,7 @@ go-ole
 WHATS:
 ------
 
-  Go bindings for Windows COM based off of mattn Go OLE repository.
+  Go bindings for Windows COM.
 
 INSTALL:
 --------
