@@ -85,6 +85,22 @@ func (v *VARIANT) ToString() string {
 	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
 
+// Returns v's value based on its VALTYPE.
+// Currently supported types: 2- and 4-byte integers, strings, bools.
+// Note that 64-bit integers, datetimes, and other types are stored as strings
+// and will be returned as strings.
+func (v *VARIANT) Value() interface{} {
+	switch v.VT {
+	case VT_I2, VT_I4:
+		return v.Val
+	case VT_BSTR:
+		return v.ToString()
+	case VT_BOOL:
+		return v.Val != 0
+	}
+	return nil
+}
+
 type EXCEPINFO struct {
 	wCode             uint16
 	wReserved         uint16
