@@ -1,10 +1,11 @@
 package oleutil
 
 import (
-	"github.com/mattn/go-ole"
 	"reflect"
 	"syscall"
 	"unsafe"
+
+	"github.com/mattn/go-ole"
 )
 
 func CreateObject(progId string) (unknown *ole.IUnknown, err error) {
