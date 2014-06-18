@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"syscall"
+	"unsafe"
+
 	"github.com/mattn/go-ole"
 	"github.com/mattn/go-ole/oleutil"
-	"log"
-	"unsafe"
-	"syscall"
 )
 
 type EventReceiver struct {

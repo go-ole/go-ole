@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/mattn/go-ole"
 	"github.com/mattn/go-ole/oleutil"
-	"log"
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 	collection := oleutil.MustGetProperty(wmp, "MediaCollection").ToIDispatch()
 	list := oleutil.MustCallMethod(collection, "getAll").ToIDispatch()
 	count := int(oleutil.MustGetProperty(list, "count").Val)
-	for i:= 0; i < count; i++ {
+	for i := 0; i < count; i++ {
 		item := oleutil.MustGetProperty(list, "item", i).ToIDispatch()
 		name := oleutil.MustGetProperty(item, "name").ToString()
 		sourceURL := oleutil.MustGetProperty(item, "sourceURL").ToString()

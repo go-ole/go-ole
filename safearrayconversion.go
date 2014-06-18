@@ -1,8 +1,6 @@
 // Helper for converting SafeArray to array of objects.
 package ole
 
-import ()
-
 type SafeArrayConversion struct {
 	Array *SafeArray
 }

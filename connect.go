@@ -1,8 +1,6 @@
 // Helpers for COM
 package ole
 
-import ()
-
 type Connection struct {
 	Object *IUnknown // Access COM
 }
