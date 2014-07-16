@@ -1,6 +1,7 @@
 package ole
 
 import (
+	"runtime"
 	"syscall"
 	"unsafe"
 )
@@ -219,5 +220,8 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			}
 		*/
 	}
+
+	runtime.SetFinalizer(result, VariantClear)
+
 	return
 }
