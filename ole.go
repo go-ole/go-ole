@@ -89,6 +89,10 @@ func (v *VARIANT) ToString() string {
 	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
 
+func (v *VARIANT) Clear() error {
+	return VariantClear(v)
+}
+
 // Returns v's value based on its VALTYPE.
 // Currently supported types: 2- and 4-byte integers, strings, bools.
 // Note that 64-bit integers, datetimes, and other types are stored as strings
