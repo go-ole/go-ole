@@ -63,13 +63,14 @@ func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {
 		wnames[i] = syscall.StringToUTF16Ptr(names[i])
 	}
 	dispid = make([]int32, len(names))
+	var namelen uint32 = len(names)
 	hr, _, _ := syscall.Syscall6(
 		disp.lpVtbl.pGetIDsOfNames,
 		6,
 		uintptr(unsafe.Pointer(disp)),
 		uintptr(unsafe.Pointer(IID_NULL)),
 		uintptr(unsafe.Pointer(&wnames[0])),
-		uintptr(len(names)),
+		uintptr(namelen),
 		uintptr(GetUserDefaultLCID()),
 		uintptr(unsafe.Pointer(&dispid[0])))
 	if hr != 0 {
