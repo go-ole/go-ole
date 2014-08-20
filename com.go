@@ -18,6 +18,7 @@ var (
 	procGetUserDefaultLCID, _ = modkernel32.FindProc("GetUserDefaultLCID")
 	procCopyMemory, _         = modkernel32.FindProc("RtlMoveMemory")
 	procVariantInit, _        = modoleaut32.FindProc("VariantInit")
+	procVariantClear, _       = modoleaut32.FindProc("VariantClear")
 	procSysAllocString, _     = modoleaut32.FindProc("SysAllocString")
 	procSysFreeString, _      = modoleaut32.FindProc("SysFreeString")
 	procSysStringLen, _       = modoleaut32.FindProc("SysStringLen")
@@ -152,6 +153,14 @@ func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
 
 func VariantInit(v *VARIANT) (err error) {
 	hr, _, _ := procVariantInit.Call(uintptr(unsafe.Pointer(v)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func VariantClear(v *VARIANT) (err error) {
+	hr, _, _ := procVariantClear.Call(uintptr(unsafe.Pointer(v)))
 	if hr != 0 {
 		err = NewError(hr)
 	}

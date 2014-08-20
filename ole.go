@@ -65,7 +65,11 @@ type VARIANT struct {
 	wReserved1 uint16 //  4
 	wReserved2 uint16 //  6
 	wReserved3 uint16 //  8
-	Val        int64  // 16
+	// On 32-bit windows, sizeof(VARIANT) is 16. 64-bit is 24. Although an int would
+	// be that size, stick with int64 due to conversions in invoke. 32-bit machines
+	// will thus have 8-bytes of unused space.
+	Val  int64
+	Val2 int64
 }
 
 func (v *VARIANT) ToIUnknown() *IUnknown {
@@ -83,6 +87,10 @@ func (v *VARIANT) ToArray() *SafeArrayConversion {
 
 func (v *VARIANT) ToString() string {
 	return UTF16PtrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
+}
+
+func (v *VARIANT) Clear() error {
+	return VariantClear(v)
 }
 
 // Returns v's value based on its VALTYPE.
