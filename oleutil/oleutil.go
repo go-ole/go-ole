@@ -53,7 +53,10 @@ func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result
 }
 
 func MustCallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := CallMethod(disp, name, params...)
+	r, err := CallMethod(disp, name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
 	return r
 }
 
@@ -68,7 +71,10 @@ func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 }
 
 func MustGetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := GetProperty(disp, name, params...)
+	r, err := GetProperty(disp, name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
 	return r
 }
 
@@ -83,7 +89,10 @@ func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 }
 
 func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := PutProperty(disp, name, params...)
+	r, err := PutProperty(disp, name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
 	return r
 }
 
