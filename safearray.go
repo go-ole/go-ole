@@ -171,7 +171,7 @@ func safeArrayGetElementString(safearray *SafeArray, index int64) (str string, e
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&index)),
 			uintptr(unsafe.Pointer(&element))))
-	str = UTF16PtrToString(*(**uint16)(unsafe.Pointer(&element)))
+	str = BstrToString(*(**uint16)(unsafe.Pointer(&element)))
 	SysFreeString(element)
 	return
 }
