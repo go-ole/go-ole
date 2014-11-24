@@ -2,6 +2,7 @@ package ole
 
 import (
 	"syscall"
+	"unicode/utf16"
 	"unsafe"
 )
 
@@ -20,6 +21,7 @@ var (
 	procVariantInit, _        = modoleaut32.FindProc("VariantInit")
 	procVariantClear, _       = modoleaut32.FindProc("VariantClear")
 	procSysAllocString, _     = modoleaut32.FindProc("SysAllocString")
+	procSysAllocStringLen, _  = modoleaut32.FindProc("SysAllocStringLen")
 	procSysFreeString, _      = modoleaut32.FindProc("SysFreeString")
 	procSysStringLen, _       = modoleaut32.FindProc("SysStringLen")
 	procCreateDispTypeInfo, _ = modoleaut32.FindProc("CreateDispTypeInfo")
@@ -169,6 +171,15 @@ func VariantClear(v *VARIANT) (err error) {
 
 func SysAllocString(v string) (ss *int16) {
 	pss, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(v))))
+	ss = (*int16)(unsafe.Pointer(pss))
+	return
+}
+
+func SysAllocStringLen(v string) (ss *int16) {
+	utf16 := utf16.Encode([]rune(v))
+	ptr := &utf16[0]
+
+	pss, _, _ := procSysAllocStringLen.Call(uintptr(unsafe.Pointer(ptr)), uintptr(len(utf16)))
 	ss = (*int16)(unsafe.Pointer(pss))
 	return
 }
