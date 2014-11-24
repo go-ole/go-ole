@@ -177,6 +177,10 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 				vargs[n] = VARIANT{VT_NULL, 0, 0, 0, 0, 0}
 			case *VARIANT:
 				vargs[n] = VARIANT{VT_VARIANT | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*VARIANT)))), 0}
+			case []byte:
+				safeByteArray := safeArrayFromByteSlice(v.([]byte))
+				vargs[n] = VARIANT{VT_ARRAY | VT_UI1, 0, 0, 0, int64(uintptr(unsafe.Pointer(safeByteArray))), 0}
+				defer VariantClear(&vargs[n])
 			default:
 				panic("unknown type")
 			}
