@@ -166,7 +166,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			case *float64:
 				vargs[n] = VARIANT{VT_R8 | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*float64)))), 0}
 			case string:
-				vargs[n] = VARIANT{VT_BSTR, 0, 0, 0, int64(uintptr(unsafe.Pointer(SysAllocString(v.(string))))), 0}
+				vargs[n] = VARIANT{VT_BSTR, 0, 0, 0, int64(uintptr(unsafe.Pointer(SysAllocStringLen(v.(string))))), 0}
 			case *string:
 				vargs[n] = VARIANT{VT_BSTR | VT_BYREF, 0, 0, 0, int64(uintptr(unsafe.Pointer(v.(*string)))), 0}
 			case *IDispatch:
