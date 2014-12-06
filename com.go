@@ -98,7 +98,7 @@ func StringFromCLSID(clsid *GUID) (str string, err error) {
 	if hr != 0 {
 		err = NewError(hr)
 	}
-	str = UTF16PtrToString(p)
+	str = LpOleStrToString(p)
 	return
 }
 
@@ -119,7 +119,7 @@ func StringFromIID(iid *GUID) (str string, err error) {
 	if hr != 0 {
 		err = NewError(hr)
 	}
-	str = UTF16PtrToString(p)
+	str = LpOleStrToString(p)
 	return
 }
 

@@ -204,7 +204,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		if excepInfo.bstrDescription == nil {
 			err = NewError(hr)
 		} else {
-			bs := UTF16PtrToString(excepInfo.bstrDescription)
+			bs := BstrToString(excepInfo.bstrDescription)
 			err = NewErrorWithDescription(hr, bs)
 		}
 	}
@@ -214,7 +214,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		}
 		/*
 			if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
-				*(params[n].(*string)) = UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(varg.Val))))
+				*(params[n].(*string)) = LpOleStrToString((*uint16)(unsafe.Pointer(uintptr(varg.Val))))
 				println(*(params[n].(*string)))
 				fmt.Fprintln(os.Stderr, *(params[n].(*string)))
 			}
