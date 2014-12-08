@@ -32,7 +32,7 @@ var (
 	procSafeArrayPtrOfIndex, _        = modoleaut32.FindProc("SafeArrayPtrOfIndex")
 	procSafeArrayUnaccessData, _      = modoleaut32.FindProc("SafeArrayUnaccessData")
 	procSafeArrayUnlock, _            = modoleaut32.FindProc("SafeArrayUnlock")
-	//procSafeArrayPutElement, _        = modoleaut32.FindProc("SafeArrayPutElement") // TODO
+	procSafeArrayPutElement, _        = modoleaut32.FindProc("SafeArrayPutElement")
 	//procSafeArrayRedim, _             = modoleaut32.FindProc("SafeArrayRedim") // TODO
 	//procSafeArraySetIID, _            = modoleaut32.FindProc("SafeArraySetIID") // TODO
 	//procSafeArrayGetRecordInfo, _     = modoleaut32.FindProc("SafeArrayGetRecordInfo") // TODO
@@ -217,6 +217,15 @@ func safeArrayLock(safearray *SafeArray) (err error) {
 
 func safeArrayUnlock(safearray *SafeArray) (err error) {
 	err = convertHresultToError(procSafeArrayUnlock.Call(uintptr(unsafe.Pointer(safearray))))
+	return
+}
+
+func safeArrayPutElement(safearray *SafeArray, index int64, element uintptr) (err error) {
+	err = convertHresultToError(
+		procSafeArrayPutElement.Call(
+			uintptr(unsafe.Pointer(safearray)),
+			uintptr(unsafe.Pointer(&index)),
+			uintptr(unsafe.Pointer(element))))
 	return
 }
 
