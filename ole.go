@@ -2,6 +2,7 @@ package ole
 
 import (
 	"fmt"
+	"runtime"
 	"syscall"
 	"unicode/utf16"
 	"unsafe"
@@ -65,11 +66,22 @@ type VARIANT struct {
 	wReserved1 uint16 //  4
 	wReserved2 uint16 //  6
 	wReserved3 uint16 //  8
-	// On 32-bit windows, sizeof(VARIANT) is 16. 64-bit is 24. Although an int would
-	// be that size, stick with int64 due to conversions in invoke. 32-bit machines
-	// will thus have 8-bytes of unused space.
-	Val  int64
-	Val2 int64
+	Val        int
+	Val2       int
+}
+
+func NewVariant(vt uint16, val uint64) VARIANT {
+	var v VARIANT
+	v.VT = vt
+	v.Val = int(val)
+
+	if runtime.GOARCH == "386" {
+		if vt == VT_R8 || vt == VT_UI8 || vt == VT_I8 || vt == VT_CY {
+			v.Val = int(val & 0xffffffff)
+			v.Val2 = int(val >> 32)
+		}
+	}
+	return v
 }
 
 func (v *VARIANT) ToIUnknown() *IUnknown {
