@@ -7,5 +7,5 @@ type VARIANT struct {
 	wReserved2 uint16  //  6
 	wReserved3 uint16  //  8
 	Val        int64   // 16
-	filler     [8]byte // 24
+	_          [8]byte // 24
 }
