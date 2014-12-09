@@ -61,6 +61,17 @@ type DISPPARAMS struct {
 	cNamedArgs        uint32
 }
 
+// A VARIANT in Windows is 16 bytes on 32-bit architectures, and 24 bytes on 64-bit architectures.
+//
+// To work around this difference, the value is split into two fields, Val and Val2,
+// and they are both defined as int, so that they are either 32 bits or 64 bits
+// depending on the architecture the program is running on.
+//
+// The other fields always add up to 8 bytes, so when GOARCH is 386, Val and Val2
+// will each be 32 bits (4 bytes), thus unsafe.Sizeof(new(VARIANT)) will be 16 (8 + 4 + 4).
+//
+// When GOARCH is amd64, Val and Val2 will be 64 bits (8 bytes),
+// thus unsafe.Sizeof(new(VARIANT)) will be 24 (8 + 8 + 8).
 type VARIANT struct {
 	VT         uint16 //  2
 	wReserved1 uint16 //  4
