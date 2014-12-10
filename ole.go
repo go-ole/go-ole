@@ -2,6 +2,7 @@ package ole
 
 import (
 	"fmt"
+	"runtime"
 	"syscall"
 	"unicode/utf16"
 	"unsafe"
@@ -60,16 +61,38 @@ type DISPPARAMS struct {
 	cNamedArgs        uint32
 }
 
+// A VARIANT in Windows is 16 bytes on 32-bit architectures, and 24 bytes on 64-bit architectures.
+//
+// To work around this difference, the value is split into two fields, Val and Val2,
+// and they are both defined as int, so that they are either 32 bits or 64 bits
+// depending on the architecture the program is running on.
+//
+// The other fields always add up to 8 bytes, so when GOARCH is 386, Val and Val2
+// will each be 32 bits (4 bytes), thus unsafe.Sizeof(new(VARIANT)) will be 16 (8 + 4 + 4).
+//
+// When GOARCH is amd64, Val and Val2 will be 64 bits (8 bytes),
+// thus unsafe.Sizeof(new(VARIANT)) will be 24 (8 + 8 + 8).
 type VARIANT struct {
 	VT         uint16 //  2
 	wReserved1 uint16 //  4
 	wReserved2 uint16 //  6
 	wReserved3 uint16 //  8
-	// On 32-bit windows, sizeof(VARIANT) is 16. 64-bit is 24. Although an int would
-	// be that size, stick with int64 due to conversions in invoke. 32-bit machines
-	// will thus have 8-bytes of unused space.
-	Val  int64
-	Val2 int64
+	Val        int
+	Val2       int
+}
+
+func NewVariant(vt uint16, val uint64) VARIANT {
+	var v VARIANT
+	v.VT = vt
+	v.Val = int(val)
+
+	if runtime.GOARCH == "386" {
+		if vt == VT_R8 || vt == VT_UI8 || vt == VT_I8 || vt == VT_CY {
+			v.Val = int(val & 0xffffffff)
+			v.Val2 = int(val >> 32)
+		}
+	}
+	return v
 }
 
 func (v *VARIANT) ToIUnknown() *IUnknown {
