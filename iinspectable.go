@@ -62,7 +62,7 @@ func (v *IInspectable) GetRuntimeClassName() (s string, err error) {
 		err = NewError(hr)
 		return
 	}
-	s = HStringToString(hstring)
+	s = hstring.String()
 	DeleteHString(hstring)
 	return
 }
