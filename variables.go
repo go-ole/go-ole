@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	modcombase, _  = syscall.LoadDLL("combase.dll")
+	modcombase     = syscall.NewLazyDLL("combase.dll")
 	modkernel32, _ = syscall.LoadDLL("kernel32.dll")
 	modole32, _    = syscall.LoadDLL("ole32.dll")
 	modoleaut32, _ = syscall.LoadDLL("oleaut32.dll")

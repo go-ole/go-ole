@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	procRoInitialize, _              = modcombase.FindProc("RoInitialize")
-	procRoActivateInstance, _        = modcombase.FindProc("RoActivateInstance")
-	procRoGetActivationFactory, _    = modcombase.FindProc("RoGetActivationFactory")
-	procWindowsCreateString, _       = modcombase.FindProc("WindowsCreateString")
-	procWindowsDeleteString, _       = modcombase.FindProc("WindowsDeleteString")
-	procWindowsGetStringRawBuffer, _ = modcombase.FindProc("WindowsGetStringRawBuffer")
+	procRoInitialize              = modcombase.NewProc("RoInitialize")
+	procRoActivateInstance        = modcombase.NewProc("RoActivateInstance")
+	procRoGetActivationFactory    = modcombase.NewProc("RoGetActivationFactory")
+	procWindowsCreateString       = modcombase.NewProc("WindowsCreateString")
+	procWindowsDeleteString       = modcombase.NewProc("WindowsDeleteString")
+	procWindowsGetStringRawBuffer = modcombase.NewProc("WindowsGetStringRawBuffer")
 )
 
 func RoInitialize(thread_type uint32) (err error) {
