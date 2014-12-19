@@ -87,9 +87,7 @@ func (h HString) String() string {
 		uintptr(h),
 		uintptr(unsafe.Pointer(&u16len)))
 
-	u16hdr := *(*reflect.SliceHeader)(unsafe.Pointer(&u16buf))
-	u16hdr.Len = int(u16len)
-	u16hdr.Cap = int(u16len)
+	u16hdr := reflect.SliceHeader{Data: u16buf, Len: int(u16len), Cap: int(u16len)}
 	u16 := *(*[]uint16)(unsafe.Pointer(&u16hdr))
 	return syscall.UTF16ToString(u16)
 }

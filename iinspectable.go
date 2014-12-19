@@ -40,9 +40,7 @@ func (v *IInspectable) GetIids() (iids []*GUID, err error) {
 
 	iids = make([]*GUID, count)
 	byteCount := count * uint32(unsafe.Sizeof(GUID{}))
-	slicehdr := *(*reflect.SliceHeader)(unsafe.Pointer(&array))
-	slicehdr.Len = int(byteCount)
-	slicehdr.Cap = int(byteCount)
+	slicehdr := reflect.SliceHeader{Data: array, Len: int(byteCount), Cap: int(byteCount)}
 	byteSlice := *(*[]byte)(unsafe.Pointer(&slicehdr))
 	reader := bytes.NewReader(byteSlice)
 	for i, _ := range iids {
