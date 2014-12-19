@@ -1,9 +1,9 @@
 package ole
 
 import (
-	"C"
 	"bytes"
 	"encoding/binary"
+	"reflect"
 	"syscall"
 	"unsafe"
 )
@@ -40,7 +40,11 @@ func (v *IInspectable) GetIids() (iids []*GUID, err error) {
 
 	iids = make([]*GUID, count)
 	byteCount := count * uint32(unsafe.Sizeof(GUID{}))
-	reader := bytes.NewReader(C.GoBytes(unsafe.Pointer(array), C.int(byteCount)))
+	slicehdr := *(*reflect.SliceHeader)(unsafe.Pointer(&array))
+	slicehdr.Len = int(byteCount)
+	slicehdr.Cap = int(byteCount)
+	byteSlice := *(*[]byte)(unsafe.Pointer(&slicehdr))
+	reader := bytes.NewReader(byteSlice)
 	for i, _ := range iids {
 		guid := GUID{}
 		err = binary.Read(reader, binary.LittleEndian, &guid)
