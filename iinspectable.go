@@ -34,7 +34,9 @@ func (v *IInspectable) GetIids() (iids []*GUID, err error) {
 		uintptr(unsafe.Pointer(&array)))
 	if hr != 0 {
 		err = NewError(hr)
+		return
 	}
+	defer CoTaskMemFree(array)
 
 	iids = make([]*GUID, count)
 	byteCount := count * uint32(unsafe.Sizeof(GUID{}))
