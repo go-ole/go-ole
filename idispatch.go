@@ -104,9 +104,9 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			//n := len(params)-i-1
 			n := len(params) - i - 1
 			VariantInit(&vargs[n])
-			switch v.(type) {
+			switch vv := v.(type) {
 			case bool:
-				if v.(bool) {
+				if vv {
 					vargs[n] = NewVariant(VT_BOOL, 0xffff)
 				} else {
 					vargs[n] = NewVariant(VT_BOOL, 0)
@@ -142,11 +142,11 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			case *uint64:
 				vargs[n] = NewVariant(VT_UI8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint64)))))
 			case float32:
-				vargs[n] = NewVariant(VT_R4, int64(v.(float32)))
+				vargs[n] = NewVariant(VT_R4, *(*int64)(unsafe.Pointer(&vv)))
 			case *float32:
 				vargs[n] = NewVariant(VT_R4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float32)))))
 			case float64:
-				vargs[n] = NewVariant(VT_R8, int64(v.(float64)))
+				vargs[n] = NewVariant(VT_R8, *(*int64)(unsafe.Pointer(&vv)))
 			case *float64:
 				vargs[n] = NewVariant(VT_R8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float64)))))
 			case string:
