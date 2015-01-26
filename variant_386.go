@@ -1,4 +1,6 @@
 // +build 386
+// +build windows
+
 package ole
 
 type VARIANT struct {

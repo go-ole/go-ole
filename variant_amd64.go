@@ -1,4 +1,6 @@
 // +build amd64
+// +build windows
+
 package ole
 
 type VARIANT struct {

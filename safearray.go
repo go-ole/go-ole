@@ -1,4 +1,7 @@
 // Package is meant to retrieve and process safe array data returned from COM.
+//
+// +build windows
+
 package ole
 
 import (
