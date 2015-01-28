@@ -2,6 +2,7 @@ package ole
 
 import (
 	"syscall"
+	"time"
 	"unsafe"
 )
 
@@ -153,6 +154,12 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 				vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(v.(string))))))
 			case *string:
 				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*string)))))
+			case time.Time:
+				s := vv.Format("2006-01-02 15:04:05")
+				vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(s)))))
+			case *time.Time:
+				s := vv.Format("2006-01-02 15:04:05")
+				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(&s))))
 			case *IDispatch:
 				vargs[n] = NewVariant(VT_DISPATCH, int64(uintptr(unsafe.Pointer(v.(*IDispatch)))))
 			case **IDispatch:
