@@ -196,12 +196,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		uintptr(unsafe.Pointer(&excepInfo)),
 		0)
 	if hr != 0 {
-		if excepInfo.bstrDescription == nil {
-			err = NewError(hr)
-		} else {
-			bs := BstrToString(excepInfo.bstrDescription)
-			err = NewErrorWithDescription(hr, bs)
-		}
+		err = NewErrorWithSubError(hr, BstrToString(excepInfo.bstrDescription), excepInfo)
 	}
 	for _, varg := range vargs {
 		if varg.VT == VT_BSTR && varg.Val != 0 {
