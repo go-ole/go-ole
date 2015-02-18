@@ -4,7 +4,7 @@ package ole
 
 import "unsafe"
 
-func NewVariant(vt uint16, val int64) VARIANT {
+func NewVariant(vt VT, val int64) VARIANT {
 	return VARIANT{VT: vt, Val: val}
 }
 
