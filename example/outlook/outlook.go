@@ -13,8 +13,8 @@ func main() {
 	ns := oleutil.MustCallMethod(outlook, "GetNamespace", "MAPI").ToIDispatch()
 	folder := oleutil.MustCallMethod(ns, "GetDefaultFolder", 10).ToIDispatch()
 	contacts := oleutil.MustCallMethod(folder, "Items").ToIDispatch()
-	count := oleutil.MustGetProperty(contacts, "Count").Value().(int64)
-	for i := int64(1); i <= count; i++ {
+	count := oleutil.MustGetProperty(contacts, "Count").Value().(int32)
+	for i := 1; i <= int(count); i++ {
 		item, err := oleutil.GetProperty(contacts, "Item", i)
 		if err == nil && item.VT == ole.VT_DISPATCH {
 			if value, err := oleutil.GetProperty(item.ToIDispatch(), "FullName"); err == nil {
@@ -22,5 +22,5 @@ func main() {
 			}
 		}
 	}
-    oleutil.MustCallMethod(outlook, "Quit")
+	oleutil.MustCallMethod(outlook, "Quit")
 }
