@@ -80,8 +80,7 @@ func Invoke(this *ole.IDispatch, dispid int, riid *ole.GUID, lcid int, flags int
 		var data ole.VARIANT
 		ole.VariantInit(&data)
 		oleutil.CallMethod(winsock, "GetData", &data)
-		array := (*ole.SAFEARRAY)(unsafe.Pointer(uintptr(data.Val)))
-		s := ole.BytePtrToString((*byte)(unsafe.Pointer(uintptr(array.PvData))))
+		s := string(data.ToArray().ToByteArray())
 		println()
 		println(s)
 		println()
@@ -107,7 +106,10 @@ func Invoke(this *ole.IDispatch, dispid int, riid *ole.GUID, lcid int, flags int
 func main() {
 	ole.CoInitialize(0)
 
-	unknown, _ := oleutil.CreateObject("{248DD896-BB45-11CF-9ABC-0080C7E7B78D}")
+	unknown, err := oleutil.CreateObject("{248DD896-BB45-11CF-9ABC-0080C7E7B78D}")
+	if err != nil {
+		panic(err.Error())
+	}
 	winsock, _ := unknown.QueryInterface(ole.IID_IDispatch)
 	iid, _ := ole.CLSIDFromString("{248DD893-BB45-11CF-9ABC-0080C7E7B78D}")
 
@@ -123,7 +125,7 @@ func main() {
 	dest.host = winsock
 
 	oleutil.ConnectObject(winsock, iid, (*ole.IUnknown)(unsafe.Pointer(dest)))
-	_, err := oleutil.CallMethod(winsock, "Connect", "127.0.0.1", 80)
+	_, err = oleutil.CallMethod(winsock, "Connect", "127.0.0.1", 80)
 	if err != nil {
 		log.Fatal(err)
 	}
