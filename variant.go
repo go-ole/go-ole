@@ -9,19 +9,31 @@ func NewVariant(vt VT, val int64) VARIANT {
 }
 
 func (v *VARIANT) ToIUnknown() *IUnknown {
+	if v.VT != VT_UNKNOWN {
+		return nil
+	}
 	return (*IUnknown)(unsafe.Pointer(uintptr(v.Val)))
 }
 
 func (v *VARIANT) ToIDispatch() *IDispatch {
+	if v.VT != VT_DISPATCH {
+		return nil
+	}
 	return (*IDispatch)(unsafe.Pointer(uintptr(v.Val)))
 }
 
 func (v *VARIANT) ToArray() *SafeArrayConversion {
+	if v.VT != VT_SAFEARRAY {
+		return nil
+	}
 	var safeArray *SafeArray = (*SafeArray)(unsafe.Pointer(uintptr(v.Val)))
 	return &SafeArrayConversion{safeArray}
 }
 
 func (v *VARIANT) ToString() string {
+	if v.VT != VT_BSTR {
+		return ""
+	}
 	return BstrToString(*(**uint16)(unsafe.Pointer(&v.Val)))
 }
 
