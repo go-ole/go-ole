@@ -2,6 +2,7 @@ package ole
 
 import (
 	"syscall"
+	"unicode/utf16"
 	"unsafe"
 )
 
@@ -18,7 +19,9 @@ var (
 	procGetUserDefaultLCID, _ = modkernel32.FindProc("GetUserDefaultLCID")
 	procCopyMemory, _         = modkernel32.FindProc("RtlMoveMemory")
 	procVariantInit, _        = modoleaut32.FindProc("VariantInit")
+	procVariantClear, _       = modoleaut32.FindProc("VariantClear")
 	procSysAllocString, _     = modoleaut32.FindProc("SysAllocString")
+	procSysAllocStringLen, _  = modoleaut32.FindProc("SysAllocStringLen")
 	procSysFreeString, _      = modoleaut32.FindProc("SysFreeString")
 	procSysStringLen, _       = modoleaut32.FindProc("SysStringLen")
 	procCreateDispTypeInfo, _ = modoleaut32.FindProc("CreateDispTypeInfo")
@@ -95,7 +98,7 @@ func StringFromCLSID(clsid *GUID) (str string, err error) {
 	if hr != 0 {
 		err = NewError(hr)
 	}
-	str = UTF16PtrToString(p)
+	str = LpOleStrToString(p)
 	return
 }
 
@@ -116,7 +119,7 @@ func StringFromIID(iid *GUID) (str string, err error) {
 	if hr != 0 {
 		err = NewError(hr)
 	}
-	str = UTF16PtrToString(p)
+	str = LpOleStrToString(p)
 	return
 }
 
@@ -158,8 +161,25 @@ func VariantInit(v *VARIANT) (err error) {
 	return
 }
 
+func VariantClear(v *VARIANT) (err error) {
+	hr, _, _ := procVariantClear.Call(uintptr(unsafe.Pointer(v)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
 func SysAllocString(v string) (ss *int16) {
 	pss, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(v))))
+	ss = (*int16)(unsafe.Pointer(pss))
+	return
+}
+
+func SysAllocStringLen(v string) (ss *int16) {
+	utf16 := utf16.Encode([]rune(v))
+	ptr := &utf16[0]
+
+	pss, _, _ := procSysAllocStringLen.Call(uintptr(unsafe.Pointer(ptr)), uintptr(len(utf16)))
 	ss = (*int16)(unsafe.Pointer(pss))
 	return
 }
