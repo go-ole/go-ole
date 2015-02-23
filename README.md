@@ -2,6 +2,8 @@
 
 Go bindings for Windows COM using shared libraries instead of cgo.
 
+By Yasuhiro Matsumoto.
+
 ##INSTALL
 
 To experiment with go-ole, you can just compile and run the example program:
