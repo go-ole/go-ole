@@ -1,7 +1,7 @@
 // Helper for converting SafeArray to array of objects.
 package ole
 
-import "unsafe"
+import ()
 
 type SafeArrayConversion struct {
 	Array *SafeArray
@@ -13,18 +13,6 @@ func (sac *SafeArrayConversion) ToStringArray() (strings []string) {
 
 	for i := int64(0); i < totalElements; i++ {
 		strings[int32(i)], _ = safeArrayGetElementString(sac.Array, i)
-	}
-
-	return
-}
-
-func (sac *SafeArrayConversion) ToByteArray() (bytes []byte) {
-	totalElements, _ := sac.TotalElements(0)
-	bytes = make([]byte, totalElements)
-
-	for i := int64(0); i < totalElements; i++ {
-		ptr, _ := safeArrayGetElement(sac.Array, i)
-		bytes[int32(i)] = *(*byte)(unsafe.Pointer(&ptr))
 	}
 
 	return

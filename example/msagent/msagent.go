@@ -1,9 +1,8 @@
 package main
 
 import (
-	"time"
-
 	"github.com/mattn/go-ole"
+	"time"
 )
 import "github.com/mattn/go-ole/oleutil"
 

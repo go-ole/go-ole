@@ -1,5 +1,7 @@
 package ole
 
+import ()
+
 const (
 	CLSCTX_INPROC_SERVER   = 1
 	CLSCTX_INPROC_HANDLER  = 2

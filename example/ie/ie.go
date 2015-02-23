@@ -1,10 +1,9 @@
 package main
 
 import (
-	"time"
-
 	"github.com/mattn/go-ole"
 	"github.com/mattn/go-ole/oleutil"
+	"time"
 )
 
 func main() {

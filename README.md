@@ -4,7 +4,11 @@ go-ole
 WHATS:
 ------
 
-  Go bindings for Windows COM.
+  Go bindings for Windows COM based off of mattn Go OLE repository.
+  
+  *This repository was created for experimentation and should be considered unstable.*
+  
+  It is being used to develop a few working projects and fixes will be applied and when it is stable enough it will be merged into the mattn repository. For now, simply use mattn repository, unless you want to live on the edge. No warranties.
 
 INSTALL:
 --------
