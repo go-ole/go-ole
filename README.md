@@ -18,12 +18,3 @@ go run excel.go
 ##LICENSE
 
 Under the MIT License: http://mattn.mit-license.org/2013
-
-##Author
-
-  * Yasuhiro Matsumoto
-
-##Contributors
-
-  * Jacob Santos
-  * TODO: Add others, if they wish to be recognized. Please make pull request.
