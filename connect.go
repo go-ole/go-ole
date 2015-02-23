@@ -16,27 +16,18 @@ func (*Connection) Uninitialize() {
 	CoUninitialize()
 }
 
-func (c *Connection) getClassId(progId string) (classId *GUID, err error) {
-	classId, err = CLSIDFromProgID(progId)
+// Creates Unknown object based first on ProgId and then from String.
+func (c *Connection) Create(progId string) (err error) {
+	var clsid *GUID
+	clsid, err = CLSIDFromProgID(progId)
 	if err != nil {
-		classId, err = CLSIDFromString(progId)
+		clsid, err = CLSIDFromString(progId)
 		if err != nil {
 			return
 		}
 	}
-	return
-}
 
-// Creates Unknown object based first on ProgId and then from String.
-func (c *Connection) Create(progId string) (err error) {
-	var classId *GUID
-
-	classId, err = c.getClassId(progId)
-	if err != nil {
-		return
-	}
-
-	unknown, err := CreateInstance(classId, IID_IUnknown)
+	unknown, err := CreateInstance(clsid, IID_IUnknown)
 	if err != nil {
 		return
 	}
@@ -46,36 +37,24 @@ func (c *Connection) Create(progId string) (err error) {
 }
 
 func (c *Connection) Release() {
-	if c.Object == nil {
-		return
-	}
 	c.Object.Release()
 }
 
 // Loads COM object if in list
 func (c *Connection) Load(names ...string) (errors []error) {
-	var err error
 	var tempErrors []error = make([]error, len(names))
 	var numErrors int = 0
-
 	for _, name := range names {
-		err = c.Create(name)
+		err := c.Create(name)
 		if err != nil {
-			tempErrors[numErrors] = err
+			tempErrors = append(tempErrors, err)
 			numErrors += 1
 			continue
 		}
 		break
 	}
 
-	if numErrors > 0 {
-		errors = make([]error, numErrors)
-		copy(errors, tempErrors[0:numErrors])
-	}
-	
-	if numErrors == len(names) {
-		panic("Could not load any objects.")
-	}
+	copy(errors, tempErrors[0:numErrors])
 	return
 }
 
@@ -187,9 +166,6 @@ func (d *Dispatch) Invoke(id int32, dispatch int16, params []interface{}) (resul
 }
 
 func (d *Dispatch) Release() {
-	if d.Object == nil {
-		return
-	}
 	d.Object.Release()
 }
 
