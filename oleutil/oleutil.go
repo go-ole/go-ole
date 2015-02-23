@@ -1,10 +1,11 @@
 package oleutil
 
 import (
-	"github.com/mattn/go-ole"
 	"reflect"
 	"syscall"
 	"unsafe"
+
+	"github.com/mattn/go-ole"
 )
 
 func CreateObject(progId string) (unknown *ole.IUnknown, err error) {
@@ -52,7 +53,10 @@ func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result
 }
 
 func MustCallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := CallMethod(disp, name, params...)
+	r, err := CallMethod(disp, name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
 	return r
 }
 
@@ -67,7 +71,10 @@ func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 }
 
 func MustGetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := GetProperty(disp, name, params...)
+	r, err := GetProperty(disp, name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
 	return r
 }
 
@@ -82,7 +89,10 @@ func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (resul
 }
 
 func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
-	r, _ := PutProperty(disp, name, params...)
+	r, err := PutProperty(disp, name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
 	return r
 }
 
@@ -137,7 +147,7 @@ func dispGetIDsOfNames(this *ole.IUnknown, iid *ole.GUID, wnames []*uint16, name
 	pthis := (*stdDispatch)(unsafe.Pointer(this))
 	names := make([]string, len(wnames))
 	for i := 0; i < len(names); i++ {
-		names[i] = ole.UTF16PtrToString(wnames[i])
+		names[i] = ole.LpOleStrToString(wnames[i])
 	}
 	for n := 0; n < namelen; n++ {
 		if id, ok := pthis.funcMap[names[n]]; ok {
