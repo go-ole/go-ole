@@ -3,4 +3,4 @@
 //
 // +build !windows
 
-package oleutil
+package ole
