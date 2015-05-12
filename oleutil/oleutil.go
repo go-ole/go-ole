@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/mattn/go-ole"
+	"github.com/go-ole"
 )
 
 func CreateObject(progId string) (unknown *ole.IUnknown, err error) {
