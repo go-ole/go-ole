@@ -9,7 +9,7 @@ By Yasuhiro Matsumoto.
 To experiment with go-ole, you can just compile and run the example program:
 
 ```
-go get github.com/mattn/go-ole
+go get github.com/go-ole/go-ole
 cd /path/to/go-ole/
 go test
 
