@@ -1,68 +1,9 @@
-// +build windows
-
 package ole
 
 import (
 	"fmt"
 	"strings"
-	"syscall"
-	"unicode/utf16"
 )
-
-type OleError struct {
-	hr          uintptr
-	description string
-	subError    error
-}
-
-func errstr(errno int) string {
-	// ask windows for the remaining errors
-	var flags uint32 = syscall.FORMAT_MESSAGE_FROM_SYSTEM | syscall.FORMAT_MESSAGE_ARGUMENT_ARRAY | syscall.FORMAT_MESSAGE_IGNORE_INSERTS
-	b := make([]uint16, 300)
-	n, err := syscall.FormatMessage(flags, 0, uint32(errno), 0, b, nil)
-	if err != nil {
-		return fmt.Sprintf("error %d (FormatMessage failed with: %v)", errno, err)
-	}
-	// trim terminating \r and \n
-	for ; n > 0 && (b[n-1] == '\n' || b[n-1] == '\r'); n-- {
-	}
-	return string(utf16.Decode(b[:n]))
-}
-
-func NewError(hr uintptr) *OleError {
-	return &OleError{hr: hr}
-}
-
-func NewErrorWithDescription(hr uintptr, description string) *OleError {
-	return &OleError{hr: hr, description: description}
-}
-
-func NewErrorWithSubError(hr uintptr, description string, err error) *OleError {
-	return &OleError{hr: hr, description: description, subError: err}
-}
-
-func (v *OleError) Code() uintptr {
-	return uintptr(v.hr)
-}
-
-func (v *OleError) String() string {
-	if v.description != "" {
-		return errstr(int(v.hr)) + " (" + v.description + ")"
-	}
-	return errstr(int(v.hr))
-}
-
-func (v *OleError) Error() string {
-	return v.String()
-}
-
-func (v *OleError) Description() string {
-	return v.description
-}
-
-func (v *OleError) SubError() error {
-	return v.subError
-}
 
 type DISPPARAMS struct {
 	rgvarg            uintptr
@@ -71,6 +12,7 @@ type DISPPARAMS struct {
 	cNamedArgs        uint32
 }
 
+// EXCEPINFO defines exception info.
 type EXCEPINFO struct {
 	wCode             uint16
 	wReserved         uint16
@@ -83,6 +25,7 @@ type EXCEPINFO struct {
 	scode             uint32
 }
 
+// String convert EXCEPINFO to string.
 func (e EXCEPINFO) String() string {
 	var src, desc, hlp string
 	if e.bstrSource == nil {
@@ -109,6 +52,7 @@ func (e EXCEPINFO) String() string {
 	)
 }
 
+// Error implements error interface and returns error string.
 func (e EXCEPINFO) Error() string {
 	if e.bstrDescription != nil {
 		return strings.TrimSpace(BstrToString(e.bstrDescription))
@@ -127,11 +71,13 @@ func (e EXCEPINFO) Error() string {
 	return fmt.Sprintf("%v: %#x", src, code)
 }
 
+// PARAMDATA defines parameter data type.
 type PARAMDATA struct {
 	Name *int16
 	Vt   uint16
 }
 
+// METHODDATA defines method info.
 type METHODDATA struct {
 	Name     *uint16
 	Data     *PARAMDATA
@@ -143,16 +89,19 @@ type METHODDATA struct {
 	VtReturn uint32
 }
 
+// INTERFACEDATA defines interface info.
 type INTERFACEDATA struct {
 	MethodData *METHODDATA
 	CMembers   uint32
 }
 
+// Point is 2D vector type.
 type Point struct {
 	X int32
 	Y int32
 }
 
+// Msg is message between processes.
 type Msg struct {
 	Hwnd    uint32
 	Message uint32
@@ -162,16 +111,19 @@ type Msg struct {
 	Pt      Point
 }
 
+// TYPEDESC defines data type.
 type TYPEDESC struct {
 	Hreftype uint32
 	VT       uint16
 }
 
+// IDLDESC defines IDL info.
 type IDLDESC struct {
 	DwReserved uint32
 	WIDLFlags  uint16
 }
 
+// TYPEATTR defines type info.
 type TYPEATTR struct {
 	Guid             GUID
 	Lcid             uint32

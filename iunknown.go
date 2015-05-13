@@ -1,11 +1,6 @@
-// +build windows
-
 package ole
 
-import (
-	"syscall"
-	"unsafe"
-)
+import "unsafe"
 
 type IUnknown struct {
 	RawVTable *interface{}
@@ -27,14 +22,13 @@ func (v *IUnknown) VTable() *IUnknownVtbl {
 	return (*IUnknownVtbl)(unsafe.Pointer(v.RawVTable))
 }
 
-func (v *IUnknown) QueryInterface(iid *GUID) (disp *IDispatch, err error) {
-	disp, err = queryInterface(v, iid)
-	return
+func (v *IUnknown) QueryInterface(iid *GUID) (*IDispatch, error) {
+	return queryInterface(v, iid)
 }
 
-func (v *IUnknown) MustQueryInterface(iid *GUID) (disp *IDispatch) {
+func (v *IUnknown) MustQueryInterface(iid *GUID) *IDispatch {
 	disp, _ = queryInterface(v, iid)
-	return
+	return disp
 }
 
 func (v *IUnknown) AddRef() int32 {
@@ -43,37 +37,4 @@ func (v *IUnknown) AddRef() int32 {
 
 func (v *IUnknown) Release() int32 {
 	return release(v)
-}
-
-func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err error) {
-	hr, _, _ := syscall.Syscall(
-		unk.VTable().QueryInterface,
-		3,
-		uintptr(unsafe.Pointer(unk)),
-		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(&disp)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func addRef(unk *IUnknown) int32 {
-	ret, _, _ := syscall.Syscall(
-		unk.VTable().AddRef,
-		1,
-		uintptr(unsafe.Pointer(unk)),
-		0,
-		0)
-	return int32(ret)
-}
-
-func release(unk *IUnknown) int32 {
-	ret, _, _ := syscall.Syscall(
-		unk.VTable().Release,
-		1,
-		uintptr(unsafe.Pointer(unk)),
-		0,
-		0)
-	return int32(ret)
 }
