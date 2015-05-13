@@ -5,8 +5,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/mattn/go-ole"
-	"github.com/mattn/go-ole/oleutil"
+	ole "github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/oleutil"
 )
 
 type EventReceiver struct {
