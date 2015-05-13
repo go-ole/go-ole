@@ -1,4 +1,6 @@
+# Version 1.0.1
 
+ 1. Fix package references from repository location change.
 
 # Version 1.0.0
 

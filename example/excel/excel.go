@@ -3,8 +3,8 @@ package main
 import (
 	"time"
 
-	"github.com/mattn/go-ole"
-	"github.com/mattn/go-ole/oleutil"
+	ole "github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/oleutil"
 )
 
 func main() {

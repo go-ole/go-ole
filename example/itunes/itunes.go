@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/gonuts/commander"
-	"github.com/mattn/go-ole"
-	"github.com/mattn/go-ole/oleutil"
 	"log"
 	"os"
 	"strings"
+
+	ole "github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/oleutil"
+	"github.com/gonuts/commander"
 )
 
 func iTunes() *ole.IDispatch {
