@@ -1,5 +1,7 @@
 #Go OLE
 
+[![GoDoc](https://godoc.org/github.com/go-ole/go-ole?status.svg)](https://godoc.org/github.com/go-ole/go-ole)
+
 Go bindings for Windows COM using shared libraries instead of cgo.
 
 By Yasuhiro Matsumoto.
