@@ -1,9 +1,19 @@
-# Version 1.0.2
+# Version 1.1.0
+
+The change to provide building on all platforms is a new feature. The increase in minor version reflects that and allows those who wish to stay on 1.0.x to continue to do so. Support for 1.0.x will be limited to bug fixes.
 
  * Move GUID out of variables.go into its own file to make new documentation available.
+ * Move OleError out of ole.go into its own file to make new documentation available.
  * Add documentation to utility functions.
  * Add documentation to variant receiver functions.
+ * Add documentation to ole structures.
  * Make variant available to other systems outside of Windows.
+ * Make OLE structures available to other systems outside of Windows.
+
+## New Features
+
+ * Library should now be built on all platforms supported by Go. Library will NOOP on any platform that is not Windows.
+ * More functions are now documented and available on godoc.org.
 
 # Version 1.0.1
 
