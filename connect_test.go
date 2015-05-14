@@ -1,5 +1,3 @@
-// +build windows
-
 package ole
 
 import (
@@ -9,7 +7,7 @@ import (
 	_ "unsafe"
 )
 
-func TestConnectHelper_QuickBooks(t *testing.T) {
+func Example_quickbooks(t *testing.T) {
 	var err error
 
 	connection := &Connection{nil}
