@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	_ "unsafe"
 )
 
-func Example_quickbooks(t *testing.T) {
+func Example_quickbooks() {
 	var err error
 
 	connection := &Connection{nil}
