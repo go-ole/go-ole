@@ -13,8 +13,7 @@ func Example_quickbooks() {
 
 	err = connection.Initialize()
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer connection.Uninitialize()
 
@@ -23,15 +22,12 @@ func Example_quickbooks() {
 		if err.(*OleError).Code() == CO_E_CLASSSTRING {
 			return
 		}
-		t.Log(err)
-		t.FailNow()
 	}
 	defer connection.Release()
 
 	dispatch, err := connection.Dispatch()
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer dispatch.Release()
 }
