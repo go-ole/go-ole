@@ -2,7 +2,7 @@ package ole
 
 // Connection contains IUnknown for fluent interface interaction.
 //
-// Deprecated. Use oleutil instead.
+// Deprecated. Use oleutil package instead.
 type Connection struct {
 	Object *IUnknown // Access COM
 }

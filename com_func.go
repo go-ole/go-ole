@@ -83,7 +83,7 @@ func IIDFromString(progId string) (*GUID, error) {
 	return nil, NewError(E_NOTIMPL)
 }
 
-// StringFromIID returns GUID formated string from GUID object.
+// StringFromIID returns GUID formatted string from GUID object.
 func StringFromIID(iid *GUID) (string, error) {
 	return "", NewError(E_NOTIMPL)
 }
