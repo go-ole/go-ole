@@ -3,7 +3,7 @@ package oleutil
 import ole "github.com/go-ole/go-ole"
 
 // ClassIDFrom retrieves class ID whether given is program ID or application string.
-func ClassIDFrom(programID string) (classID *GUID, err error) {
+func ClassIDFrom(programID string) (classID *ole.GUID, err error) {
 	classID, err = ole.CLSIDFromProgID(programID)
 	if err != nil {
 		classID, err = ole.CLSIDFromString(programID)

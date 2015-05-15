@@ -27,8 +27,11 @@ func (v *IUnknown) QueryInterface(iid *GUID) (*IDispatch, error) {
 }
 
 func (v *IUnknown) MustQueryInterface(iid *GUID) (disp *IDispatch) {
-	disp, _ = queryInterface(v, iid)
-	return disp
+	unk, err := queryInterface(v, iid)
+	if err != nil {
+		panic(err)
+	}
+	return unk
 }
 
 func (v *IUnknown) AddRef() int32 {
