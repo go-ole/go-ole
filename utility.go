@@ -1,5 +1,3 @@
-// +build windows
-
 package ole
 
 import (
@@ -7,20 +5,7 @@ import (
 	"unsafe"
 )
 
-func IsEqualGUID(guid1 *GUID, guid2 *GUID) bool {
-	return guid1.Data1 == guid2.Data1 &&
-		guid1.Data2 == guid2.Data2 &&
-		guid1.Data3 == guid2.Data3 &&
-		guid1.Data4[0] == guid2.Data4[0] &&
-		guid1.Data4[1] == guid2.Data4[1] &&
-		guid1.Data4[2] == guid2.Data4[2] &&
-		guid1.Data4[3] == guid2.Data4[3] &&
-		guid1.Data4[4] == guid2.Data4[4] &&
-		guid1.Data4[5] == guid2.Data4[5] &&
-		guid1.Data4[6] == guid2.Data4[6] &&
-		guid1.Data4[7] == guid2.Data4[7]
-}
-
+// BytePtrToString converts byte pointer to a Go string.
 func BytePtrToString(p *byte) string {
 	a := (*[10000]uint8)(unsafe.Pointer(p))
 	i := 0
@@ -30,11 +15,14 @@ func BytePtrToString(p *byte) string {
 	return string(a[:i])
 }
 
-// Alias for LpOleStrToString - kept for compatibility reasons
+// UTF16PtrToString is alias for LpOleStrToString.
+//
+// Kept for compatibility reasons.
 func UTF16PtrToString(p *uint16) string {
 	return LpOleStrToString(p)
 }
 
+// LpOleStrToString converts COM Unicode to Go string.
 func LpOleStrToString(p *uint16) string {
 	if p == nil {
 		return ""
@@ -53,6 +41,7 @@ func LpOleStrToString(p *uint16) string {
 	return string(utf16.Decode(a))
 }
 
+// BstrToString converts COM binary string to Go string.
 func BstrToString(p *uint16) string {
 	if p == nil {
 		return ""
@@ -69,6 +58,7 @@ func BstrToString(p *uint16) string {
 	return string(utf16.Decode(a))
 }
 
+// lpOleStrLen returns the length of Unicode string.
 func lpOleStrLen(p *uint16) (length int64) {
 	if p == nil {
 		return 0
@@ -86,6 +76,7 @@ func lpOleStrLen(p *uint16) (length int64) {
 	return
 }
 
+// convertHresultToError converts syscall to error, if call is unsuccessful.
 func convertHresultToError(hr uintptr, r2 uintptr, ignore error) (err error) {
 	if hr != 0 {
 		err = NewError(hr)

@@ -59,8 +59,10 @@ func RoGetActivationFactory(clsid string, iid *GUID) (ins *IInspectable, err err
 	return
 }
 
+// HString is handle string for pointers.
 type HString uintptr
 
+// NewHString returns a new HString for Go string.
 func NewHString(s string) (hstring HString, err error) {
 	u16 := syscall.StringToUTF16Ptr(s)
 	len := uint32(utf8.RuneCountInString(s))
@@ -74,6 +76,7 @@ func NewHString(s string) (hstring HString, err error) {
 	return
 }
 
+// DeleteHString deletes HString.
 func DeleteHString(hstring HString) (err error) {
 	hr, _, _ := procWindowsDeleteString.Call(uintptr(hstring))
 	if hr != 0 {
@@ -82,6 +85,7 @@ func DeleteHString(hstring HString) (err error) {
 	return
 }
 
+// String returns Go string value of HString.
 func (h HString) String() string {
 	var u16buf uintptr
 	var u16len uint32

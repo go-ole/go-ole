@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"testing"
-	_ "unsafe"
 )
 
 // This tests more than one function. It tests all of the functions needed in order to retrieve an

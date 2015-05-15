@@ -1,6 +1,4 @@
 // Helper for converting SafeArray to array of objects.
-//
-// +build windows
 
 package ole
 

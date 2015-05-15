@@ -1,0 +1,12 @@
+language: go
+
+go:
+  - 1.1
+  - 1.4
+  - tip
+
+env:
+  - GOOS=windows
+  - GOOS=linux
+  - GOARCH=386
+  - GOARCH=amd64

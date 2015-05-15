@@ -3,7 +3,8 @@ package main
 import (
 	"time"
 
-	"github.com/mattn/go-ole"
+	ole "github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/oleutil"
 )
 import "github.com/mattn/go-ole/oleutil"
 

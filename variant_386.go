@@ -1,5 +1,4 @@
 // +build 386
-// +build windows
 
 package ole
 

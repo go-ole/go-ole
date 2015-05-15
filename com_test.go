@@ -1,5 +1,3 @@
-// +build windows
-
 package ole
 
 import (
@@ -15,7 +13,12 @@ func TestComSetupAndShutDown(t *testing.T) {
 		}
 	}()
 
-	coInitialize()
+	err := coInitialize()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
 	CoUninitialize()
 }
 
@@ -27,7 +30,12 @@ func TestComPublicSetupAndShutDown(t *testing.T) {
 		}
 	}()
 
-	CoInitialize(0)
+	err := CoInitialize(0)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
 	CoUninitialize()
 }
 
@@ -39,7 +47,12 @@ func TestComPublicSetupAndShutDown_WithValue(t *testing.T) {
 		}
 	}()
 
-	CoInitialize(5)
+	err := CoInitialize(5)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
 	CoUninitialize()
 }
 
@@ -51,7 +64,12 @@ func TestComExSetupAndShutDown(t *testing.T) {
 		}
 	}()
 
-	coInitializeEx(COINIT_MULTITHREADED)
+	err := coInitializeEx(COINIT_MULTITHREADED)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
 	CoUninitialize()
 }
 
@@ -63,7 +81,12 @@ func TestComPublicExSetupAndShutDown(t *testing.T) {
 		}
 	}()
 
-	CoInitializeEx(0, COINIT_MULTITHREADED)
+	err := CoInitializeEx(0, COINIT_MULTITHREADED)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
 	CoUninitialize()
 }
 
@@ -75,7 +98,12 @@ func TestComPublicExSetupAndShutDown_WithValue(t *testing.T) {
 		}
 	}()
 
-	CoInitializeEx(5, COINIT_MULTITHREADED)
+	err := CoInitializeEx(5, COINIT_MULTITHREADED)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
 	CoUninitialize()
 }
 
