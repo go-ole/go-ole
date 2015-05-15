@@ -60,13 +60,13 @@ func safeArrayDestroyDescriptor(safearray *SafeArray) error {
 }
 
 func safeArrayGetDim(safearray *SafeArray) (*uint32, error) {
-	var u *uint32
-	return u, NewError(E_NOTIMPL)
+	u := uint32(0)
+	return &u, NewError(E_NOTIMPL)
 }
 
 func safeArrayGetElementSize(safearray *SafeArray) (*uint32, error) {
-	var u *uint32
-	return u, NewError(E_NOTIMPL)
+	u := uint32(0)
+	return &u, NewError(E_NOTIMPL)
 }
 
 func safeArrayGetElement(safearray *SafeArray, index int64) (uintptr, error) {
