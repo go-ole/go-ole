@@ -8,5 +8,3 @@ go:
 env:
   - GOOS=windows
   - GOOS=linux
-  - GOARCH=386
-  - GOARCH=amd64

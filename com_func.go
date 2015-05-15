@@ -105,11 +105,11 @@ func VariantClear(v *VARIANT) error {
 }
 
 func SysAllocString(v string) *int16 {
-	return *int16(0)
+	return &int16(0)
 }
 
 func SysAllocStringLen(v string) *int16 {
-	return *int16(0)
+	return &int16(0)
 }
 
 func SysFreeString(v *int16) error {
