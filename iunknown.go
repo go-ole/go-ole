@@ -26,7 +26,7 @@ func (v *IUnknown) QueryInterface(iid *GUID) (*IDispatch, error) {
 	return queryInterface(v, iid)
 }
 
-func (v *IUnknown) MustQueryInterface(iid *GUID) *IDispatch {
+func (v *IUnknown) MustQueryInterface(iid *GUID) (disp *IDispatch) {
 	disp, _ = queryInterface(v, iid)
 	return disp
 }
