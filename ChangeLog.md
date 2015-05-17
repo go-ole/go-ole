@@ -1,3 +1,13 @@
+# Version 1.1.X
+
+ * Add CI configuration for Travis-CI and AppVeyor.
+ * Add more test cases and reference new test COM server project.
+
+# Version 1.1.1
+
+ * Fixes for Linux build.
+ * Fixes for Windows build.
+
 # Version 1.1.0
 
 The change to provide building on all platforms is a new feature. The increase in minor version reflects that and allows those who wish to stay on 1.0.x to continue to do so. Support for 1.0.x will be limited to bug fixes.
