@@ -1,26 +1,54 @@
 package ole
 
 var (
-	// NullInterfaceID is null Interface ID, used when no other Interface ID is known.
+	// IID_NULL is null Interface ID, used when no other Interface ID is known.
 	IID_NULL = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}}
 
-	// IUnknownInterfaceID is for IUnknown interfaces.
+	// IID_IUnknown is for IUnknown interfaces.
 	IID_IUnknown = &GUID{0x00000000, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
-	// IDispatchInterfaceID is for IDispatch interfaces.
+	// IID_IDispatch is for IDispatch interfaces.
 	IID_IDispatch = &GUID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
-	// IConnectionPointContainerInterfaceID is for IConnectionPointContainer interfaces.
+	// IID_IConnectionPointContainer is for IConnectionPointContainer interfaces.
 	IID_IConnectionPointContainer = &GUID{0xB196B284, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
 
-	// IConnectionPointInterfaceID is for IConnectionPoint interfaces.
+	// IID_IConnectionPoint is for IConnectionPoint interfaces.
 	IID_IConnectionPoint = &GUID{0xB196B286, 0xBAB4, 0x101A, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
 
-	// IInspectableInterfaceID is for IInspectable interfaces.
+	// IID_IInspectable is for IInspectable interfaces.
 	IID_IInspectable = &GUID{0xaf86e2e0, 0xb12d, 0x4c6a, [8]byte{0x9c, 0x5a, 0xd7, 0xaa, 0x65, 0x10, 0x1e, 0x90}}
 
-	// IProvideClassInfoInterfaceID is for IProvideClassInfo interfaces.
+	// IID_IProvideClassInfo is for IProvideClassInfo interfaces.
 	IID_IProvideClassInfo = &GUID{0xb196b283, 0xbab4, 0x101a, [8]byte{0xB6, 0x9C, 0x00, 0xAA, 0x00, 0x34, 0x1D, 0x07}}
+)
+
+// These are for testing and not part of any library.
+var (
+	// IID_ICOMTestString is for ICOMTestString interfaces.
+	//
+	// {E0133EB4-C36F-469A-9D3D-C66B84BE19ED}
+	IID_ICOMTestString = &GUID{0xe0133eb4, 0xc36f, 0x469a, [8]byte{0x9d, 0x3d, 0xc6, 0x6b, 0x84, 0xbe, 0x19, 0xed}}
+
+	// IID_ICOMTestInt16 is for ICOMTestInt16 interfaces.
+	//
+	// {DAA3F9FA-761E-4976-A860-8364CE55F6FC}
+	IID_ICOMTestInt16 = &GUID{0xdaa3f9fa, 0x761e, 0x4976, [8]byte{0xa8, 0x60, 0x83, 0x64, 0xce, 0x55, 0xf6, 0xfc}}
+
+	// IID_ICOMTestInt32 is for ICOMTestInt32 interfaces.
+	//
+	// {E3DEDEE7-38A2-4540-91D1-2EEF1D8891B0}
+	IID_ICOMTestInt32 = &GUID{0xe3dedee7, 0x38a2, 0x4540, [8]byte{0x91, 0xd1, 0x2e, 0xef, 0x1d, 0x88, 0x91, 0xb0}}
+
+	// IID_ICOMTestInt64 is for ICOMTestInt64 interfaces.
+	//
+	// {8D437CBC-B3ED-485C-BC32-C336432A1623}
+	IID_ICOMTestInt64 = &GUID{0x8d437cbc, 0xb3ed, 0x485c, [8]byte{0xbc, 0x32, 0xc3, 0x36, 0x43, 0x2a, 0x16, 0x23}}
+
+	// CLSID_COMTestClass1 is for COMTestClass1 class.
+	//
+	// {865B85C5-0334-4AC6-9EF6-AACEC8FC5E86}
+	CLSID_COMTestClass1 = &GUID{0x865b85c5, 0x3340, 0x4ac6, [8]byte{0x9e, 0xf6, 0xaa, 0xce, 0xc8, 0xfc, 0x5e, 0x86}}
 )
 
 // GUID is Windows API specific GUID type.
