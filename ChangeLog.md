@@ -1,7 +1,8 @@
 # Version 1.1.X
 
  * Add CI configuration for Travis-CI and AppVeyor.
- * Add more test cases and reference new test COM server project.
+ * Add test InterfaceID and ClassID for the COM Test Server project.
+ * **Add more test cases and reference new test COM server project.** (Placeholder for future additions)
 
 # Version 1.1.1
 
