@@ -114,11 +114,9 @@ func TestClsidFromProgID_WindowsMediaNSSManager(t *testing.T) {
 		}
 	}()
 
-	expected := &GUID{0x92498132, 0x4D1A, 0x4297, [8]byte{0x9B, 0x78, 0x9E, 0x2E, 0x4B, 0xA9, 0x9C, 0x07}}
-
 	coInitialize()
 	defer CoUninitialize()
-	actual, err := CLSIDFromProgID("WMPNSSCI.NSSManager")
+	_, err := CLSIDFromProgID("WMPNSSCI.NSSManager")
 	if err == nil {
 		t.Error("should be error, because only Windows is supported.")
 		t.FailNow()
@@ -133,11 +131,9 @@ func TestClsidFromString_WindowsMediaNSSManager(t *testing.T) {
 		}
 	}()
 
-	expected := &GUID{0x92498132, 0x4D1A, 0x4297, [8]byte{0x9B, 0x78, 0x9E, 0x2E, 0x4B, 0xA9, 0x9C, 0x07}}
-
 	coInitialize()
 	defer CoUninitialize()
-	actual, err := CLSIDFromString("{92498132-4D1A-4297-9B78-9E2E4BA99C07}")
+	_, err := CLSIDFromString("{92498132-4D1A-4297-9B78-9E2E4BA99C07}")
 
 	if err == nil {
 		t.Error("should be error, because only Windows is supported.")
@@ -153,11 +149,9 @@ func TestCreateInstance_WindowsMediaNSSManager(t *testing.T) {
 		}
 	}()
 
-	expected := &GUID{0x92498132, 0x4D1A, 0x4297, [8]byte{0x9B, 0x78, 0x9E, 0x2E, 0x4B, 0xA9, 0x9C, 0x07}}
-
 	coInitialize()
 	defer CoUninitialize()
-	actual, err := CLSIDFromProgID("WMPNSSCI.NSSManager")
+	_, err := CLSIDFromProgID("WMPNSSCI.NSSManager")
 
 	if err == nil {
 		t.Error("should be error, because only Windows is supported.")
