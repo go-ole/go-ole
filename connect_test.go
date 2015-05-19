@@ -1,3 +1,5 @@
+// +build !windows
+
 package ole
 
 import (
@@ -32,7 +34,7 @@ func Example_quickbooks() {
 	defer dispatch.Release()
 }
 
-func TestConnectHelperCallDispatch_QuickBooks(t *testing.T) {
+func Example_quickbooksConnectHelperCallDispatch() {
 	var err error
 
 	connection := &Connection{nil}
@@ -90,7 +92,7 @@ func TestConnectHelperCallDispatch_QuickBooks(t *testing.T) {
 	}
 }
 
-func TestConnectHelperDispatchProperty_QuickBooks(t *testing.T) {
+func Example_quickbooksConnectHelperDispatchProperty(t *testing.T) {
 	var err error
 
 	connection := &Connection{nil}
