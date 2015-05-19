@@ -2,11 +2,7 @@
 
 package ole
 
-import (
-	"fmt"
-	"strings"
-	"testing"
-)
+import "strings"
 
 func Example_quickbooks() {
 	var err error
@@ -41,8 +37,7 @@ func Example_quickbooksConnectHelperCallDispatch() {
 
 	err = connection.Initialize()
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer connection.Uninitialize()
 
@@ -51,15 +46,13 @@ func Example_quickbooksConnectHelperCallDispatch() {
 		if err.(*OleError).Code() == CO_E_CLASSSTRING {
 			return
 		}
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer connection.Release()
 
 	dispatch, err := connection.Dispatch()
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer dispatch.Release()
 
@@ -67,40 +60,35 @@ func Example_quickbooksConnectHelperCallDispatch() {
 
 	_, err = dispatch.Call("OpenConnection2", "", "Test Application 1", 1)
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 
 	result, err = dispatch.Call("BeginSession", "", 2)
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 
 	ticket := result.ToString()
 
 	_, err = dispatch.Call("EndSession", ticket)
 	if err != nil {
-		t.Log(err)
-		t.Fail()
+		return
 	}
 
 	_, err = dispatch.Call("CloseConnection")
 	if err != nil {
-		t.Log(err)
-		t.Fail()
+		return
 	}
 }
 
-func Example_quickbooksConnectHelperDispatchProperty(t *testing.T) {
+func Example_quickbooksConnectHelperDispatchProperty() {
 	var err error
 
 	connection := &Connection{nil}
 
 	err = connection.Initialize()
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer connection.Uninitialize()
 
@@ -109,15 +97,13 @@ func Example_quickbooksConnectHelperDispatchProperty(t *testing.T) {
 		if err.(*OleError).Code() == CO_E_CLASSSTRING {
 			return
 		}
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer connection.Release()
 
 	dispatch, err := connection.Dispatch()
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 	defer dispatch.Release()
 
@@ -125,30 +111,26 @@ func Example_quickbooksConnectHelperDispatchProperty(t *testing.T) {
 
 	_, err = dispatch.Call("OpenConnection2", "", "Test Application 1", 1)
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 
 	result, err = dispatch.Call("BeginSession", "", 2)
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 
 	ticket := result.ToString()
 
 	result, err = dispatch.Get("QBXMLVersionsForSession", ticket)
 	if err != nil {
-		t.Log(err)
-		t.FailNow()
+		return
 	}
 
 	conversion := result.ToArray()
 
 	totalElements, _ := conversion.TotalElements(0)
 	if totalElements != 13 {
-		t.Log(fmt.Sprintf("%d total elements does not equal 13\n", totalElements))
-		t.Fail()
+		return
 	}
 
 	versions := conversion.ToStringArray()
@@ -156,26 +138,22 @@ func Example_quickbooksConnectHelperDispatchProperty(t *testing.T) {
 	versionString := strings.Join(versions, ", ")
 
 	if len(versions) != 13 {
-		t.Log(fmt.Sprintf("%s\n", versionString))
-		t.Fail()
+		return
 	}
 
 	if expectedVersionString != versionString {
-		t.Log(fmt.Sprintf("Expected: %s\nActual: %s", expectedVersionString, versionString))
-		t.Fail()
+		return
 	}
 
 	conversion.Release()
 
 	_, err = dispatch.Call("EndSession", ticket)
 	if err != nil {
-		t.Log(err)
-		t.Fail()
+		return
 	}
 
 	_, err = dispatch.Call("CloseConnection")
 	if err != nil {
-		t.Log(err)
-		t.Fail()
+		return
 	}
 }
