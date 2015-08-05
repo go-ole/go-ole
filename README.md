@@ -1,5 +1,7 @@
 #Go OLE
 
+[![Join the chat at https://gitter.im/go-ole/go-ole](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/go-ole/go-ole?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![GoDoc](https://godoc.org/github.com/go-ole/go-ole?status.svg)](https://godoc.org/github.com/go-ole/go-ole)
 [![Build Status](https://travis-ci.org/go-ole/go-ole.svg)](https://travis-ci.org/go-ole/go-ole)
 
