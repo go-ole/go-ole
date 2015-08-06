@@ -43,7 +43,6 @@ matrix:
 install:
   - choco install mingw
   - SET PATH=c:\tools\mingw64\bin;%PATH%
-  - ECHO %PATH%
   # - Download COM Server
   - ps: Start-FileDownload "https://github.com/go-ole/test-com-server/releases/download/v1.0.0/test-com-server-${env:DOWNLOADPLATFORM}.zip" 
   - 7z e test-com-server-%DOWNLOADPLATFORM%.zip -oc:\gopath\src\github.com\go-ole\go-ole > NUL
