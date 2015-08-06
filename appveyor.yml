@@ -33,6 +33,12 @@ environment:
 
 matrix:
   fast_finish: true
+  allow_failures:
+    - GOARCH: 386
+      GOVERSION: 1.4
+      GOROOT: c:\go-x86
+      GOTOOLDIR: c:\go
+      DOWNLOADPLATFORM: "x86"
 
 install:
   - choco install mingw
