@@ -27,8 +27,7 @@ environment:
     DOWNLOADPLATFORM: "x64"
   - GOARCH: 386
     GOVERSION: 1.4
-    GOROOT: c:\go-x86
-    GOTOOLDIR: c:\go
+    GOROOT: c:\go
     DOWNLOADPLATFORM: "x86"
 
 matrix:
@@ -36,15 +35,14 @@ matrix:
   allow_failures:
     - GOARCH: 386
       GOVERSION: 1.4
-      GOROOT: c:\go-x86
-      GOTOOLDIR: c:\go
+      GOROOT: c:\go
       DOWNLOADPLATFORM: "x86"
 
 install:
   - choco install mingw
   - SET PATH=c:\tools\mingw64\bin;%PATH%
   # - Download COM Server
-  - ps: Start-FileDownload "https://github.com/go-ole/test-com-server/releases/download/v1.0.0/test-com-server-${env:DOWNLOADPLATFORM}.zip" 
+  - ps: Start-FileDownload "https://github.com/go-ole/test-com-server/releases/download/v1.0.0/test-com-server-${env:DOWNLOADPLATFORM}.zip"
   - 7z e test-com-server-%DOWNLOADPLATFORM%.zip -oc:\gopath\src\github.com\go-ole\go-ole > NUL
   - c:\gopath\src\github.com\go-ole\go-ole\build\register-assembly.bat
   # - set
