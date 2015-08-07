@@ -1,7 +1,8 @@
-# Version 1.1.X
+# Version 1.2.0-alphaX
 
  * Add CI configuration for Travis-CI and AppVeyor.
  * Add test InterfaceID and ClassID for the COM Test Server project.
+ * Add more inline documentation.
  * **Add more test cases and reference new test COM server project.** (Placeholder for future additions)
 
 # Version 1.1.1
