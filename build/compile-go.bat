@@ -1,5 +1,5 @@
-@ECHO OFF
+@echo OFF
 
-ECHO "BUILD GOLANG"
+echo "BUILD GOLANG"
 cd "%GOROOT%\src"
 ./make.bat --dist-tool
