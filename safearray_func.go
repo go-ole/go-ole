@@ -136,34 +136,72 @@ func safeArrayGetIID(safearray *SafeArray) (*GUID, error) {
 	return nil, NewError(E_NOTIMPL)
 }
 
+// safeArrayGetLBound returns lower bounds of SafeArray.
+//
+// SafeArrays may have multiple dimensions. Meaning, it could be
+// multidimensional array.
+//
+// AKA: SafeArrayGetLBound in Windows API.
 func safeArrayGetLBound(safearray *SafeArray, dimension uint32) (int64, error) {
 	return int64(0), NewError(E_NOTIMPL)
 }
 
+// safeArrayGetUBound returns upper bounds of SafeArray.
+//
+// SafeArrays may have multiple dimensions. Meaning, it could be
+// multidimensional array.
+//
+// AKA: SafeArrayGetUBound in Windows API.
 func safeArrayGetUBound(safearray *SafeArray, dimension uint32) (int64, error) {
 	return int64(0), NewError(E_NOTIMPL)
 }
 
+// safeArrayGetVartype returns data type of SafeArray.
+//
+// AKA: SafeArrayGetVartype in Windows API.
 func safeArrayGetVartype(safearray *SafeArray) (uint16, error) {
 	return uint16(0), NewError(E_NOTIMPL)
 }
 
+// safeArrayLock locks SafeArray for reading to modify SafeArray.
+//
+// This must be called during some calls to ensure that another process does not
+// read or write to the SafeArray during editing.
+//
+// AKA: SafeArrayLock in Windows API.
 func safeArrayLock(safearray *SafeArray) error {
 	return NewError(E_NOTIMPL)
 }
 
+// safeArrayUnlock unlocks SafeArray for reading.
+//
+// AKA: SafeArrayUnlock in Windows API.
 func safeArrayUnlock(safearray *SafeArray) error {
 	return NewError(E_NOTIMPL)
 }
 
+// safeArrayPutElement stores the data element at the specified location in the
+// array.
+//
+// AKA: SafeArrayPutElement in Windows API.
 func safeArrayPutElement(safearray *SafeArray, index int64, element uintptr) error {
 	return NewError(E_NOTIMPL)
 }
 
+// safeArrayGetRecordInfo accesses IRecordInfo info for custom types.
+//
+// AKA: SafeArrayGetRecordInfo in Windows API.
+//
+// XXX: Must implement IRecordInfo interface for this to return.
 func safeArrayGetRecordInfo(safearray *SafeArray) (interface{}, error) {
 	return nil, NewError(E_NOTIMPL)
 }
 
+// safeArraySetRecordInfo mutates IRecordInfo info for custom types.
+//
+// AKA: SafeArraySetRecordInfo in Windows API.
+//
+// XXX: Must implement IRecordInfo interface for this to return.
 func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) error {
 	return NewError(E_NOTIMPL)
 }

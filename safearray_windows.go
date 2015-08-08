@@ -238,6 +238,12 @@ func safeArrayGetIID(safearray *SafeArray) (guid *GUID, err error) {
 	return
 }
 
+// safeArrayGetLBound returns lower bounds of SafeArray.
+//
+// SafeArrays may have multiple dimensions. Meaning, it could be
+// multidimensional array.
+//
+// AKA: SafeArrayGetLBound in Windows API.
 func safeArrayGetLBound(safearray *SafeArray, dimension uint32) (lowerBound int64, err error) {
 	err = convertHresultToError(
 		procSafeArrayGetLBound.Call(
@@ -247,6 +253,12 @@ func safeArrayGetLBound(safearray *SafeArray, dimension uint32) (lowerBound int6
 	return
 }
 
+// safeArrayGetUBound returns upper bounds of SafeArray.
+//
+// SafeArrays may have multiple dimensions. Meaning, it could be
+// multidimensional array.
+//
+// AKA: SafeArrayGetUBound in Windows API.
 func safeArrayGetUBound(safearray *SafeArray, dimension uint32) (upperBound int64, err error) {
 	err = convertHresultToError(
 		procSafeArrayGetUBound.Call(
@@ -256,6 +268,9 @@ func safeArrayGetUBound(safearray *SafeArray, dimension uint32) (upperBound int6
 	return
 }
 
+// safeArrayGetVartype returns data type of SafeArray.
+//
+// AKA: SafeArrayGetVartype in Windows API.
 func safeArrayGetVartype(safearray *SafeArray) (varType uint16, err error) {
 	err = convertHresultToError(
 		procSafeArrayGetVartype.Call(
@@ -264,16 +279,29 @@ func safeArrayGetVartype(safearray *SafeArray) (varType uint16, err error) {
 	return
 }
 
+// safeArrayLock locks SafeArray for reading to modify SafeArray.
+//
+// This must be called during some calls to ensure that another process does not
+// read or write to the SafeArray during editing.
+//
+// AKA: SafeArrayLock in Windows API.
 func safeArrayLock(safearray *SafeArray) (err error) {
 	err = convertHresultToError(procSafeArrayLock.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
+// safeArrayUnlock unlocks SafeArray for reading.
+//
+// AKA: SafeArrayUnlock in Windows API.
 func safeArrayUnlock(safearray *SafeArray) (err error) {
 	err = convertHresultToError(procSafeArrayUnlock.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
+// safeArrayPutElement stores the data element at the specified location in the
+// array.
+//
+// AKA: SafeArrayPutElement in Windows API.
 func safeArrayPutElement(safearray *SafeArray, index int64, element uintptr) (err error) {
 	err = convertHresultToError(
 		procSafeArrayPutElement.Call(
@@ -283,8 +311,11 @@ func safeArrayPutElement(safearray *SafeArray, index int64, element uintptr) (er
 	return
 }
 
-/*
-// TODO: Must implement IRecordInfo interface for this to return.
+// safeArrayGetRecordInfo accesses IRecordInfo info for custom types.
+//
+// AKA: SafeArrayGetRecordInfo in Windows API.
+//
+// XXX: Must implement IRecordInfo interface for this to return.
 func safeArrayGetRecordInfo(safearray *SafeArray) (recordInfo interface{}, err error) {
 	err = convertHresultToError(
 		procSafeArrayGetRecordInfo.Call(
@@ -293,7 +324,11 @@ func safeArrayGetRecordInfo(safearray *SafeArray) (recordInfo interface{}, err e
 	return
 }
 
-// TODO: Must implement IRecordInfo interface for this to work.
+// safeArraySetRecordInfo mutates IRecordInfo info for custom types.
+//
+// AKA: SafeArraySetRecordInfo in Windows API.
+//
+// XXX: Must implement IRecordInfo interface for this to return.
 func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) (err error) {
 	err = convertHresultToError(
 		procSafeArraySetRecordInfo.Call(
@@ -301,4 +336,3 @@ func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) (err e
 			uintptr(unsafe.Pointer(recordInfo))))
 	return
 }
-*/
