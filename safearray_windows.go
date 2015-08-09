@@ -333,6 +333,6 @@ func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) (err e
 	err = convertHresultToError(
 		procSafeArraySetRecordInfo.Call(
 			uintptr(unsafe.Pointer(safearray)),
-			uintptr(unsafe.Pointer(recordInfo))))
+			uintptr(unsafe.Pointer(&recordInfo))))
 	return
 }
