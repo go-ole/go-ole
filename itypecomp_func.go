@@ -2,7 +2,7 @@
 
 package ole
 
-func (v *ITypeComp) Bind(name string, hash uint, flags short) (*ITypeInfo, int, error) {
+func (v *ITypeComp) Bind(name string, hash uint, flags int16) (*ITypeInfo, int32, error) {
 	return nil, 0, NewError(E_NOTIMPL)
 }
 
