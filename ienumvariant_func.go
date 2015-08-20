@@ -10,10 +10,10 @@ func (enum *IEnumVARIANT) Reset() error {
 	return NewError(E_NOTIMPL)
 }
 
-func (enum *IEnumVARIANT) Skip(celt int) error {
+func (enum *IEnumVARIANT) Skip(celt uint) error {
 	return NewError(E_NOTIMPL)
 }
 
-func (enum *IEnumVARIANT) Next(celt int, int q) error {
-	return NewError(E_NOTIMPL)
+func (enum *IEnumVARIANT) Next(celt uint) (array VARIANT, length ulong, err error) {
+	return nil, 0, NewError(E_NOTIMPL)
 }

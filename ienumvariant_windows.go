@@ -2,27 +2,62 @@
 
 package ole
 
-import "github.com/go-ole/go-ole/oleutil"
+import (
+	"syscall"
+	"unsafe"
+)
 
-func (enum *IEnumVARIANT) Clone() (*IEnumVARIANT, error) {
-	r, err := oleutil.CallMethod(enum, "Clone")
-	if err != nil {
-		return nil, err
+func (enum *IEnumVARIANT) Clone() (cloned *IEnumVARIANT, err error) {
+	hr, _, _ := syscall.Syscall(
+		enum.VTable().Clone,
+		2,
+		uintptr(unsafe.Pointer(enum)),
+		uintptr(unsafe.Pointer(&cloned)),
+		0)
+	if hr != 0 {
+		err = NewError(hr)
 	}
-	return &IEnumVARIANT{*r.ToIDispatch()}, nil
+	return
 }
 
-func (enum *IEnumVARIANT) Reset() error {
-	_, err := oleutil.CallMethod(enum, "Reset")
-	return err
+func (enum *IEnumVARIANT) Reset() (err error) {
+	hr, _, _ := syscall.Syscall(
+		enum.VTable().Reset,
+		1,
+		uintptr(unsafe.Pointer(enum)),
+		0,
+		0)
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
 }
 
-func (enum *IEnumVARIANT) Skip(celt int) error {
-	_, err := oleutil.CallMethod(enum, "Skip", celt)
-	return err
+func (enum *IEnumVARIANT) Skip(celt uint) (err error) {
+	hr, _, _ := syscall.Syscall(
+		enum.VTable().Skip,
+		2,
+		uintptr(unsafe.Pointer(enum)),
+		uintptr(celt),
+		0)
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
 }
 
-func (enum *IEnumVARIANT) Next(celt int, int q) error {
-	_, err := oleutil.CallMethod(enum, "Next", celt)
-	return err
+func (enum *IEnumVARIANT) Next(celt uint) (array VARIANT, length ulong, err error) {
+	hr, _, _ := syscall.Syscall6(
+		enum.VTable().Next,
+		4,
+		uintptr(unsafe.Pointer(enum)),
+		uintptr(celt),
+		uintptr(unsafe.Pointer(&array)),
+		uintptr(unsafe.Pointer(&length)),
+		0,
+		0)
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
 }
