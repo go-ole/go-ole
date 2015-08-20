@@ -14,6 +14,6 @@ func (enum *IEnumVARIANT) Skip(celt uint) error {
 	return NewError(E_NOTIMPL)
 }
 
-func (enum *IEnumVARIANT) Next(celt uint) (array VARIANT, length uint, err error) {
+func (enum *IEnumVARIANT) Next(celt uint) (*VARIANT, uint, error) {
 	return nil, 0, NewError(E_NOTIMPL)
 }
