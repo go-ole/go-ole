@@ -4,8 +4,9 @@ package oleutil
 
 import (
 	"reflect"
-	"syscall"
 	"unsafe"
+
+	syscall "golang.org/x/sys/windows"
 
 	ole "github.com/go-ole/go-ole"
 )

@@ -3,6 +3,9 @@
  * Add CI configuration for Travis-CI and AppVeyor.
  * Add test InterfaceID and ClassID for the COM Test Server project.
  * Add more inline documentation.
+ * Minimum supported version is now Go 1.4. Go 1.1 support is deprecated, but should still build.
+ * Add ITypeInfo interface.
+ * Add ITypeComp interface.
  * **Add more test cases and reference new test COM server project.** (Placeholder for future additions)
 
 # Version 1.1.1

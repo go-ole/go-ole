@@ -3,9 +3,10 @@
 package ole
 
 import (
-	"syscall"
 	"time"
 	"unsafe"
+
+	syscall "golang.org/x/sys/windows"
 )
 
 func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {

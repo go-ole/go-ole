@@ -3,8 +3,9 @@
 package ole
 
 import (
-	"syscall"
 	"unsafe"
+
+	syscall "golang.org/x/sys/windows"
 )
 
 func (v *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err error) {
