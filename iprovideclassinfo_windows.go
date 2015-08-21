@@ -3,8 +3,9 @@
 package ole
 
 import (
-	"syscall"
 	"unsafe"
+
+	syscall "golang.org/x/sys/windows"
 )
 
 func getClassInfo(disp *IProvideClassInfo) (tinfo *ITypeInfo, err error) {

@@ -3,7 +3,7 @@
 package ole
 
 import (
-	"syscall"
+	syscall "golang.org/x/sys/windows"
 )
 
 var (

@@ -3,9 +3,10 @@
 package ole
 
 import (
-	"syscall"
 	"unicode/utf16"
 	"unsafe"
+
+	syscall "golang.org/x/sys/windows"
 )
 
 var (

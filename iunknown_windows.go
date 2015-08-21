@@ -3,8 +3,9 @@
 package ole
 
 import (
-	"syscall"
 	"unsafe"
+
+	syscall "golang.org/x/sys/windows"
 )
 
 func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err error) {

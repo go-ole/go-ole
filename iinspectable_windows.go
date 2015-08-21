@@ -6,8 +6,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"reflect"
-	"syscall"
 	"unsafe"
+
+	syscall "golang.org/x/sys/windows"
 )
 
 func (v *IInspectable) GetIids() (iids []*GUID, err error) {

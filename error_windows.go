@@ -4,8 +4,9 @@ package ole
 
 import (
 	"fmt"
-	"syscall"
 	"unicode/utf16"
+
+	syscall "golang.org/x/sys/windows"
 )
 
 // errstr converts error code to string.
