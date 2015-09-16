@@ -12,7 +12,7 @@ func reflectQueryInterface(self interface{}, method uintptr, interfaceID *GUID, 
 	hr, _, _ := syscall.Syscall(
 		method,
 		3,
-		uintptr(unsafe.Pointer(self)),
+		reflect.ValueOf(self).UnsafeAddr(),
 		uintptr(unsafe.Pointer(interfaceID)),
 		reflect.ValueOf(obj).UnsafeAddr())
 	if hr != 0 {
