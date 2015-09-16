@@ -43,14 +43,14 @@ func TestIDispatch(t *testing.T) {
 	}
 	defer dispatch.Release()
 
-	echoValue = func(method string, value interface{}) (interface{}, bool) {
-		dispid, err = dispatch.GetIDsOfName([]string{method})
+	echoValue := func(method string, value interface{}) (interface{}, bool) {
+		dispid, err := dispatch.GetIDsOfName([]string{method})
 		if err != nil {
 			t.Fatal(err)
 			return nil, false
 		}
 
-		result, err = disp.Invoke(dispid[0], ole.DISPATCH_METHOD, value)
+		result, err := dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, value)
 		if err != nil {
 			t.Fatal(err)
 			return nil, false
