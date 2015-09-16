@@ -67,7 +67,7 @@ func TestIDispatch(t *testing.T) {
 		"EchoInt64":   int64(1),
 		"EchoUInt8":   uint8(1),
 		"EchoUInt16":  uint16(1),
-		"EchoUInt32":  uint32(1),
+		"EchoUInt32":  uint(1),
 		"EchoUInt64":  uint64(1),
 		"EchoFloat32": float32(1.2),
 		"EchoFloat64": float64(1.2),
