@@ -50,7 +50,7 @@ func TestIDispatch(t *testing.T) {
 			return nil, false
 		}
 
-		result, err := dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, value)
+		result, err := dispatch.Invoke(dispid[0], DISPATCH_METHOD, value)
 		if err != nil {
 			t.Fatal(err)
 			return nil, false
@@ -60,17 +60,17 @@ func TestIDispatch(t *testing.T) {
 	}
 
 	methods := map[string]interface{}{
-		"EchoInt8":   int8(1),
-		"EchoInt16":  int16(1),
-		"EchoInt32":  int32(1),
-		"EchoInt64":  int64(1),
-		"EchoUInt8":  uint8(1),
-		"EchoUInt16": uint16(1),
-		"EchoUInt32": uint32(1),
-		"EchoUInt64": uint64(1),
-		"EchoFloat32", float32(1.2),
-		"EchoFloat64", float64(1.2),
-		"EchoString", "Test String"}
+		"EchoInt8":    int8(1),
+		"EchoInt16":   int16(1),
+		"EchoInt32":   int32(1),
+		"EchoInt64":   int64(1),
+		"EchoUInt8":   uint8(1),
+		"EchoUInt16":  uint16(1),
+		"EchoUInt32":  uint32(1),
+		"EchoUInt64":  uint64(1),
+		"EchoFloat32": float32(1.2),
+		"EchoFloat64": float64(1.2),
+		"EchoString":  "Test String"}
 
 	for method, expected := range methods {
 		if actual, passed := echoValue(method, expected); passed {
