@@ -317,7 +317,7 @@ func DispatchMessage(msg *Msg) (ret int32) {
 	return
 }
 
-func GetVariantDate(value float32) (time.Time, error) {
+func GetVariantDate(value float64) (time.Time, error) {
 	var st syscall.Systemtime
 	r, _, _ := procVariantTimeToSystemTime.Call(uintptr(unsafe.Pointer(&value)), uintptr(unsafe.Pointer(&st)))
 	if r != 0 {
