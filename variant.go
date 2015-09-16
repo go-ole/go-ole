@@ -1,6 +1,10 @@
 package ole
 
-import "unsafe"
+import (
+	"syscall"
+	"time"
+	"unsafe"
+)
 
 // NewVariant returns new variant based on type and value.
 func NewVariant(vt VT, val int64) VARIANT {
@@ -82,8 +86,14 @@ func (v *VARIANT) Value() interface{} {
 		return float64(v.Val)
 	case VT_BSTR:
 		return v.ToString()
-	//case VT_DATE:
-	//	return v.ToIDispatch() // TODO: use VariantTimeToSystemTime
+	case VT_DATE:
+		d := float32(v.Val)
+		var st syscall.Systemtime
+		r, _, _ := procVariantTimeToSystemTime.Call(uintptr(unsafe.Pointer(&d)), uintptr(unsafe.Pointer(&st)))
+		if r != 0 {
+			return time.Date(int(st.Year), time.Month(st.Month), int(st.Day), int(st.Hour), int(st.Minute), int(st.Second), int(st.Milliseconds/1000), nil)
+		}
+		return d
 	case VT_UNKNOWN:
 		return v.ToIUnknown()
 	case VT_DISPATCH:
