@@ -169,6 +169,6 @@ func DispatchMessage(msg *Msg) int32 {
 	return int32(0)
 }
 
-func GetVariantDate(value int64) time.Time {
-	return nil
+func GetVariantDate(value float32) (time.Time, error) {
+	return time.Now(), NewError(E_NOTIMPL)
 }

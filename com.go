@@ -317,12 +317,11 @@ func DispatchMessage(msg *Msg) (ret int32) {
 	return
 }
 
-func GetVariantDate(value int64) time.Time {
-	d := float32(value)
+func GetVariantDate(value float32) (time.Time, error) {
 	var st syscall.Systemtime
-	r, _, _ := procVariantTimeToSystemTime.Call(uintptr(unsafe.Pointer(&d)), uintptr(unsafe.Pointer(&st)))
+	r, _, _ := procVariantTimeToSystemTime.Call(uintptr(unsafe.Pointer(&value)), uintptr(unsafe.Pointer(&st)))
 	if r != 0 {
-		return time.Date(int(st.Year), time.Month(st.Month), int(st.Day), int(st.Hour), int(st.Minute), int(st.Second), int(st.Milliseconds/1000), nil)
+		return time.Date(int(st.Year), time.Month(st.Month), int(st.Day), int(st.Hour), int(st.Minute), int(st.Second), int(st.Milliseconds/1000), nil), nil
 	}
-	return nil
+	return time.Now(), NewError("Could not convert to time, passing current time.")
 }

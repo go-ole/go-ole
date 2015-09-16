@@ -83,7 +83,13 @@ func (v *VARIANT) Value() interface{} {
 	case VT_BSTR:
 		return v.ToString()
 	case VT_DATE:
-		return GetVariantDate(v.Val)
+		// VT_DATE type will either return float32 or time.Time.
+		d := float32(v.Val)
+		date, err := GetVariantDate(v.Val)
+		if err != nil {
+			return d
+		}
+		return date
 	case VT_UNKNOWN:
 		return v.ToIUnknown()
 	case VT_DISPATCH:
