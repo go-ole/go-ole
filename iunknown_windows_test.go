@@ -28,4 +28,5 @@ func TestIUnknown(t *testing.T) {
 		t.Fatal(err)
 		return
 	}
+	unknown.Release()
 }
