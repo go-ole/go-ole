@@ -23,7 +23,7 @@ func (v *IUnknown) VTable() *IUnknownVtbl {
 }
 
 func (v *IUnknown) PutQueryInterface(interfaceID *GUID, obj interface{}) error {
-	return reflectQueryInterface(v, unk.VTable().QueryInterface, interfaceID, &obj)
+	return reflectQueryInterface(v, v.VTable().QueryInterface, interfaceID, &obj)
 }
 
 func (v *IUnknown) IDispatch(interfaceID *GUID) (dispatch *IDispatch, err error) {
