@@ -26,8 +26,6 @@ func TestIDispatch(t *testing.T) {
 	var unknown *IUnknown
 	var dispatch *IDispatch
 
-	var dispid []int32
-
 	// oleutil.CreateObject()
 	unknown, err = CreateInstance(CLSID_COMEchoTestObject, IID_IUnknown)
 	if err != nil {
@@ -44,7 +42,10 @@ func TestIDispatch(t *testing.T) {
 	defer dispatch.Release()
 
 	echoValue := func(method string, value interface{}) (interface{}, bool) {
-		dispid, err := dispatch.GetIDsOfName([]string{method})
+		var dispid []int32
+		var err error
+
+		dispid, err = dispatch.GetIDsOfName([]string{method})
 		if err != nil {
 			t.Fatal(err)
 			return nil, false
