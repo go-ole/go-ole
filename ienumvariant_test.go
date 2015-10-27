@@ -14,6 +14,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 
 	var err error
 	var classID *GUID
+	var displayID int32
 
 	err = CoInitializeEx(0, COINIT_APARTMENTTHREADED)
 	if err != nil {
@@ -29,7 +30,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 		}
 	}
 
-	comserver, err = CreateInstance(classID, IID_IUnknown)
+	comserver, err := CreateInstance(classID, IID_IUnknown)
 	if err != nil {
 		t.Errorf("CreateInstance WbemScripting.SWbemLocator returned with %v", err)
 	}
@@ -47,7 +48,12 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	}
 	defer dispatch.Release()
 
-	wbemServices, err := dispatch.Invoke(GetSingleIDOfName(dispatch, "ConnectServer"), DISPATCH_METHOD)
+	displayID, err = GetSingleIDOfName(dispatch, "ConnectServer")
+	if err != nil {
+		t.Errorf("ConnectServer display id failed with %v", err)
+	}
+
+	wbemServices, err := dispatch.Invoke(displayID, DISPATCH_METHOD)
 	if err != nil {
 		t.Errorf("ExecQuery failed with %v", err)
 	}
@@ -56,7 +62,12 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	wbemServices_dispatch := wbemServices.ToIDispatch()
 	defer wbemServices_dispatch.Release()
 
-	objectset, err := wbemServices_dispatch.Invoke(GetSingleIDOfName(wbemServices_dispatch, "ExecQuery"), DISPATCH_METHOD, "SELECT * FROM WIN32_Process")
+	displayID, err = GetSingleIDOfName(wbemServices_dispatch, "ExecQuery")
+	if err != nil {
+		t.Errorf("ExecQuery display id failed with %v", err)
+	}
+
+	objectset, err := wbemServices_dispatch.Invoke(displayID, DISPATCH_METHOD, "SELECT * FROM WIN32_Process")
 	if err != nil {
 		t.Errorf("ExecQuery failed with %v", err)
 	}
@@ -65,7 +76,12 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	objectset_dispatch := objectset.ToIDispatch()
 	defer objectset_dispatch.Release()
 
-	variant, err := objectset_dispatch.Invoke(GetSingleIDOfName(objectset_dispatch, "_NewEnum"), DISPATCH_PROPERTYGET)
+	displayID, err = GetSingleIDOfName(objectset_dispatch, "_NewEnum")
+	if err != nil {
+		t.Errorf("_NewEnum display id failed with %v", err)
+	}
+
+	variant, err := objectset_dispatch.Invoke(displayID, DISPATCH_PROPERTYGET)
 	if err != nil {
 		t.Errorf("Get _NewEnum property failed with %v", err)
 	}
