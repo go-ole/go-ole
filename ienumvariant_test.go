@@ -16,7 +16,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 		}
 	}()
 
-	err := CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED)
+	err := CoInitializeEx(0, COINIT_APARTMENTTHREADED)
 	if err != nil {
 		t.Errorf("Initialize error: %v", err)
 	}
@@ -26,9 +26,15 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	if err != nil {
 		t.Errorf("CreateObject WbemScripting.SWbemLocator returned with %v", err)
 	}
+	if comserver == nil {
+		t.Error("CreateObject WbemScripting.SWbemLocator not an object")
+	}
 	defer comserver.Release()
 
-	dispatch, err := comserver.QueryInterface(ole.IID_IDispatch)
+	IID_ISWbemLocator := &GUID{0x76a6415b, 0xcb41, 0x11d1, [8]byte{0x8b, 0x02, 0x00, 0x60, 0x08, 0x06, 0xd9, 0xb6}}
+	IID_IEnumVariant := &GUID{0x027947E1, 0xD731, 0x11CE, [8]byte{0xA3, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}
+
+	dispatch, err := comserver.QueryInterface(IID_ISWbemLocator)
 	if err != nil {
 		t.Errorf("context.iunknown.QueryInterface returned with %v", err)
 	}
@@ -58,10 +64,13 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	}
 	defer variant.Clear()
 
-	object2 := variant.ToIUnknown().IEnumVARIANT(&GUID{0x027947E1, 0xD731, 0x11CE, [8]byte{0xA3, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}})
+	object2, err := variant.ToIUnknown().IEnumVARIANT(IID_IEnumVariant)
+	if err != nil {
+		t.Errorf("enum.Next() returned with %v", err)
+	}
 	defer object2.Release()
 
-	a, l, err := enum.Next(1)
+	a, l, err := object2.Next(1)
 	if err != nil {
 		t.Errorf("enum.Next() returned with %v", err)
 	}
