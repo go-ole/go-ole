@@ -2,11 +2,7 @@
 
 package ole
 
-import (
-	"testing"
-
-	"github.com/go-ole/go-ole/oleutil"
-)
+import "testing"
 
 func TestIEnumVariant_wmi(t *testing.T) {
 	defer func() {
@@ -16,15 +12,26 @@ func TestIEnumVariant_wmi(t *testing.T) {
 		}
 	}()
 
-	err := CoInitializeEx(0, COINIT_APARTMENTTHREADED)
+	var err error
+	var classID *GUID
+
+	err = CoInitializeEx(0, COINIT_APARTMENTTHREADED)
 	if err != nil {
 		t.Errorf("Initialize error: %v", err)
 	}
 	defer CoUninitialize()
 
-	comserver, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
+	classID, err = CLSIDFromProgID("WbemScripting.SWbemLocator")
 	if err != nil {
-		t.Errorf("CreateObject WbemScripting.SWbemLocator returned with %v", err)
+		classID, err = CLSIDFromString("WbemScripting.SWbemLocator")
+		if err != nil {
+			t.Errorf("CreateObject WbemScripting.SWbemLocator returned with %v", err)
+		}
+	}
+
+	comserver, err = CreateInstance(classID, IID_IUnknown)
+	if err != nil {
+		t.Errorf("CreateInstance WbemScripting.SWbemLocator returned with %v", err)
 	}
 	if comserver == nil {
 		t.Error("CreateObject WbemScripting.SWbemLocator not an object")
@@ -40,7 +47,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	}
 	defer dispatch.Release()
 
-	wbemServices, err := oleutil.CallMethod(dispatch, "ConnectServer")
+	wbemServices, err := dispatch.Invoke(GetSingleIDOfName(dispatch, "ConnectServer"), DISPATCH_METHOD)
 	if err != nil {
 		t.Errorf("ExecQuery failed with %v", err)
 	}
@@ -49,7 +56,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	wbemServices_dispatch := wbemServices.ToIDispatch()
 	defer wbemServices_dispatch.Release()
 
-	objectset, err := oleutil.CallMethod(wbemServices_dispatch, "ExecQuery", "SELECT * FROM WIN32_Process")
+	objectset, err := wbemServices_dispatch.Invoke(GetSingleIDOfName(wbemServices_dispatch, "ExecQuery"), DISPATCH_METHOD, "SELECT * FROM WIN32_Process")
 	if err != nil {
 		t.Errorf("ExecQuery failed with %v", err)
 	}
@@ -58,7 +65,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	objectset_dispatch := objectset.ToIDispatch()
 	defer objectset_dispatch.Release()
 
-	variant, err := oleutil.GetProperty(objectset_dispatch, "_NewEnum")
+	variant, err := objectset_dispatch.Invoke(GetSingleIDOfName(objectset_dispatch, "_NewEnum"), DISPATCH_PROPERTYGET)
 	if err != nil {
 		t.Errorf("Get _NewEnum property failed with %v", err)
 	}
