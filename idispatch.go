@@ -44,7 +44,7 @@ func GetSingleIDOfName(dispatch *IDispatch, name string) (displayID int32, err e
 	var displayIDs []int32
 	displayIDs, err = dispatch.GetIDsOfName([]string{name})
 	if err != nil {
-		return 0
+		return
 	}
 	displayID = displayIDs[0]
 	return
