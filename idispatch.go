@@ -40,11 +40,12 @@ func (v *IDispatch) GetTypeInfo() (tinfo *ITypeInfo, err error) {
 
 // Helper function pointers.
 
-func GetSingleIDOfName(dispatch *IDispatch, name string) (int32, err error) {
+func GetSingleIDOfName(dispatch *IDispatch, name string) (displayID int32, err error) {
 	var displayIDs []int32
 	displayIDs, err = dispatch.GetIDsOfName([]string{name})
 	if err != nil {
 		return 0
 	}
-	return displayIDs[0]
+	displayID = displayIDs[0]
+	return
 }
