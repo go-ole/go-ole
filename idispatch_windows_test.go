@@ -8,9 +8,10 @@ import (
 )
 
 func TestIDispatch(t *testing.T) {
+	var at string
 	defer func() {
 		if r := recover(); r != nil {
-			t.Error(r)
+			t.Errorf("Recovered %v at %s", r, at)
 		}
 	}()
 
@@ -69,6 +70,7 @@ func TestIDispatch(t *testing.T) {
 		"EchoUInt64": uint64(1)}
 
 	for method, expected := range methods {
+		at = method
 		if actual, passed := echoValue(method, expected); passed {
 			if !reflect.DeepEqual(expected, actual) {
 				t.Errorf("%s() expected %v did not match %v", method, expected, actual)
@@ -76,38 +78,48 @@ func TestIDispatch(t *testing.T) {
 		}
 	}
 
-	if actual, passed := echoValue("EchoInt32", int32(2)); passed {
+	at = "EchoInt32"
+	valueInt32 := int32(2)
+	if actual, passed := echoValue("EchoInt32", valueInt32); passed {
 		value := actual.(int32)
-		if value != int32(2) {
-			t.Errorf("%s() expected %v did not match %v", "EchoInt32", int32(2), value)
+		if value != valueInt32 {
+			t.Errorf("%s() expected %v did not match %v", "EchoInt32", valueInt32, value)
 		}
 	}
 
-	if actual, passed := echoValue("EchoUInt32", uint32(4)); passed {
+	at = "EchoUInt32"
+	valueUInt32 := uint32(4)
+	if actual, passed := echoValue("EchoUInt32", valueUInt32); passed {
 		value := actual.(uint32)
-		if value != uint32(4) {
-			t.Errorf("%s() expected %v did not match %v", "EchoUInt32", uint32(4), value)
+		if value != valueUInt32 {
+			t.Errorf("%s() expected %v did not match %v", "EchoUInt32", valueUInt32, value)
 		}
 	}
 
-	if actual, passed := echoValue("EchoFloat32", float32(2.2)); passed {
+	at = "EchoFloat32"
+	valueFloat32 := float32(2.2)
+	if actual, passed := echoValue("EchoFloat32", valueFloat32); passed {
 		value := actual.(float32)
-		if value != uint32(2.2) {
-			t.Errorf("%s() expected %v did not match %v", "EchoFloat32", uint32(2.2), value)
+		if value != valueFloat32 {
+			t.Errorf("%s() expected %v did not match %v", "EchoFloat32", valueFloat32, value)
 		}
 	}
 
-	if actual, passed := echoValue("EchoFloat64", float64(2.2)); passed {
+	at = "EchoFloat64"
+	valueFloat64 := float64(2.2)
+	if actual, passed := echoValue("EchoFloat64", valueFloat64); passed {
 		value := actual.(float64)
-		if value != float64(2.2) {
-			t.Errorf("%s() expected %v did not match %v", "EchoFloat64", float64(2.2), value)
+		if value != valueFloat64 {
+			t.Errorf("%s() expected %v did not match %v", "EchoFloat64", valueFloat64, value)
 		}
 	}
 
-	if actual, passed := echoValue("EchoString", "Test String"); passed {
+	at = "EchoString"
+	valueString := "Test String"
+	if actual, passed := echoValue("EchoString", valueString); passed {
 		value := actual.(string)
-		if value != "Test String" {
-			t.Errorf("%s() expected %v did not match %v", "EchoString", "Test String", value)
+		if value != valueString {
+			t.Errorf("%s() expected %v did not match %v", "EchoString", valueString, value)
 		}
 	}
 }
