@@ -34,6 +34,19 @@ func queryInterface(unk *IUnknown, iid *GUID) (disp *IDispatch, err error) {
 	return
 }
 
+func enumQueryInterface(unk *IUnknown, iid *GUID) (enum *IEnumVARIANT, err error) {
+	hr, _, _ := syscall.Syscall(
+		unk.VTable().QueryInterface,
+		3,
+		uintptr(unsafe.Pointer(unk)),
+		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(&enum)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
 func addRef(unk *IUnknown) int32 {
 	ret, _, _ := syscall.Syscall(
 		unk.VTable().AddRef,

@@ -1,6 +1,8 @@
 package ole
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 // NewVariant returns new variant based on type and value.
 func NewVariant(vt VT, val int64) VARIANT {
@@ -21,6 +23,19 @@ func (v *VARIANT) ToIDispatch() *IDispatch {
 		return nil
 	}
 	return (*IDispatch)(unsafe.Pointer(uintptr(v.Val)))
+}
+
+// converst cariant to IEnumVariant
+func (v* VARIANT) ToIEnumVARIANT() *IEnumVARIANT{
+	unknown:=v.ToIUnknown()
+	if unknown==nil	{
+		return nil
+	}
+	enum, err:=unknown.IEnumVARIANT(IID_IEnumVariant)
+	if err!=nil{
+		panic(err)
+	}
+	return enum
 }
 
 // ToArray converts variant to SafeArray helper.

@@ -32,8 +32,7 @@ func (v *IUnknown) IDispatch(interfaceID *GUID) (dispatch *IDispatch, err error)
 }
 
 func (v *IUnknown) IEnumVARIANT(interfaceID *GUID) (enum *IEnumVARIANT, err error) {
-	err = v.PutQueryInterface(interfaceID, &enum)
-	return
+	return enumQueryInterface(v,interfaceID)
 }
 
 func (v *IUnknown) QueryInterface(iid *GUID) (*IDispatch, error) {
