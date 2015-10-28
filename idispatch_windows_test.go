@@ -8,12 +8,6 @@ import (
 )
 
 func TestIDispatch(t *testing.T) {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Error(r)
-		}
-	}()
-
 	var err error
 
 	err = CoInitialize(0)

@@ -5,15 +5,6 @@ package ole
 import "testing"
 
 func TestIEnumVariant_wmi(t *testing.T) {
-	/*
-		defer func() {
-			r := recover()
-			if r != nil {
-				t.Error(r)
-			}
-		}()
-	*/
-
 	var err error
 	var classID *GUID
 	var displayID int32
