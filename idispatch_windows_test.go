@@ -29,7 +29,7 @@ func TestIDispatch(t *testing.T) {
 	// oleutil.CreateObject()
 	unknown, err = CreateInstance(CLSID_COMEchoTestObject, IID_IUnknown)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 		return
 	}
 	defer unknown.Release()
@@ -61,16 +61,16 @@ func TestIDispatch(t *testing.T) {
 	}
 
 	methods := map[string]interface{}{
-		"EchoInt8":    int8(1),
-		"EchoInt16":   int16(1),
-		"EchoInt32":   int32(1),
+		"EchoInt8":  int8(1),
+		"EchoInt16": int16(1),
+		//"EchoInt32":   int32(1),
 		"EchoInt64":   int64(1),
 		"EchoUInt8":   uint8(1),
 		"EchoUInt16":  uint16(1),
 		"EchoUInt32":  uint(1),
 		"EchoUInt64":  uint64(1),
 		"EchoFloat32": float32(1.2),
-		"EchoFloat64": float64(1.2),
+		"EchoFloat64": float64(1.4),
 		"EchoString":  "Test String"}
 
 	for method, expected := range methods {
@@ -78,6 +78,13 @@ func TestIDispatch(t *testing.T) {
 			if !reflect.DeepEqual(expected, actual) {
 				t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 			}
+		}
+	}
+
+	if actual, passed := echoValue("EchoInt32", int32(2)); passed {
+		value := actual.(int32)
+		if value != int32(2) {
+			t.Errorf("%s() expected %v did not match %v", "EchoInt32", int32(2), value)
 		}
 	}
 }
