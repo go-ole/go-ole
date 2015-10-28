@@ -5,18 +5,20 @@ package ole
 import "testing"
 
 func TestIEnumVariant_wmi(t *testing.T) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			t.Error(r)
-		}
-	}()
+	/*
+		defer func() {
+			r := recover()
+			if r != nil {
+				t.Error(r)
+			}
+		}()
+	*/
 
 	var err error
 	var classID *GUID
 	var displayID int32
 
-	err = CoInitializeEx(0, COINIT_APARTMENTTHREADED)
+	err = CoInitialize(0)
 	if err != nil {
 		t.Errorf("Initialize error: %v", err)
 	}
@@ -40,7 +42,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	defer comserver.Release()
 
 	IID_ISWbemLocator := &GUID{0x76a6415b, 0xcb41, 0x11d1, [8]byte{0x8b, 0x02, 0x00, 0x60, 0x08, 0x06, 0xd9, 0xb6}}
-	IID_IEnumVariant := &GUID{0x027947E1, 0xD731, 0x11CE, [8]byte{0xA3, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}}
+	IID_IEnumVariant := &GUID{0x00020404, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
 	dispatch, err := comserver.QueryInterface(IID_ISWbemLocator)
 	if err != nil {
@@ -60,7 +62,6 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	defer wbemServices.Clear()
 
 	wbemServices_dispatch := wbemServices.ToIDispatch()
-	defer wbemServices_dispatch.Release()
 
 	displayID, err = GetSingleIDOfName(wbemServices_dispatch, "ExecQuery")
 	if err != nil {
@@ -74,7 +75,6 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	defer objectset.Clear()
 
 	objectset_dispatch := objectset.ToIDispatch()
-	defer objectset_dispatch.Release()
 
 	displayID, err = GetSingleIDOfName(objectset_dispatch, "_NewEnum")
 	if err != nil {
@@ -87,17 +87,70 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	}
 	defer variant.Clear()
 
-	object2, err := variant.ToIUnknown().IEnumVARIANT(IID_IEnumVariant)
-	if err != nil {
-		t.Errorf("enum.Next() returned with %v", err)
-	}
-	defer object2.Release()
-
-	a, l, err := object2.Next(1)
-	if err != nil {
-		t.Errorf("enum.Next() returned with %v", err)
+	object2 := variant.ToIUnknown()
+	if object2 == nil {
+		t.Errorf("Object 2 iunknown is nil returned with %v", err)
 	}
 
-	t.Log(&a)
-	t.Log(&l)
+	enum, err := object2.IEnumVARIANT(IID_IEnumVariant)
+	if err != nil {
+		t.Errorf("IEnumVARIANT() returned with %v", err)
+	}
+	if enum == nil {
+		t.Error("Enum is nil")
+		t.FailNow()
+	}
+
+	var tmp_dispatch *IDispatch
+
+	for tmp, length, err := enum.Next(1); length > 0; tmp, length, err = enum.Next(1) {
+		if err != nil {
+			t.Errorf("Next() returned with %v", err)
+		}
+		tmp_dispatch = tmp.ToIDispatch()
+		defer tmp_dispatch.Release()
+
+		displayID, err = GetSingleIDOfName(tmp_dispatch, "Properties_")
+		if err != nil {
+			t.Errorf("Properties_ display id failed with %v", err)
+		}
+
+		props, err := tmp_dispatch.Invoke(displayID, DISPATCH_PROPERTYGET)
+		if err != nil {
+			t.Errorf("Get Properties_ property failed with %v", err)
+		}
+		defer props.Clear()
+
+		props_dispatch := props.ToIDispatch()
+
+		displayID, err = GetSingleIDOfName(props_dispatch, "_NewEnum")
+		if err != nil {
+			t.Errorf("_NewEnum display id failed with %v", err)
+		}
+
+		props_enum_property, err := props_dispatch.Invoke(displayID, DISPATCH_PROPERTYGET)
+		if err != nil {
+			t.Errorf("Get _NewEnum property failed with %v", err)
+		}
+		defer props_enum_property.Clear()
+
+		_, err = props_enum_property.ToIUnknown().IEnumVARIANT(IID_IEnumVariant)
+		if err != nil {
+			t.Errorf("IEnumVARIANT failed with %v", err)
+		}
+
+		displayID, err = GetSingleIDOfName(tmp_dispatch, "Name")
+		if err != nil {
+			t.Errorf("Name display id failed with %v", err)
+		}
+
+		class_variant, err := tmp_dispatch.Invoke(displayID, DISPATCH_PROPERTYGET)
+		if err != nil {
+			t.Errorf("Get Name property failed with %v", err)
+		}
+		defer class_variant.Clear()
+
+		class_name := class_variant.ToString()
+		t.Logf("Got %v", class_name)
+	}
 }
