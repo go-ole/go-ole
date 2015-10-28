@@ -9,12 +9,15 @@ import (
 )
 
 func reflectQueryInterface(self interface{}, method uintptr, interfaceID *GUID, obj interface{}) (err error) {
+	selfValue := reflect.ValueOf(self).Elem()
+	objValue := reflect.ValueOf(obj).Elem()
+
 	hr, _, _ := syscall.Syscall(
 		method,
 		3,
-		reflect.ValueOf(self).UnsafeAddr(),
+		selfValue.UnsafeAddr(),
 		uintptr(unsafe.Pointer(interfaceID)),
-		reflect.ValueOf(obj).UnsafeAddr())
+		objValue.Addr().Pointer())
 	if hr != 0 {
 		err = NewError(hr)
 	}
