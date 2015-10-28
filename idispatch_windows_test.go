@@ -8,6 +8,12 @@ import (
 )
 
 func TestIDispatch(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Error(r)
+		}
+	}()
+
 	var err error
 
 	err = CoInitialize(0)
@@ -55,17 +61,12 @@ func TestIDispatch(t *testing.T) {
 	}
 
 	methods := map[string]interface{}{
-		"EchoInt8":  int8(1),
-		"EchoInt16": int16(1),
-		//"EchoInt32":   int32(1),
-		"EchoInt64":   int64(1),
-		"EchoUInt8":   uint8(1),
-		"EchoUInt16":  uint16(1),
-		"EchoUInt32":  uint(1),
-		"EchoUInt64":  uint64(1),
-		"EchoFloat32": float32(1.2),
-		"EchoFloat64": float64(1.4),
-		"EchoString":  "Test String"}
+		"EchoInt8":   int8(1),
+		"EchoInt16":  int16(1),
+		"EchoInt64":  int64(1),
+		"EchoUInt8":  uint8(1),
+		"EchoUInt16": uint16(1),
+		"EchoUInt64": uint64(1)}
 
 	for method, expected := range methods {
 		if actual, passed := echoValue(method, expected); passed {
@@ -79,6 +80,34 @@ func TestIDispatch(t *testing.T) {
 		value := actual.(int32)
 		if value != int32(2) {
 			t.Errorf("%s() expected %v did not match %v", "EchoInt32", int32(2), value)
+		}
+	}
+
+	if actual, passed := echoValue("EchoUInt32", uint32(4)); passed {
+		value := actual.(uint32)
+		if value != uint32(4) {
+			t.Errorf("%s() expected %v did not match %v", "EchoUInt32", uint32(4), value)
+		}
+	}
+
+	if actual, passed := echoValue("EchoFloat32", float32(2.2)); passed {
+		value := actual.(float32)
+		if value != uint32(2.2) {
+			t.Errorf("%s() expected %v did not match %v", "EchoFloat32", uint32(2.2), value)
+		}
+	}
+
+	if actual, passed := echoValue("EchoFloat64", float64(2.2)); passed {
+		value := actual.(float64)
+		if value != float64(2.2) {
+			t.Errorf("%s() expected %v did not match %v", "EchoFloat64", float64(2.2), value)
+		}
+	}
+
+	if actual, passed := echoValue("EchoString", "Test String"); passed {
+		value := actual.(string)
+		if value != "Test String" {
+			t.Errorf("%s() expected %v did not match %v", "EchoString", "Test String", value)
 		}
 	}
 }
