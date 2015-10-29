@@ -23,6 +23,7 @@ func wrapCOMExecute(t *testing.T, callback func(*testing.T)) {
 func wrapDispatch(t *testing.T, ClassID, UnknownInterfaceID, DispatchInterfaceID *GUID, callback func(*testing.T, *IUnknown, *IDispatch)) {
 	var unknown *IUnknown
 	var dispatch *IDispatch
+	var err error
 
 	unknown, err = CreateInstance(ClassID, UnknownInterfaceID)
 	if err != nil {
@@ -57,7 +58,7 @@ func TestIDispatch_goolecomserver_echostring(t *testing.T) {
 		}
 		actual := variant.Value().(string)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -72,7 +73,7 @@ func TestIDispatch_goolecomserver_echoint8(t *testing.T) {
 		}
 		actual := variant.Value().(int8)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -87,7 +88,7 @@ func TestIDispatch_goolecomserver_echouint8(t *testing.T) {
 		}
 		actual := variant.Value().(uint8)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -102,7 +103,7 @@ func TestIDispatch_goolecomserver_echoint16(t *testing.T) {
 		}
 		actual := variant.Value().(int16)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -117,7 +118,7 @@ func TestIDispatch_goolecomserver_echouint16(t *testing.T) {
 		}
 		actual := variant.Value().(uint16)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -132,7 +133,7 @@ func TestIDispatch_goolecomserver_echoint32(t *testing.T) {
 		}
 		actual := variant.Value().(int32)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -147,7 +148,7 @@ func TestIDispatch_goolecomserver_echouint32(t *testing.T) {
 		}
 		actual := variant.Value().(uint32)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -162,7 +163,7 @@ func TestIDispatch_goolecomserver_echoint64(t *testing.T) {
 		}
 		actual := variant.Value().(int64)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -177,7 +178,7 @@ func TestIDispatch_goolecomserver_echouint64(t *testing.T) {
 		}
 		actual := variant.Value().(uint64)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -192,7 +193,7 @@ func TestIDispatch_goolecomserver_echofloat32(t *testing.T) {
 		}
 		actual := variant.Value().(float32)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
@@ -207,7 +208,7 @@ func TestIDispatch_goolecomserver_echofloat64(t *testing.T) {
 		}
 		actual := variant.Value().(float64)
 		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, value)
+			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
 	})
 }
