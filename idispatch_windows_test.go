@@ -57,7 +57,10 @@ func TestIDispatch_goolecomserver_echostring(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(string)
+		actual, passed := variant.Value().(string)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "string", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -73,7 +76,10 @@ func TestIDispatch_goolecomserver_echoint8(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(int8)
+		actual, passed := variant.Value().(int8)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int8", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -89,7 +95,10 @@ func TestIDispatch_goolecomserver_echouint8(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(uint8)
+		actual, passed := variant.Value().(uint8)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint8", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -105,7 +114,10 @@ func TestIDispatch_goolecomserver_echoint16(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(int16)
+		actual, passed := variant.Value().(int16)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int16", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -121,7 +133,10 @@ func TestIDispatch_goolecomserver_echouint16(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(uint16)
+		actual, passed := variant.Value().(uint16)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint16", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -137,9 +152,20 @@ func TestIDispatch_goolecomserver_echoint32(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(int32)
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
+		actual, passed := variant.Value().(int32)
+		if passed {
+			if actual != expected {
+				t.Errorf("%s() expected %v did not match %v", method, expected, actual)
+			}
+		}
+
+		actualInt, passed := variant.Value().(int)
+		if passed {
+			if actualInt != expected {
+				t.Errorf("%s() expected %v did not match %v", method, expected, actualInt)
+			}
+		} else {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int32", variant.VT, variant.Val)
 		}
 	})
 }
@@ -153,9 +179,20 @@ func TestIDispatch_goolecomserver_echouint32(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(uint32)
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
+		actual, passed := variant.Value().(uint32)
+		if passed {
+			if actual != expected {
+				t.Errorf("%s() expected %v did not match %v", method, expected, actual)
+			}
+		}
+
+		actualUInt, passed := variant.Value().(uint)
+		if passed {
+			if actualInt != expected {
+				t.Errorf("%s() expected %v did not match %v", method, expected, actualInt)
+			}
+		} else {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint32", variant.VT, variant.Val)
 		}
 	})
 }
@@ -169,7 +206,10 @@ func TestIDispatch_goolecomserver_echoint64(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(int64)
+		actual, passed := variant.Value().(int64)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int64", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -185,7 +225,10 @@ func TestIDispatch_goolecomserver_echouint64(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(uint64)
+		actual, passed := variant.Value().(uint64)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint64", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -201,7 +244,10 @@ func TestIDispatch_goolecomserver_echofloat32(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(float32)
+		actual, passed := variant.Value().(float32)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "float32", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
@@ -217,7 +263,10 @@ func TestIDispatch_goolecomserver_echofloat64(t *testing.T) {
 			t.Error(err)
 		}
 		variant.Clear()
-		actual := variant.Value().(float64)
+		actual, passed := variant.Value().(float64)
+		if !passed {
+			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "float64", variant.VT, variant.Val)
+		}
 		if actual != expected {
 			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
 		}
