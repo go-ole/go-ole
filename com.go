@@ -318,6 +318,7 @@ func DispatchMessage(msg *Msg) (ret int32) {
 	return
 }
 
+// GetVariantDate converts COM Variant Time value to Go time.Time.
 func GetVariantDate(value float64) (time.Time, error) {
 	var st syscall.Systemtime
 	r, _, _ := procVariantTimeToSystemTime.Call(uintptr(unsafe.Pointer(&value)), uintptr(unsafe.Pointer(&st)))
@@ -325,4 +326,20 @@ func GetVariantDate(value float64) (time.Time, error) {
 		return time.Date(int(st.Year), time.Month(st.Month), int(st.Day), int(st.Hour), int(st.Minute), int(st.Second), int(st.Milliseconds/1000), nil), nil
 	}
 	return time.Now(), errors.New("Could not convert to time, passing current time.")
+}
+
+// ClassIDFrom retrieves class ID whether given is program ID or application string.
+//
+// Helper that provides check against both Class ID from Program ID and Class ID from string. It is
+// faster, if you know which you are using, to use the individual functions, but this will check
+// against available functions for you.
+func ClassIDFrom(programID string) (classID *GUID, err error) {
+	classID, err = CLSIDFromProgID(programID)
+	if err != nil {
+		classID, err = CLSIDFromString(programID)
+		if err != nil {
+			return
+		}
+	}
+	return
 }
