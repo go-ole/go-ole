@@ -46,13 +46,13 @@ func (enum *IEnumVARIANT) Skip(celt uint) (err error) {
 	return
 }
 
-func (enum *IEnumVARIANT) Next(celt uint) (variant VARIANT, length uint32, err error) {
+func (enum *IEnumVARIANT) Next(celt uint) (array VARIANT, length uint, err error) {
 	hr, _, _ := syscall.Syscall6(
 		enum.VTable().Next,
 		4,
 		uintptr(unsafe.Pointer(enum)),
 		uintptr(celt),
-		uintptr(unsafe.Pointer(&variant)),
+		uintptr(unsafe.Pointer(&array)),
 		uintptr(unsafe.Pointer(&length)),
 		0,
 		0)
