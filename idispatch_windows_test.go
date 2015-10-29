@@ -7,6 +7,25 @@ import (
 	"testing"
 )
 
+func echoValue(t *testing.T, dispatch *IDispatch, method string, value interface{}) (VARIANT, bool) {
+	var dispid []int32
+	var err error
+
+	dispid, err = dispatch.GetIDsOfName([]string{method})
+	if err != nil {
+		t.Fatal(err)
+		return nil, false
+	}
+
+	result, err := dispatch.Invoke(dispid[0], DISPATCH_METHOD, value)
+	if err != nil {
+		t.Fatal(err)
+		return nil, false
+	}
+
+	return result, true
+}
+
 func TestIDispatch(t *testing.T) {
 	var at string
 	defer func() {
@@ -41,42 +60,6 @@ func TestIDispatch(t *testing.T) {
 		return
 	}
 	defer dispatch.Release()
-
-	echoValue := func(method string, value interface{}) (interface{}, bool) {
-		var dispid []int32
-		var err error
-
-		dispid, err = dispatch.GetIDsOfName([]string{method})
-		if err != nil {
-			t.Fatal(err)
-			return nil, false
-		}
-
-		result, err := dispatch.Invoke(dispid[0], DISPATCH_METHOD, value)
-		if err != nil {
-			t.Fatal(err)
-			return nil, false
-		}
-
-		return result.Value(), true
-	}
-
-	methods := map[string]interface{}{
-		"EchoInt8":   int8(1),
-		"EchoInt16":  int16(1),
-		"EchoInt64":  int64(1),
-		"EchoUInt8":  uint8(1),
-		"EchoUInt16": uint16(1),
-		"EchoUInt64": uint64(1)}
-
-	for method, expected := range methods {
-		at = method
-		if actual, passed := echoValue(method, expected); passed {
-			if !reflect.DeepEqual(expected, actual) {
-				t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-			}
-		}
-	}
 
 	at = "EchoInt32"
 	valueInt32 := int32(2)
@@ -120,6 +103,23 @@ func TestIDispatch(t *testing.T) {
 		value := actual.(string)
 		if value != valueString {
 			t.Errorf("%s() expected %v did not match %v", "EchoString", valueString, value)
+		}
+	}
+
+	methods := map[string]interface{}{
+		"EchoInt8":   int8(1),
+		"EchoInt16":  int16(1),
+		"EchoInt64":  int64(1),
+		"EchoUInt8":  uint8(1),
+		"EchoUInt16": uint16(1),
+		"EchoUInt64": uint64(1)}
+
+	for method, expected := range methods {
+		at = method
+		if actual, passed := echoValue(method, expected); passed {
+			if !reflect.DeepEqual(expected, actual) {
+				t.Errorf("%s() expected %v did not match %v", method, expected, actual)
+			}
 		}
 	}
 }
