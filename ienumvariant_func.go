@@ -15,5 +15,5 @@ func (enum *IEnumVARIANT) Skip(celt uint) error {
 }
 
 func (enum *IEnumVARIANT) Next(celt uint) (VARIANT, uint, error) {
-	return nil, 0, NewError(E_NOTIMPL)
+	return NewVariant(VT_NULL, int64(0)), 0, NewError(E_NOTIMPL)
 }
