@@ -32,7 +32,7 @@ func wrapDispatch(t *testing.T, ClassID, UnknownInterfaceID, DispatchInterfaceID
 	}
 	defer unknown.Release()
 
-	dispatch, err = unknown.QueryInterface(DispatchInterfaceID)
+	dispatch, err = unknown.QueryInterface(IID_IDispatch)
 	if err != nil {
 		t.Error(err)
 		return
