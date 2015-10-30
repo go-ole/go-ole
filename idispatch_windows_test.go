@@ -161,7 +161,7 @@ func TestIDispatch_goolecomserver_echoint32(t *testing.T) {
 
 		actualInt, passed := variant.Value().(int)
 		if passed {
-			if actualInt != expected {
+			if actualInt != int(expected) {
 				t.Errorf("%s() expected %v did not match %v", method, expected, actualInt)
 			}
 		} else {
@@ -188,8 +188,8 @@ func TestIDispatch_goolecomserver_echouint32(t *testing.T) {
 
 		actualUInt, passed := variant.Value().(uint)
 		if passed {
-			if actualInt != expected {
-				t.Errorf("%s() expected %v did not match %v", method, expected, actualInt)
+			if actualUInt != uint(expected) {
+				t.Errorf("%s() expected %v did not match %v", method, expected, actualUInt)
 			}
 		} else {
 			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint32", variant.VT, variant.Val)
