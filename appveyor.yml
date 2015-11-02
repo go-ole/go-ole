@@ -42,7 +42,7 @@ install:
   - choco install mingw
   - SET PATH=c:\tools\mingw64\bin;%PATH%
   # - Download COM Server
-  - ps: Start-FileDownload "https://github.com/go-ole/test-com-server/releases/download/v1.0.1/test-com-server-${env:DOWNLOADPLATFORM}.zip"
+  - ps: Start-FileDownload "https://github.com/go-ole/test-com-server/releases/download/v1.0.2/test-com-server-${env:DOWNLOADPLATFORM}.zip"
   - 7z e test-com-server-%DOWNLOADPLATFORM%.zip -oc:\gopath\src\github.com\go-ole\go-ole > NUL
   - c:\gopath\src\github.com\go-ole\go-ole\build\register-assembly.bat
   # - set
