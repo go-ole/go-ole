@@ -44,13 +44,13 @@ func wrapDispatch(t *testing.T, ClassID, UnknownInterfaceID, DispatchInterfaceID
 
 func wrapGoOLETestCOMServerEcho(t *testing.T, callback func(*testing.T, *IUnknown, *IDispatch)) {
 	wrapCOMExecute(t, func(t *testing.T) {
-		wrapDispatch(t, CLSID_COMEchoTestObject, IID_IDispatch, IID_ICOMEchoTestObject, callback)
+		wrapDispatch(t, CLSID_COMEchoTestObject, IID_IUnknown, IID_ICOMEchoTestObject, callback)
 	})
 }
 
 func wrapGoOLETestCOMServerScalar(t *testing.T, callback func(*testing.T, *IUnknown, *IDispatch)) {
 	wrapCOMExecute(t, func(t *testing.T) {
-		wrapDispatch(t, CLSID_COMTestScalarClass, IID_IDispatch, IID_ICOMTestTypes, callback)
+		wrapDispatch(t, CLSID_COMTestScalarClass, IID_IUnknown, IID_ICOMTestTypes, callback)
 	})
 }
 
