@@ -2,6 +2,10 @@
 
 package ole
 
+import (
+	"unsafe"
+)
+
 // safeArrayAccessData returns raw array pointer.
 //
 // AKA: SafeArrayAccessData in Windows API.
