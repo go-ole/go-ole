@@ -120,8 +120,8 @@ func safeArrayGetElementSize(safearray *SafeArray) (*uint32, error) {
 }
 
 // safeArrayGetElement retrieves element at given index.
-func safeArrayGetElement(safearray *SafeArray, index int64) (uintptr, error) {
-	return uintptr(0), NewError(E_NOTIMPL)
+func safeArrayGetElement(safearray *SafeArray, index int64, pv unsafe.Pointer) error {
+	return NewError(E_NOTIMPL)
 }
 
 // safeArrayGetElement retrieves element at given index and converts to string.
