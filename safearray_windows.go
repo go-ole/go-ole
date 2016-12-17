@@ -4,6 +4,7 @@ package ole
 
 import (
 	"unsafe"
+	"errors"
 )
 
 var (
@@ -205,11 +206,22 @@ func safeArrayGetElementSize(safearray *SafeArray) (length *uint32, err error) {
 }
 
 // safeArrayGetElement retrieves element at given index.
-func safeArrayGetElement(safearray *SafeArray, index int64, pv unsafe.Pointer) error {
+func safeArrayGetElement(safearray *SafeArray, index interface{}, pv unsafe.Pointer) error {
+	var indexPtr unsafe.Pointer
+	switch index.(type) {
+		case int64:
+			idx := index.(int64)
+			indexPtr = unsafe.Pointer(&idx)
+		case [2]int32:
+			idx := index.([2]int32)
+			indexPtr = unsafe.Pointer(&idx[0])
+		default:
+			return errors.New("safeArrayGetElement unknow index")
+	}
 	return convertHresultToError(
 		procSafeArrayGetElement.Call(
 			uintptr(unsafe.Pointer(safearray)),
-			uintptr(unsafe.Pointer(&index)),
+			uintptr(indexPtr),
 			uintptr(pv)))
 }
 
