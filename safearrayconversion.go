@@ -99,6 +99,25 @@ func (sac *SafeArrayConversion) ToValueArray() (values []interface{}) {
 	return
 }
 
+func ToValueArray2(sac *SafeArrayConversion) (values [][]interface{}) {
+	totalElements1, _ := sac.TotalElements(1)
+	totalElements2, _ := sac.TotalElements(2)
+	te1, te2 := int(totalElements1), int(totalElements2)
+
+	values = make([][]interface{}, te1)
+	for i := 0; i < te1; i ++ {
+		row := make([]interface{}, te2)
+		for j := 0; j < te2; j ++ {
+			var v VARIANT
+			SafeArrayGetElement2(sac.Array, int32(i)+1, int32(j)+1, unsafe.Pointer(&v))
+			row[j] = v.Value()
+		}
+		values[i] = row
+	}
+
+	return
+}
+
 func (sac *SafeArrayConversion) GetType() (varType uint16, err error) {
 	return safeArrayGetVartype(sac.Array)
 }

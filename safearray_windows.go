@@ -213,6 +213,16 @@ func safeArrayGetElement(safearray *SafeArray, index int64, pv unsafe.Pointer) e
 			uintptr(pv)))
 }
 
+// safeArrayGetElement retrieves element at given index.
+func SafeArrayGetElement2(safearray *SafeArray, i, j int32, pv unsafe.Pointer) error {
+	index := [2]int32 {i, j}
+	return convertHresultToError(
+		procSafeArrayGetElement.Call(
+			uintptr(unsafe.Pointer(safearray)),
+			uintptr(unsafe.Pointer(&index[0])),
+			uintptr(pv)))
+}
+
 // safeArrayGetElementString retrieves element at given index and converts to string.
 func safeArrayGetElementString(safearray *SafeArray, index int64) (str string, err error) {
 	var element *int16
