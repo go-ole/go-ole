@@ -33,7 +33,7 @@ func (sac *SafeArrayConversion) ToByteArray() (bytes []byte) {
 }
 
 func (sac *SafeArrayConversion) ToValueArray() (values []interface{}) {
-	totalElements, _ := sac.TotalElements(0)
+	totalElements, _ := sac.TotalElements(2)
 	values = make([]interface{}, totalElements)
 	vt, _ := safeArrayGetVartype(sac.Array)
 
@@ -89,7 +89,8 @@ func (sac *SafeArrayConversion) ToValueArray() (values []interface{}) {
 			values[i] = v
 		case VT_VARIANT:
 			var v VARIANT
-			safeArrayGetElement(sac.Array, int64(i), unsafe.Pointer(&v))
+			//safeArrayGetElement(sac.Array, int64(i), unsafe.Pointer(&v))
+			safeArrayGetElement(sac.Array, [2]int32 {1, int32(i+1)}, unsafe.Pointer(&v))
 			values[i] = v.Value()
 		default:
 			// TODO
