@@ -13,6 +13,9 @@ var (
 	// IID_IEnumVariant is for IEnumVariant interfaces
 	IID_IEnumVariant = NewGUID("{00020404-0000-0000-C000-000000000046}")
 
+	// IID_IEnumVariant is for IEnumVariant interfaces
+	IID_IEnumVariant = &GUID{0x00020404,0x0000,0x0000,[8]byte{0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46}}
+
 	// IID_IConnectionPointContainer is for IConnectionPointContainer interfaces.
 	IID_IConnectionPointContainer = NewGUID("{B196B284-BAB4-101A-B69C-00AA00341D07}")
 
