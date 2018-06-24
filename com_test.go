@@ -194,7 +194,7 @@ func TestError(t *testing.T) {
 	defer CoUninitialize()
 	_, err := CLSIDFromProgID("INTERFACE-NOT-FOUND")
 	if err == nil {
-		t.Fatalf("should be fail", err)
+		t.Fatalf("should be fail: %v", err)
 	}
 
 	switch vt := err.(type) {
