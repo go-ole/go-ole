@@ -222,6 +222,9 @@ func GetObject(programID string, bindOpts *BindOpts, iid *GUID) (unk *IUnknown, 
 	if bindOpts != nil {
 		bindOpts.CbStruct = uint32(unsafe.Sizeof(BindOpts{}))
 	}
+	if iid == nil {
+		iid = IID_IUnknown
+	}
 	hr, _, _ := procCoGetObject.Call(
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(programID))),
 		uintptr(unsafe.Pointer(bindOpts)),
