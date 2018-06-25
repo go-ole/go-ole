@@ -21,6 +21,7 @@ var (
 	procStringFromCLSID, _         = modole32.FindProc("StringFromCLSID")
 	procStringFromIID, _           = modole32.FindProc("StringFromIID")
 	procIIDFromString, _           = modole32.FindProc("IIDFromString")
+	procCoGetObject, _             = modole32.FindProc("CoGetObject")
 	procGetUserDefaultLCID, _      = modkernel32.FindProc("GetUserDefaultLCID")
 	procCopyMemory, _              = modkernel32.FindProc("RtlMoveMemory")
 	procVariantInit, _             = modoleaut32.FindProc("VariantInit")
@@ -201,6 +202,32 @@ func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
 	}
 	hr, _, _ := procGetActiveObject.Call(
 		uintptr(unsafe.Pointer(clsid)),
+		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(&unk)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+type BindOpts struct {
+	CbStruct          uint32
+	GrfFlags          uint32
+	GrfMode           uint32
+	TickCountDeadline uint32
+}
+
+// GetObject retrieves pointer to active object.
+func GetObject(programID string, bindOpts *BindOpts, iid *GUID) (unk *IUnknown, err error) {
+	if bindOpts != nil {
+		bindOpts.CbStruct = uint32(unsafe.Sizeof(BindOpts{}))
+	}
+	if iid == nil {
+		iid = IID_IUnknown
+	}
+	hr, _, _ := procCoGetObject.Call(
+		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(programID))),
+		uintptr(unsafe.Pointer(bindOpts)),
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&unk)))
 	if hr != 0 {
