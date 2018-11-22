@@ -1,4 +1,4 @@
-// +build amd64
+// +build windows,amd64
 
 package ole
 

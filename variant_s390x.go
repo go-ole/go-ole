@@ -1,4 +1,4 @@
-// +build s390x
+// +build windows,s390x
 
 package ole
 
