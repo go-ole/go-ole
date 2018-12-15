@@ -64,8 +64,8 @@ func Example_safeArrayGetElementString() {
 	qbXMLVersions = result.ToArray().Array
 
 	// Get array bounds
-	var LowerBounds int64
-	var UpperBounds int64
+	var LowerBounds int32
+	var UpperBounds int32
 	LowerBounds, err = safeArrayGetLBound(qbXMLVersions, 1)
 	if err != nil {
 		return
@@ -79,8 +79,8 @@ func Example_safeArrayGetElementString() {
 	totalElements := UpperBounds - LowerBounds + 1
 	qbXmlVersionStrings = make([]string, totalElements)
 
-	for i := int64(0); i < totalElements; i++ {
-		qbXmlVersionStrings[int32(i)], _ = safeArrayGetElementString(qbXMLVersions, i)
+	for i := int32(0); i < totalElements; i++ {
+		qbXmlVersionStrings[i], _ = safeArrayGetElementString(qbXMLVersions, i)
 	}
 
 	// Release Safe Array memory
