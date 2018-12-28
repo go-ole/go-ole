@@ -32,10 +32,10 @@ var (
 	procSafeArrayUnaccessData, _      = modoleaut32.FindProc("SafeArrayUnaccessData")
 	procSafeArrayUnlock, _            = modoleaut32.FindProc("SafeArrayUnlock")
 	procSafeArrayPutElement, _        = modoleaut32.FindProc("SafeArrayPutElement")
-	//procSafeArrayRedim, _             = modoleaut32.FindProc("SafeArrayRedim") // TODO
+	procSafeArrayRedim, _             = modoleaut32.FindProc("SafeArrayRedim") // TODO
 	//procSafeArraySetIID, _            = modoleaut32.FindProc("SafeArraySetIID") // TODO
-	procSafeArrayGetRecordInfo, _     = modoleaut32.FindProc("SafeArrayGetRecordInfo")
-	procSafeArraySetRecordInfo, _     = modoleaut32.FindProc("SafeArraySetRecordInfo")
+	procSafeArrayGetRecordInfo, _ = modoleaut32.FindProc("SafeArrayGetRecordInfo")
+	procSafeArraySetRecordInfo, _ = modoleaut32.FindProc("SafeArraySetRecordInfo")
 )
 
 // safeArrayAccessData returns raw array pointer.
@@ -334,5 +334,16 @@ func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) (err e
 		procSafeArraySetRecordInfo.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&recordInfo))))
+	return
+}
+
+// safeArrayRedim Changes the right-most (least significant) bound of the specified safe array.
+//
+// AKA: safeArrayRedim in Windows API.
+func safeArrayRedim(safearray *SafeArray, bounds *SafeArrayBound) (err error) {
+	err = convertHresultToError(
+		procSafeArrayRedim.Call(
+			uintptr(unsafe.Pointer(safearray)),
+			uintptr(unsafe.Pointer(bounds))))
 	return
 }

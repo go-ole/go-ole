@@ -70,3 +70,13 @@ func (sac *SafeArrayConversion) TotalElements(index uint32) (totalElements int64
 func (sac *SafeArrayConversion) Release() {
 	safeArrayDestroy(sac.Array)
 }
+
+// Redim ..
+func (sac *SafeArrayConversion) Redim(bound *SafeArrayBound) error {
+	return safeArrayRedim(sac.Array, bound)
+}
+
+// PutElement ..
+func (sac *SafeArrayConversion) PutElement(index int64, element uintptr) error {
+	return safeArrayPutElement(sac.Array, index, element)
+}
