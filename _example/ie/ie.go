@@ -30,8 +30,8 @@ func main() {
 	q := oleutil.MustCallMethod(elems, "item", 0).ToIDispatch()
 	oleutil.MustPutProperty(q, "value", "golang")
 
-	// click btnG.
-	elems = oleutil.MustCallMethod(document, "getElementsByName", "btnG").ToIDispatch()
+	// click btnK.
+	elems = oleutil.MustCallMethod(document, "getElementsByName", "btnK").ToIDispatch()
 	btnG := oleutil.MustCallMethod(elems, "item", 0).ToIDispatch()
 	oleutil.MustCallMethod(btnG, "click")
 }
