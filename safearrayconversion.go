@@ -91,6 +91,7 @@ func (sac *SafeArrayConversion) ToValueArray() (values []interface{}) {
 			var v VARIANT
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v.Value()
+			v.Clear()
 		default:
 			// TODO
 		}
