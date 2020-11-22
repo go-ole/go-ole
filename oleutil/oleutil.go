@@ -103,7 +103,7 @@ func MustPutPropertyRef(disp *ole.IDispatch, name string, params ...interface{})
 }
 
 func ForEach(disp *ole.IDispatch, f func(v *ole.VARIANT) error) error {
-	newEnum, err := disp.GetProperty("_NewEnum")
+	newEnum, err := disp.CallMethod("_NewEnum")
 	if err != nil {
 		return err
 	}
