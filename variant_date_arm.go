@@ -16,7 +16,7 @@ func GetVariantDate(value uint64) (time.Time, error) {
 	v2 := uint32(value >> 32)
 	r, _, _ := procVariantTimeToSystemTime.Call(uintptr(v1), uintptr(v2), uintptr(unsafe.Pointer(&st)))
 	if r != 0 {
-		return time.Date(int(st.Year), time.Month(st.Month), int(st.Day), int(st.Hour), int(st.Minute), int(st.Second), int(st.Milliseconds/1000), time.UTC), nil
+		return time.Date(int(st.Year), time.Month(st.Month), int(st.Day), int(st.Hour), int(st.Minute), int(st.Second), int(st.Milliseconds*1000), time.UTC), nil
 	}
 	return time.Now(), errors.New("Could not convert to time, passing current time.")
 }
