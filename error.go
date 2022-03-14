@@ -18,8 +18,8 @@ func NewErrorWithDescription(hr uintptr, description string) *OleError {
 }
 
 // NewErrorWithSubError creates new COM error with parent error.
-func NewErrorWithSubError(hr uintptr, description string, err error) *OleError {
-	return &OleError{hr: hr, description: description, subError: err}
+func NewErrorWithSubError(hr uintptr, err error) *OleError {
+	return &OleError{hr: hr, subError: err}
 }
 
 // Code is the HResult.
@@ -29,8 +29,12 @@ func (v *OleError) Code() uintptr {
 
 // String description, either manually set or format message with error code.
 func (v *OleError) String() string {
+	msg := errstr(int(v.hr))
 	if v.description != "" {
-		return errstr(int(v.hr)) + " (" + v.description + ")"
+		msg += " (" + v.description + ")"
+	}
+	if v.subError != nil {
+		msg += " (" + v.subError.Error() +")"
 	}
 	return errstr(int(v.hr))
 }
@@ -47,5 +51,10 @@ func (v *OleError) Description() string {
 
 // SubError returns parent error, if there is one.
 func (v *OleError) SubError() error {
+	return v.subError
+}
+
+// Unwrap enables OleError to be compabible with the functions in the standard library's errors package
+func (v *OleError) Unwrap() error {
 	return v.subError
 }
