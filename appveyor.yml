@@ -31,7 +31,7 @@ before_test:
   - go vet ./...
 
 test_script:
-  - go test ./...
+  - go test -v -cover ./...
 
 branches:
   only:
@@ -63,7 +63,6 @@ build_script:
   - cd c:\gopath\src\github.com\go-ole\go-ole
   - go get -v -t ./...
   - go build
-  - go test -v -cover ./...
 
 # disable automatic tests
 test: off
