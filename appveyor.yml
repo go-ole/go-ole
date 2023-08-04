@@ -25,8 +25,8 @@ before_test:
   - 7z e test-com-server-%DOWNLOADPLATFORM%.zip -oc:\gopath\src\github.com\go-ole\go-ole > NUL
   - c:\gopath\src\github.com\go-ole\go-ole\build\register-assembly.bat
   # - GO
-  - set PATH=C:\go116\bin;%PATH%
-  - set GOROOT=C:\go116
+  # - set PATH=C:\go116\bin;%PATH%
+  # - set GOROOT=C:\go116
   - go vet ./...
 
 test_script:
