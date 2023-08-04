@@ -65,7 +65,7 @@ build_script:
   - go build
 
 # disable automatic tests
-test: off
+test: on
 
 # disable deployment
 deploy: off
