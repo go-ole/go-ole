@@ -27,7 +27,8 @@ before_test:
 
 test_script:
   - go test -v -cover ./...
-  - go vet ./...
+  # go vet has false positives on unsafe.Pointer with windows/sys. Disabling since it is recommended to use go test instead.
+  # - go vet ./...
 
 branches:
   only:
