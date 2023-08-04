@@ -23,7 +23,6 @@ before_test:
   # - Download COM Server
   - ps: Start-FileDownload "https://github.com/go-ole/test-com-server/releases/download/v1.0.2/test-com-server-${env:DOWNLOADPLATFORM}.zip"
   - 7z e test-com-server-%DOWNLOADPLATFORM%.zip -oc:\gopath\src\github.com\go-ole\go-ole > NUL
-  - dir c:\gopath\src\github.com\go-ole\go-ole /s /b /o:gn 
   - c:\gopath\src\github.com\go-ole\go-ole\build\register-assembly.bat
 
 test_script:
