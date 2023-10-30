@@ -5,6 +5,7 @@ package ole
 
 import (
 	"errors"
+	"math"
 	"syscall"
 	"time"
 	"unsafe"
@@ -15,10 +16,10 @@ const ONETHOUSANDMILLISECONDS = 0.0000115740740740
 // GetVariantDate converts COM Variant Time value to Go time.Time.
 func GetVariantDate(value uint64) (time.Time, error) {
 	halfSecond := ONETHOUSANDMILLISECONDS / 2.0
-	dVariantTime := *(*float64)(unsafe.Pointer(&value))
+	dVariantTime := math.Float64frombits(value)
 	var st syscall.Systemtime
 	adjustedVariantTime := dVariantTime - halfSecond
-	uAdjustedVariantTime := *(*uint64)(unsafe.Pointer(&adjustedVariantTime))
+	uAdjustedVariantTime := math.Float64bits(adjustedVariantTime)
 	v1 := uint32(uAdjustedVariantTime)
 	v2 := uint32(uAdjustedVariantTime >> 32)
 	r, _, _ := procVariantTimeToSystemTime.Call(uintptr(v1), uintptr(v2), uintptr(unsafe.Pointer(&st)))
