@@ -1,11 +1,13 @@
+//go:build windows
 // +build windows
 
 package ole
 
 import (
-	"syscall"
 	"unicode/utf16"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 var (
@@ -158,7 +160,7 @@ func CoTaskMemFree(memptr uintptr) {
 // CLSIDFromProgID in Windows API.
 func CLSIDFromProgID(progId string) (clsid *GUID, err error) {
 	var guid GUID
-	lpszProgID := uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(progId)))
+	lpszProgID := uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(progId)))
 	hr, _, _ := procCLSIDFromProgID.Call(lpszProgID, uintptr(unsafe.Pointer(&guid)))
 	if hr != 0 {
 		err = NewError(hr)
@@ -175,7 +177,7 @@ func CLSIDFromProgID(progId string) (clsid *GUID, err error) {
 // CLSIDFromString in Windows API.
 func CLSIDFromString(str string) (clsid *GUID, err error) {
 	var guid GUID
-	lpsz := uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(str)))
+	lpsz := uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(str)))
 	hr, _, _ := procCLSIDFromString.Call(lpsz, uintptr(unsafe.Pointer(&guid)))
 	if hr != 0 {
 		err = NewError(hr)
@@ -198,7 +200,7 @@ func StringFromCLSID(clsid *GUID) (str string, err error) {
 // IIDFromString returns GUID from program ID.
 func IIDFromString(progId string) (clsid *GUID, err error) {
 	var guid GUID
-	lpsz := uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(progId)))
+	lpsz := uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(progId)))
 	hr, _, _ := procIIDFromString.Call(lpsz, uintptr(unsafe.Pointer(&guid)))
 	if hr != 0 {
 		err = NewError(hr)
@@ -266,7 +268,7 @@ func GetObject(programID string, bindOpts *BindOpts, iid *GUID) (unk *IUnknown, 
 		iid = IID_IUnknown
 	}
 	hr, _, _ := procCoGetObject.Call(
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(programID))),
+		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(programID))),
 		uintptr(unsafe.Pointer(bindOpts)),
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&unk)))
@@ -296,7 +298,7 @@ func VariantClear(v *VARIANT) (err error) {
 
 // SysAllocString allocates memory for string and copies string into memory.
 func SysAllocString(v string) (ss *int16) {
-	pss, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(v))))
+	pss, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(v))))
 	ss = (*int16)(unsafe.Pointer(pss))
 	return
 }
