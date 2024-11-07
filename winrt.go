@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package ole
@@ -7,6 +8,8 @@ import (
 	"syscall"
 	"unicode/utf8"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 var (
@@ -64,7 +67,7 @@ type HString uintptr
 
 // NewHString returns a new HString for Go string.
 func NewHString(s string) (hstring HString, err error) {
-	u16 := syscall.StringToUTF16Ptr(s)
+	u16 := windows.StringToUTF16Ptr(s)
 	len := uint32(utf8.RuneCountInString(s))
 	hr, _, _ := procWindowsCreateString.Call(
 		uintptr(unsafe.Pointer(u16)),

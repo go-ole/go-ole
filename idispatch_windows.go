@@ -8,12 +8,14 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {
 	wnames := make([]*uint16, len(names))
 	for i := 0; i < len(names); i++ {
-		wnames[i] = syscall.StringToUTF16Ptr(names[i])
+		wnames[i] = windows.StringToUTF16Ptr(names[i])
 	}
 	dispid = make([]int32, len(names))
 	namelen := uint32(len(names))
