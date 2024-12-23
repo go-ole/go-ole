@@ -112,6 +112,13 @@ const (
 	VT_TYPEMASK        VT = 0xfff
 )
 
+type Nothing int64
+
+const (
+	EMPTY Nothing = 0
+	NULL  Nothing = 1
+)
+
 const (
 	DISPID_UNKNOWN     = -1
 	DISPID_VALUE       = 0
