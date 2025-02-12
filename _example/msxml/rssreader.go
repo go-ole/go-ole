@@ -1,19 +1,20 @@
+//go:build windows
 // +build windows
 
 package main
 
 import (
 	"fmt"
+	"github.com/go-ole/go-ole/legacy"
 	"time"
 
-	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 )
 
 func main() {
-	ole.CoInitialize(0)
+	legacy.CoInitialize(0)
 	unknown, _ := oleutil.CreateObject("Microsoft.XMLHTTP")
-	xmlhttp, _ := unknown.QueryInterface(ole.IID_IDispatch)
+	xmlhttp, _ := unknown.QueryInterface(legacy.IID_IDispatch)
 	_, err := oleutil.CallMethod(xmlhttp, "open", "GET", "http://rss.slashdot.org/Slashdot/slashdot", false)
 	if err != nil {
 		panic(err.Error())

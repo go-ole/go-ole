@@ -1,3 +1,47 @@
+# Version 2.0-alpha
+
+* Use `golang.org/x/sys/windows` package as a base instead of calling out to each COM DLL.
+* Reduce package size by removing unused COM interfaces and functions.
+  * These have been or will be moved to their own repository to preserve the functionality if you need it.
+* oleutil is top level and no longer a subpackage.
+
+## Features
+
+* `Initialize` provides additional information by wrapping the COM into golang constants.
+  * Added `InitializeMultithreaded` function to alias Multithreaded `CoInitializeEx()`.
+  * Added `InitializeApartmentThreaded` function to alias ApartmentThreaded `CoInitializeEx()`.
+  * Added `ConcurrencyModel` type to restrict values to Initialize (you may still cast a `uint32` to `ConcurrencyModel`).
+  * `Initialize()` will return `InitializeResult` type providing more information instead of an error as the result.
+
+    The return tuple gives `SuccessfullyInitialized`, `AlreadyInitialized`, or `IncompatibleConcurrencyModelAlreadyInitialized`
+    as success values. These should mean the COM was either already initialized or has initialized and is ready to proceed.
+    the second value is the error part of the tuple and means the Initialization failed.
+* 
+
+## Breaking Changes
+
+### Renamed
+
+* `CoInitializeEx` is now `Initialize`.
+* `CoUninitialize` is now `Uninitialize`.
+* `CLSIDFromProgID` is now `LookupClassIdByProgramId`.
+* `CLSIDFromString` is now `LookupClassIdByGUIDString`.
+* `IIDFromString` is now `InterfaceIdFromString`.
+* `StringFromCLSID` is now `StringFromClassId`.
+* `StringFromIID` is now `StringFromInterfaceId`.
+
+### Removed
+
+* `GUID`. Uses `golang.org/x/sys/windows` `GUID` instead.
+* `CoInitialize`. Use `Initialize()` instead.
+* Removed WinRT (**TODO** add repo it has been moved to)
+  * `RoInitialize`. Use ``
+  * `RoActivateInstance`. Use ``
+  * `RoGetActivationFactory`. Use ``
+  * `NewHString`. Use ``
+  * `DeleteHString`. Use ``
+  * `HString`. Use ``
+
 # Version 1.x.x
 
 * **Add more test cases and reference new test COM server project.** (Placeholder for future additions)

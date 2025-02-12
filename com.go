@@ -4,74 +4,97 @@
 package ole
 
 import (
-	"unicode/utf16"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
 
 var (
-	procCoInitialize            = modole32.NewProc("CoInitialize")
-	procCoInitializeEx          = modole32.NewProc("CoInitializeEx")
-	procCoInitializeSecurity    = modole32.NewProc("CoInitializeSecurity")
-	procCoUninitialize          = modole32.NewProc("CoUninitialize")
-	procCoCreateInstance        = modole32.NewProc("CoCreateInstance")
-	procCoTaskMemFree           = modole32.NewProc("CoTaskMemFree")
-	procCLSIDFromProgID         = modole32.NewProc("CLSIDFromProgID")
-	procCLSIDFromString         = modole32.NewProc("CLSIDFromString")
-	procStringFromCLSID         = modole32.NewProc("StringFromCLSID")
-	procStringFromIID           = modole32.NewProc("StringFromIID")
-	procIIDFromString           = modole32.NewProc("IIDFromString")
-	procCoGetObject             = modole32.NewProc("CoGetObject")
-	procGetUserDefaultLCID      = modkernel32.NewProc("GetUserDefaultLCID")
-	procCopyMemory              = modkernel32.NewProc("RtlMoveMemory")
-	procVariantInit             = modoleaut32.NewProc("VariantInit")
-	procVariantClear            = modoleaut32.NewProc("VariantClear")
-	procVariantTimeToSystemTime = modoleaut32.NewProc("VariantTimeToSystemTime")
-	procSysAllocString          = modoleaut32.NewProc("SysAllocString")
-	procSysAllocStringLen       = modoleaut32.NewProc("SysAllocStringLen")
-	procSysFreeString           = modoleaut32.NewProc("SysFreeString")
-	procSysStringLen            = modoleaut32.NewProc("SysStringLen")
-	procCreateDispTypeInfo      = modoleaut32.NewProc("CreateDispTypeInfo")
-	procCreateStdDispatch       = modoleaut32.NewProc("CreateStdDispatch")
-	procGetActiveObject         = modoleaut32.NewProc("GetActiveObject")
-
-	procGetMessageW      = moduser32.NewProc("GetMessageW")
-	procDispatchMessageW = moduser32.NewProc("DispatchMessageW")
+	procCoInitializeSecurity = modole32.NewProc("CoInitializeSecurity")
+	procGetActiveObject      = modoleaut32.NewProc("GetActiveObject")
 )
 
-// This is to enable calling COM Security initialization multiple times
-var bSecurityInit bool = false
+// The `ConcurrencyModel` aliases the COINIT_* constants so that the `Initialize()` function is type checked and limited
+type ConcurrencyModel uint32
 
-// coInitialize initializes COM library on current thread.
+const (
+	// Requires concurrency control
+	Multithreaded ConcurrencyModel = windows.COINIT_MULTITHREADED
+
+	// Requires COM operations on the same thread as Initialized.
+	ApartmentThreaded = windows.COINIT_APARTMENTTHREADED
+
+	// You probably neither want to nor need to use this for `Initialize()`. Included only for completeness.
+	DisableOle1DDE = windows.COINIT_DISABLE_OLE1DDE
+
+	// You probably neither want to nor need to use this for `Initialize()`. Included only for completeness.
+	SpeedOverMemory = windows.COINIT_SPEED_OVER_MEMORY
+)
+
+// The result from calling `CoInitializeEx()` to prevent exposing syscall windows dependency.
+type InitializeResult uint32
+
+const (
+	SuccessfullyInitialized InitializeResult = iota << 1
+	AlreadyInitialized
+	IncompatibleConcurrencyModelAlreadyInitialized
+)
+
+// Setup COM for the application.
 //
-// MSDN documentation suggests that this function should not be called. Call
-// CoInitializeEx() instead. The reason has to do with threading and this
-// function is only for single-threaded apartments.
-//
-// That said, most users of the library have gotten away with just this
-// function. If you are experiencing threading issues, then use
-// CoInitializeEx().
-func coInitialize() (err error) {
-	// http://msdn.microsoft.com/en-us/library/windows/desktop/ms678543(v=vs.85).aspx
-	// Suggests that no value should be passed to CoInitialized.
-	// Could just be Call() since the parameter is optional. <-- Needs testing to be sure.
-	hr, _, _ := procCoInitialize.Call(uintptr(0))
-	if hr != 0 {
-		err = NewError(hr)
+// COM Function: CoInitializeEx
+func Initialize(model ConcurrencyModel) (InitializeResult, error) {
+	err = windows.CoInitializeEx(0, uint32(model))
+
+	switch err {
+	case windows.S_OK:
+		return SuccessfullyInitialized, nil
+	case windows.S_FALSE:
+		return AlreadyInitialized, nil
+	case windows.RPC_E_CHANGED_MODE:
+		return IncompatibleConcurrencyModelAlreadyInitialized, nil
+	default:
+		return nil, err
 	}
-	return
 }
 
-// coInitializeEx initializes COM library with concurrency model.
-func coInitializeEx(coinit uint32) (err error) {
-	// http://msdn.microsoft.com/en-us/library/windows/desktop/ms695279(v=vs.85).aspx
-	// Suggests that the first parameter is not only optional but should always be NULL.
-	hr, _, _ := procCoInitializeEx.Call(uintptr(0), uintptr(coinit))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
+// Initialize COM as multithreaded.
+//
+// Called when you are handling the multithreading for COM.
+func InitializeMultithreaded() (InitializeResult, error) {
+	return Initialize(Multithreaded)
+}
+
+// Initialize COM as apartment-multithreaded.
+//
+// This is slower, but does not require concurrency control or protections. This assumes the COM code will always run
+// on the same thread. This should not be used in a gothread without additional guarantees to ensure the COM code is
+// also run on the same thread.
+func InitializeApartmentThreaded() (InitializeResult, error) {
+	return Initialize(ApartmentThreaded)
+}
+
+// You want to call this as a companion for any `Initialize()` call. This ensures that any remaining messages are
+// completed that were pending before the application closed.
+//
+// COM Function: CoUninitialize
+func Uninitialize() error {
+	windows.CoUninitialize()
+}
+
+// Free memory owned by COM by Pointer
+//
+// COM Function: CoTaskMemFree
+func TaskMemoryFreePointer(address unsafe.Pointer) {
+	windows.CoTaskMemFree(address)
+}
+
+// Free memory owned by COM by `uintptr`
+//
+// COM Function: CoTaskMemFree
+func TaskMemoryFreeAddress(address uintptr) {
+	p := unsafe.Pointer(&address)
+	windows.CoTaskMemFree(p)
 }
 
 // coInitializeSecurity: Registers security and sets the default security values
@@ -92,7 +115,7 @@ func coInitializeSecurity(cAuthSvc int32,
 			uintptr(dwImpLevel),     // Minimal impersonation abilities
 			uintptr(0),              // Default COM authentication settings
 			uintptr(dwCapabilities), // Cloaking
-			uintptr(0))              // eserved parameter
+			uintptr(0))              // reserved parameter
 		if hr != 0 {
 			err = NewError(hr)
 		} else {
@@ -101,34 +124,6 @@ func coInitializeSecurity(cAuthSvc int32,
 		}
 	}
 	return
-}
-
-// CoInitialize initializes COM library on current thread.
-//
-// MSDN documentation suggests that this function should not be called. Call
-// CoInitializeEx() instead. The reason has to do with threading and this
-// function is only for single-threaded apartments.
-//
-// That said, most users of the library have gotten away with just this
-// function. If you are experiencing threading issues, then use
-// CoInitializeEx().
-func CoInitialize(p uintptr) (err error) {
-	// p is ignored and won't be used.
-	// Avoid any variable not used errors.
-	p = uintptr(0)
-	return coInitialize()
-}
-
-// CoInitializeEx initializes COM library with concurrency model.
-func CoInitializeEx(p uintptr, coinit uint32) (err error) {
-	// Avoid any variable not used errors.
-	p = uintptr(0)
-	return coInitializeEx(coinit)
-}
-
-// CoUninitialize uninitializes COM Library.
-func CoUninitialize() {
-	procCoUninitialize.Call()
 }
 
 // CoInitializeSecurity: Registers security and sets the default security values
@@ -140,249 +135,20 @@ func CoInitializeSecurity(cAuthSvc int32,
 	return coInitializeSecurity(cAuthSvc, dwAuthnLevel, dwImpLevel, dwCapabilities)
 }
 
-// CoTaskMemFree frees memory pointer.
-func CoTaskMemFree(memptr uintptr) {
-	procCoTaskMemFree.Call(memptr)
-}
-
-// CLSIDFromProgID retrieves Class Identifier with the given Program Identifier.
+// GetActiveObject retrieves virtual table to active object.
 //
-// The Programmatic Identifier must be registered, because it will be looked up
-// in the Windows Registry. The registry entry has the following keys: CLSID,
-// Insertable, Protocol and Shell
-// (https://msdn.microsoft.com/en-us/library/dd542719(v=vs.85).aspx).
-//
-// programID identifies the class id with less precision and is not guaranteed
-// to be unique. These are usually found in the registry under
-// HKEY_LOCAL_MACHINE\SOFTWARE\Classes, usually with the format of
-// "Program.Component.Version" with version being optional.
-//
-// CLSIDFromProgID in Windows API.
-func CLSIDFromProgID(progId string) (clsid *GUID, err error) {
-	var guid GUID
-	lpszProgID := uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(progId)))
-	hr, _, _ := procCLSIDFromProgID.Call(lpszProgID, uintptr(unsafe.Pointer(&guid)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	clsid = &guid
-	return
-}
-
-// CLSIDFromString retrieves Class ID from string representation.
-//
-// This is technically the string version of the GUID and will convert the
-// string to object.
-//
-// CLSIDFromString in Windows API.
-func CLSIDFromString(str string) (clsid *GUID, err error) {
-	var guid GUID
-	lpsz := uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(str)))
-	hr, _, _ := procCLSIDFromString.Call(lpsz, uintptr(unsafe.Pointer(&guid)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	clsid = &guid
-	return
-}
-
-// StringFromCLSID returns GUID formated string from GUID object.
-func StringFromCLSID(clsid *GUID) (str string, err error) {
-	var p *uint16
-	hr, _, _ := procStringFromCLSID.Call(uintptr(unsafe.Pointer(clsid)), uintptr(unsafe.Pointer(&p)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	str = LpOleStrToString(p)
-	return
-}
-
-// IIDFromString returns GUID from program ID.
-func IIDFromString(progId string) (clsid *GUID, err error) {
-	var guid GUID
-	lpsz := uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(progId)))
-	hr, _, _ := procIIDFromString.Call(lpsz, uintptr(unsafe.Pointer(&guid)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	clsid = &guid
-	return
-}
-
-// StringFromIID returns GUID formatted string from GUID object.
-func StringFromIID(iid *GUID) (str string, err error) {
-	var p *uint16
-	hr, _, _ := procStringFromIID.Call(uintptr(unsafe.Pointer(iid)), uintptr(unsafe.Pointer(&p)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	str = LpOleStrToString(p)
-	return
-}
-
-// CreateInstance of single uninitialized object with GUID.
-func CreateInstance(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
-	if iid == nil {
-		iid = IID_IUnknown
-	}
-	hr, _, _ := procCoCreateInstance.Call(
-		uintptr(unsafe.Pointer(clsid)),
-		0,
-		CLSCTX_SERVER,
-		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(&unk)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-// GetActiveObject retrieves pointer to active object.
-func GetActiveObject(clsid *GUID, iid *GUID) (unk *IUnknown, err error) {
-	if iid == nil {
-		iid = IID_IUnknown
+// [T] must be a virtual table structure. This function is unsafe(!!!) and will attempt to populate whatever type you
+// pass.
+func GetActiveObject[T struct{}](classId *windows.GUID, interfaceId *windows.GUID) (obj *T, err error) {
+	if interfaceId == nil {
+		interfaceId = IID_IUnknown
 	}
 	hr, _, _ := procGetActiveObject.Call(
-		uintptr(unsafe.Pointer(clsid)),
-		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(&unk)))
-	if hr != 0 {
-		err = NewError(hr)
+		uintptr(unsafe.Pointer(classId)),
+		uintptr(unsafe.Pointer(interfaceId)),
+		uintptr(unsafe.Pointer(&obj)))
+	if hr != windows.S_OK {
+		return nil, windows.Errno(hr)
 	}
-	return
-}
-
-type BindOpts struct {
-	CbStruct          uint32
-	GrfFlags          uint32
-	GrfMode           uint32
-	TickCountDeadline uint32
-}
-
-// GetObject retrieves pointer to active object.
-func GetObject(programID string, bindOpts *BindOpts, iid *GUID) (unk *IUnknown, err error) {
-	if bindOpts != nil {
-		bindOpts.CbStruct = uint32(unsafe.Sizeof(BindOpts{}))
-	}
-	if iid == nil {
-		iid = IID_IUnknown
-	}
-	hr, _, _ := procCoGetObject.Call(
-		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(programID))),
-		uintptr(unsafe.Pointer(bindOpts)),
-		uintptr(unsafe.Pointer(iid)),
-		uintptr(unsafe.Pointer(&unk)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-// VariantInit initializes variant.
-func VariantInit(v *VARIANT) (err error) {
-	hr, _, _ := procVariantInit.Call(uintptr(unsafe.Pointer(v)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-// VariantClear clears value in Variant settings to VT_EMPTY.
-func VariantClear(v *VARIANT) (err error) {
-	hr, _, _ := procVariantClear.Call(uintptr(unsafe.Pointer(v)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-// SysAllocString allocates memory for string and copies string into memory.
-func SysAllocString(v string) (ss *int16) {
-	pss, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(v))))
-	ss = (*int16)(unsafe.Pointer(pss))
-	return
-}
-
-// SysAllocStringLen copies up to length of given string returning pointer.
-func SysAllocStringLen(v string) (ss *int16) {
-	utf16 := utf16.Encode([]rune(v + "\x00"))
-	ptr := &utf16[0]
-
-	pss, _, _ := procSysAllocStringLen.Call(uintptr(unsafe.Pointer(ptr)), uintptr(len(utf16)-1))
-	ss = (*int16)(unsafe.Pointer(pss))
-	return
-}
-
-// SysFreeString frees string system memory. This must be called with SysAllocString.
-func SysFreeString(v *int16) (err error) {
-	hr, _, _ := procSysFreeString.Call(uintptr(unsafe.Pointer(v)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-// SysStringLen is the length of the system allocated string.
-func SysStringLen(v *int16) uint32 {
-	l, _, _ := procSysStringLen.Call(uintptr(unsafe.Pointer(v)))
-	return uint32(l)
-}
-
-// CreateStdDispatch provides default IDispatch implementation for IUnknown.
-//
-// This handles default IDispatch implementation for objects. It haves a few
-// limitations with only supporting one language. It will also only return
-// default exception codes.
-func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispatch, err error) {
-	hr, _, _ := procCreateStdDispatch.Call(
-		uintptr(unsafe.Pointer(unk)),
-		v,
-		uintptr(unsafe.Pointer(ptinfo)),
-		uintptr(unsafe.Pointer(&disp)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-// CreateDispTypeInfo provides default ITypeInfo implementation for IDispatch.
-//
-// This will not handle the full implementation of the interface.
-func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
-	hr, _, _ := procCreateDispTypeInfo.Call(
-		uintptr(unsafe.Pointer(idata)),
-		uintptr(GetUserDefaultLCID()),
-		uintptr(unsafe.Pointer(&pptinfo)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-// copyMemory moves location of a block of memory.
-func copyMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
-	procCopyMemory.Call(uintptr(dest), uintptr(src), uintptr(length))
-}
-
-// GetUserDefaultLCID retrieves current user default locale.
-func GetUserDefaultLCID() (lcid uint32) {
-	ret, _, _ := procGetUserDefaultLCID.Call()
-	lcid = uint32(ret)
-	return
-}
-
-// GetMessage in message queue from runtime.
-//
-// This function appears to block. PeekMessage does not block.
-func GetMessage(msg *Msg, hwnd uint32, MsgFilterMin uint32, MsgFilterMax uint32) (ret int32, err error) {
-	r0, _, err := procGetMessageW.Call(uintptr(unsafe.Pointer(msg)), uintptr(hwnd), uintptr(MsgFilterMin), uintptr(MsgFilterMax))
-	ret = int32(r0)
-	return
-}
-
-// DispatchMessage to window procedure.
-func DispatchMessage(msg *Msg) (ret int32) {
-	r0, _, _ := procDispatchMessageW.Call(uintptr(unsafe.Pointer(msg)))
-	ret = int32(r0)
 	return
 }

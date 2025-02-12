@@ -1,10 +1,14 @@
+//go:build !windows
 // +build !windows
 
 package oleutil
 
-import ole "github.com/go-ole/go-ole"
+import (
+	"github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/legacy"
+)
 
 // ConnectObject creates a connection point between two services for communication.
-func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, idisp interface{}) (uint32, error) {
-	return 0, ole.NewError(ole.E_NOTIMPL)
+func ConnectObject(disp *ole.IDispatch, iid *legacy.GUID, idisp interface{}) (uint32, error) {
+	return 0, legacy.NewError(legacy.E_NOTIMPL)
 }

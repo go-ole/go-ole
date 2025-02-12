@@ -1,18 +1,19 @@
+//go:build windows
 // +build windows
 
 package main
 
 import (
+	"github.com/go-ole/go-ole/legacy"
 	"time"
 
-	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 )
 
 func main() {
-	ole.CoInitialize(0)
+	legacy.CoInitialize(0)
 	unknown, _ := oleutil.CreateObject("Excel.Application")
-	excel, _ := unknown.QueryInterface(ole.IID_IDispatch)
+	excel, _ := unknown.QueryInterface(legacy.IID_IDispatch)
 	oleutil.PutProperty(excel, "Visible", true)
 	workbooks := oleutil.MustGetProperty(excel, "Workbooks").ToIDispatch()
 	workbook := oleutil.MustCallMethod(workbooks, "Add", nil).ToIDispatch()
@@ -27,5 +28,5 @@ func main() {
 	oleutil.CallMethod(excel, "Quit")
 	excel.Release()
 
-	ole.CoUninitialize()
+	legacy.CoUninitialize()
 }

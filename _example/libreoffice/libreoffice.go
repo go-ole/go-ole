@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -36,9 +37,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/legacy"
 	"log"
 
-	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 )
 
@@ -72,7 +74,7 @@ func LOGetCellValue(cell *ole.IDispatch) (value string) {
 }
 
 // LOGetCellError returns the error value of a cell (dummy code, FIXME)
-func LOGetCellError(cell *ole.IDispatch) (result *ole.VARIANT) {
+func LOGetCellError(cell *ole.IDispatch) (result *legacy.VARIANT) {
 	return oleutil.MustGetProperty(cell, "error")
 }
 
@@ -132,10 +134,10 @@ func LOGetWorksheet(document *ole.IDispatch, index int) (worksheet *ole.IDispatc
 
 // This example creates a new spreadsheet, reads and modifies cell values and style.
 func main() {
-	ole.CoInitialize(0)
+	legacy.CoInitialize(0)
 	unknown, errCreate := oleutil.CreateObject("com.sun.star.ServiceManager")
 	checkError(errCreate, "Couldn't create a OLE connection to LibreOffice")
-	ServiceManager, errSM := unknown.QueryInterface(ole.IID_IDispatch)
+	ServiceManager, errSM := unknown.QueryInterface(legacy.IID_IDispatch)
 	checkError(errSM, "Couldn't start a LibreOffice instance")
 	desktop := oleutil.MustCallMethod(ServiceManager,
 		"createInstance", "com.sun.star.frame.Desktop").ToIDispatch()
@@ -158,5 +160,5 @@ func main() {
 	fmt.Printf("Press [ENTER] to exit")
 	fmt.Scanf("%s")
 	ServiceManager.Release()
-	ole.CoUninitialize()
+	legacy.CoUninitialize()
 }

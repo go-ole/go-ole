@@ -1,18 +1,19 @@
+//go:build windows
 // +build windows
 
 package main
 
 import (
+	"github.com/go-ole/go-ole/legacy"
 	"time"
 
-	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 )
 
 func main() {
-	ole.CoInitialize(0)
+	legacy.CoInitialize(0)
 	unknown, _ := oleutil.CreateObject("InternetExplorer.Application")
-	ie, _ := unknown.QueryInterface(ole.IID_IDispatch)
+	ie, _ := unknown.QueryInterface(legacy.IID_IDispatch)
 	oleutil.PutProperty(ie, "Visible", true)
 	oleutil.CallMethod(ie, "Navigate", "http://www.google.com")
 	for {

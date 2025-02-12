@@ -1,24 +1,25 @@
+//go:build windows
 // +build windows
 
 package oleutil
 
 import (
+	"github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/legacy"
 	"reflect"
 	"syscall"
 	"unsafe"
-
-	ole "github.com/go-ole/go-ole"
 )
 
 // ConnectObject creates a connection point between two services for communication.
-func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, idisp interface{}) (cookie uint32, err error) {
-	unknown, err := disp.QueryInterface(ole.IID_IConnectionPointContainer)
+func ConnectObject(disp *ole.IDispatch, iid *legacy.GUID, idisp interface{}) (cookie uint32, err error) {
+	unknown, err := disp.QueryInterface(legacy.IID_IConnectionPointContainer)
 	if err != nil {
 		return
 	}
 
-	container := (*ole.IConnectionPointContainer)(unsafe.Pointer(unknown))
-	var point *ole.IConnectionPoint
+	container := (*legacy.IConnectionPointContainer)(unsafe.Pointer(unknown))
+	var point *legacy.IConnectionPoint
 	err = container.FindConnectionPoint(iid, &point)
 	if err != nil {
 		return
@@ -54,5 +55,5 @@ func ConnectObject(disp *ole.IDispatch, iid *ole.GUID, idisp interface{}) (cooki
 
 	container.Release()
 
-	return 0, ole.NewError(ole.E_INVALIDARG)
+	return 0, legacy.NewError(legacy.E_INVALIDARG)
 }

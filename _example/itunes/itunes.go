@@ -1,24 +1,26 @@
+//go:build windows
 // +build windows
 
 package main
 
 import (
+	"github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/legacy"
 	"log"
 	"os"
 	"strings"
 
-	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	"github.com/gonuts/commander"
 )
 
 func iTunes() *ole.IDispatch {
-	ole.CoInitialize(0)
+	legacy.CoInitialize(0)
 	unknown, err := oleutil.CreateObject("iTunes.Application")
 	if err != nil {
 		log.Fatal(err)
 	}
-	itunes, err := unknown.QueryInterface(ole.IID_IDispatch)
+	itunes, err := unknown.QueryInterface(legacy.IID_IDispatch)
 	if err != nil {
 		log.Fatal(err)
 	}

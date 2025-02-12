@@ -1,10 +1,13 @@
 package oleutil
 
-import ole "github.com/go-ole/go-ole"
+import (
+	"github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/legacy"
+)
 
 // ClassIDFrom retrieves class ID whether given is program ID or application string.
-func ClassIDFrom(programID string) (classID *ole.GUID, err error) {
-	return ole.ClassIDFrom(programID)
+func ClassIDFrom(programID string) (classID *legacy.GUID, err error) {
+	return legacy.ClassIDFrom(programID)
 }
 
 // CreateObject creates object from programID based on interface type.
@@ -13,12 +16,12 @@ func ClassIDFrom(programID string) (classID *ole.GUID, err error) {
 //
 // Program ID can be either program ID or application string.
 func CreateObject(programID string) (unknown *ole.IUnknown, err error) {
-	classID, err := ole.ClassIDFrom(programID)
+	classID, err := legacy.ClassIDFrom(programID)
 	if err != nil {
 		return
 	}
 
-	unknown, err = ole.CreateInstance(classID, ole.IID_IUnknown)
+	unknown, err = legacy.CreateInstance(classID, legacy.IID_IUnknown)
 	if err != nil {
 		return
 	}
@@ -33,12 +36,12 @@ func CreateObject(programID string) (unknown *ole.IUnknown, err error) {
 //
 // Program ID can be either program ID or application string.
 func GetActiveObject(programID string) (unknown *ole.IUnknown, err error) {
-	classID, err := ole.ClassIDFrom(programID)
+	classID, err := legacy.ClassIDFrom(programID)
 	if err != nil {
 		return
 	}
 
-	unknown, err = ole.GetActiveObject(classID, ole.IID_IUnknown)
+	unknown, err = legacy.GetActiveObject(classID, legacy.IID_IUnknown)
 	if err != nil {
 		return
 	}
@@ -47,12 +50,12 @@ func GetActiveObject(programID string) (unknown *ole.IUnknown, err error) {
 }
 
 // CallMethod calls method on IDispatch with parameters.
-func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, ole.DISPATCH_METHOD, params)
+func CallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT, err error) {
+	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_METHOD, params)
 }
 
 // MustCallMethod calls method on IDispatch with parameters or panics.
-func MustCallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
+func MustCallMethod(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT) {
 	r, err := CallMethod(disp, name, params...)
 	if err != nil {
 		panic(err.Error())
@@ -61,12 +64,12 @@ func MustCallMethod(disp *ole.IDispatch, name string, params ...interface{}) (re
 }
 
 // GetProperty retrieves property from IDispatch.
-func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, ole.DISPATCH_PROPERTYGET, params)
+func GetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT, err error) {
+	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYGET, params)
 }
 
 // MustGetProperty retrieves property from IDispatch or panics.
-func MustGetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
+func MustGetProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT) {
 	r, err := GetProperty(disp, name, params...)
 	if err != nil {
 		panic(err.Error())
@@ -75,12 +78,12 @@ func MustGetProperty(disp *ole.IDispatch, name string, params ...interface{}) (r
 }
 
 // PutProperty mutates property.
-func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, ole.DISPATCH_PROPERTYPUT, params)
+func PutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT, err error) {
+	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYPUT, params)
 }
 
 // MustPutProperty mutates property or panics.
-func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
+func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT) {
 	r, err := PutProperty(disp, name, params...)
 	if err != nil {
 		panic(err.Error())
@@ -89,12 +92,12 @@ func MustPutProperty(disp *ole.IDispatch, name string, params ...interface{}) (r
 }
 
 // PutPropertyRef mutates property reference.
-func PutPropertyRef(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, ole.DISPATCH_PROPERTYPUTREF, params)
+func PutPropertyRef(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT, err error) {
+	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYPUTREF, params)
 }
 
 // MustPutPropertyRef mutates property reference or panics.
-func MustPutPropertyRef(disp *ole.IDispatch, name string, params ...interface{}) (result *ole.VARIANT) {
+func MustPutPropertyRef(disp *ole.IDispatch, name string, params ...interface{}) (result *legacy.VARIANT) {
 	r, err := PutPropertyRef(disp, name, params...)
 	if err != nil {
 		panic(err.Error())
@@ -102,14 +105,14 @@ func MustPutPropertyRef(disp *ole.IDispatch, name string, params ...interface{})
 	return r
 }
 
-func ForEach(disp *ole.IDispatch, f func(v *ole.VARIANT) error) error {
+func ForEach(disp *ole.IDispatch, f func(v *legacy.VARIANT) error) error {
 	newEnum, err := disp.GetProperty("_NewEnum")
 	if err != nil {
 		return err
 	}
 	defer newEnum.Clear()
 
-	enum, err := newEnum.ToIUnknown().IEnumVARIANT(ole.IID_IEnumVariant)
+	enum, err := newEnum.ToIUnknown().IEnumVARIANT(legacy.IID_IEnumVariant)
 	if err != nil {
 		return err
 	}

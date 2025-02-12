@@ -1,39 +1,72 @@
 package ole
 
-import "unsafe"
+import (
+	"github.com/go-ole/go-ole/legacy"
+	"unsafe"
+)
 
-type IDispatch struct {
-	IUnknown
+type IsIDispatch interface {
+	IsIUnknown
+	GetTypeInfoCountAddress() uintptr
+	GetTypeInfoAddress() uintptr
+	GetIDsOfNamesAddress() uintptr
+	InvokeAddress() uintptr
 }
 
-type IDispatchVtbl struct {
-	IUnknownVtbl
+type IDispatch struct {
+	QueryInterface   uintptr
+	AddRef           uintptr
+	Release          uintptr
 	GetTypeInfoCount uintptr
 	GetTypeInfo      uintptr
 	GetIDsOfNames    uintptr
 	Invoke           uintptr
 }
 
-func (v *IDispatch) VTable() *IDispatchVtbl {
-	return (*IDispatchVtbl)(unsafe.Pointer(v.RawVTable))
+func (v *IDispatch) QueryInterfaceAddress() uintptr {
+	return v.QueryInterface
 }
 
-func (v *IDispatch) GetIDsOfName(names []string) (dispid []int32, err error) {
+func (v *IDispatch) AddRefAddress() uintptr {
+	return v.QueryInterface
+}
+
+func (v *IDispatch) ReleaseAddress() uintptr {
+	return v.QueryInterface
+}
+
+func (v *IDispatch) GetTypeInfoCountAddress() uintptr {
+	return v.GetTypeInfoCount
+}
+
+func (v *IDispatch) GetTypeInfoAddress() uintptr {
+	return v.GetTypeInfo
+}
+
+func (v *IDispatch) GetIDsOfNamesAddress() uintptr {
+	return v.GetIDsOfNames
+}
+
+func (v *IDispatch) InvokeAddress() uintptr {
+	return v.Invoke
+}
+
+func GetIDsOfNameOnIDispatch(dispatch *IsIDispatch, names []string) (dispid []int32, err error) {
 	dispid, err = getIDsOfName(v, names)
 	return
 }
 
-func (v *IDispatch) Invoke(dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
+func InvokeOnIDispatch(dispatch *IsIDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
 	result, err = invoke(v, dispid, dispatch, params...)
 	return
 }
 
-func (v *IDispatch) GetTypeInfoCount() (c uint32, err error) {
+func GetTypeInfoCountOnIDispatch(dispatch *IsIDispatch) (c uint32, err error) {
 	c, err = getTypeInfoCount(v)
 	return
 }
 
-func (v *IDispatch) GetTypeInfo() (tinfo *ITypeInfo, err error) {
+func GetTypeInfoOnIDispatch(dispatch *IsIDispatch) (tinfo *legacy.ITypeInfo, err error) {
 	tinfo, err = getTypeInfo(v)
 	return
 }
@@ -76,7 +109,7 @@ func (v *IDispatch) InvokeWithOptionalArgs(name string, dispatch int16, params [
 
 // CallMethod invokes named function with arguments on object.
 func (v *IDispatch) CallMethod(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, DISPATCH_METHOD, params)
+	return v.InvokeWithOptionalArgs(name, legacy.DISPATCH_METHOD, params)
 }
 
 // GetProperty retrieves the property with the name with the ability to pass arguments.
@@ -85,10 +118,10 @@ func (v *IDispatch) CallMethod(name string, params ...interface{}) (*VARIANT, er
 // feature. Or at least, should not allow for this feature. Some servers don't follow best practices
 // and this is provided for those edge cases.
 func (v *IDispatch) GetProperty(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYGET, params)
+	return v.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYGET, params)
 }
 
 // PutProperty attempts to mutate a property in the object.
 func (v *IDispatch) PutProperty(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYPUT, params)
+	return v.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYPUT, params)
 }

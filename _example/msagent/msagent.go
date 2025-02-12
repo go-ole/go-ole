@@ -1,18 +1,19 @@
+//go:build windows
 // +build windows
 
 package main
 
 import (
+	"github.com/go-ole/go-ole/legacy"
 	"time"
 
-	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 )
 
 func main() {
-	ole.CoInitialize(0)
+	legacy.CoInitialize(0)
 	unknown, _ := oleutil.CreateObject("Agent.Control.1")
-	agent, _ := unknown.QueryInterface(ole.IID_IDispatch)
+	agent, _ := unknown.QueryInterface(legacy.IID_IDispatch)
 	oleutil.PutProperty(agent, "Connected", true)
 	characters := oleutil.MustGetProperty(agent, "Characters").ToIDispatch()
 	oleutil.CallMethod(characters, "Load", "Merlin", "c:\\windows\\msagent\\chars\\Merlin.acs")

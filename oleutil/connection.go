@@ -1,18 +1,19 @@
+//go:build windows
 // +build windows
 
 package oleutil
 
 import (
+	"github.com/go-ole/go-ole"
+	"github.com/go-ole/go-ole/legacy"
 	"reflect"
 	"unsafe"
-
-	ole "github.com/go-ole/go-ole"
 )
 
 type stdDispatch struct {
 	lpVtbl  *stdDispatchVtbl
 	ref     int32
-	iid     *ole.GUID
+	iid     *legacy.GUID
 	iface   interface{}
 	funcMap map[string]int32
 }
@@ -27,21 +28,21 @@ type stdDispatchVtbl struct {
 	pInvoke           uintptr
 }
 
-func dispQueryInterface(this *ole.IUnknown, iid *ole.GUID, punk **ole.IUnknown) uint32 {
+func dispQueryInterface(this *ole.IUnknown, iid *legacy.GUID, punk **ole.IUnknown) uint32 {
 	pthis := (*stdDispatch)(unsafe.Pointer(this))
 	*punk = nil
-	if ole.IsEqualGUID(iid, ole.IID_IUnknown) ||
-		ole.IsEqualGUID(iid, ole.IID_IDispatch) {
+	if legacy.IsEqualGUID(iid, legacy.IID_IUnknown) ||
+		legacy.IsEqualGUID(iid, legacy.IID_IDispatch) {
 		dispAddRef(this)
 		*punk = this
-		return ole.S_OK
+		return legacy.S_OK
 	}
-	if ole.IsEqualGUID(iid, pthis.iid) {
+	if legacy.IsEqualGUID(iid, pthis.iid) {
 		dispAddRef(this)
 		*punk = this
-		return ole.S_OK
+		return legacy.S_OK
 	}
-	return ole.E_NOINTERFACE
+	return legacy.E_NOINTERFACE
 }
 
 func dispAddRef(this *ole.IUnknown) int32 {
@@ -56,32 +57,32 @@ func dispRelease(this *ole.IUnknown) int32 {
 	return pthis.ref
 }
 
-func dispGetIDsOfNames(this *ole.IUnknown, iid *ole.GUID, wnames []*uint16, namelen int, lcid int, pdisp []int32) uintptr {
+func dispGetIDsOfNames(this *ole.IUnknown, iid *legacy.GUID, wnames []*uint16, namelen int, lcid int, pdisp []int32) uintptr {
 	pthis := (*stdDispatch)(unsafe.Pointer(this))
 	names := make([]string, len(wnames))
 	for i := 0; i < len(names); i++ {
-		names[i] = ole.LpOleStrToString(wnames[i])
+		names[i] = legacy.LpOleStrToString(wnames[i])
 	}
 	for n := 0; n < namelen; n++ {
 		if id, ok := pthis.funcMap[names[n]]; ok {
 			pdisp[n] = id
 		}
 	}
-	return ole.S_OK
+	return legacy.S_OK
 }
 
 func dispGetTypeInfoCount(pcount *int) uintptr {
 	if pcount != nil {
 		*pcount = 0
 	}
-	return ole.S_OK
+	return legacy.S_OK
 }
 
 func dispGetTypeInfo(ptypeif *uintptr) uintptr {
-	return ole.E_NOTIMPL
+	return legacy.E_NOTIMPL
 }
 
-func dispInvoke(this *ole.IDispatch, dispid int32, riid *ole.GUID, lcid int, flags int16, dispparams *ole.DISPPARAMS, result *ole.VARIANT, pexcepinfo *ole.EXCEPINFO, nerr *uint) uintptr {
+func dispInvoke(this *ole.IDispatch, dispid int32, riid *legacy.GUID, lcid int, flags int16, dispparams *legacy.DISPPARAMS, result *legacy.VARIANT, pexcepinfo *legacy.EXCEPINFO, nerr *uint) uintptr {
 	pthis := (*stdDispatch)(unsafe.Pointer(this))
 	found := ""
 	for name, id := range pthis.funcMap {
@@ -94,7 +95,7 @@ func dispInvoke(this *ole.IDispatch, dispid int32, riid *ole.GUID, lcid int, fla
 		rm := rv.MethodByName(found)
 		rr := rm.Call([]reflect.Value{})
 		println(len(rr))
-		return ole.S_OK
+		return legacy.S_OK
 	}
-	return ole.E_NOTIMPL
+	return legacy.E_NOTIMPL
 }

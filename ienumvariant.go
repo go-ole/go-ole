@@ -1,6 +1,8 @@
 package ole
 
-import "unsafe"
+import (
+	"unsafe"
+)
 
 type IEnumVARIANT struct {
 	IUnknown
