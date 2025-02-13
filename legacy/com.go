@@ -34,7 +34,6 @@ var (
 	procSysStringLen            = modoleaut32.NewProc("SysStringLen")
 	procCreateDispTypeInfo      = modoleaut32.NewProc("CreateDispTypeInfo")
 	procCreateStdDispatch       = modoleaut32.NewProc("CreateStdDispatch")
-	procGetActiveObject         = modoleaut32.NewProc("GetActiveObject")
 
 	procGetMessageW      = moduser32.NewProc("GetMessageW")
 	procDispatchMessageW = moduser32.NewProc("DispatchMessageW")

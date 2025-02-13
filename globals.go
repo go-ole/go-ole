@@ -16,7 +16,6 @@ var (
 	procCoCreateInstance = modole32.NewProc("CoCreateInstance")
 	procCoGetObject      = modole32.NewProc("CoGetObject")
 
-	procGetUserDefaultLCID      = modkernel32.NewProc("GetUserDefaultLCID")
 	procCopyMemory              = modkernel32.NewProc("RtlMoveMemory")
 	procVariantInit             = modoleaut32.NewProc("VariantInit")
 	procVariantClear            = modoleaut32.NewProc("VariantClear")

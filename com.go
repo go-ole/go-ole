@@ -12,6 +12,7 @@ import (
 var (
 	procCoInitializeSecurity = modole32.NewProc("CoInitializeSecurity")
 	procGetActiveObject      = modoleaut32.NewProc("GetActiveObject")
+	procGetUserDefaultLCID   = modkernel32.NewProc("GetUserDefaultLCID")
 )
 
 // The `ConcurrencyModel` aliases the COINIT_* constants so that the `Initialize()` function is type checked and limited
@@ -150,5 +151,12 @@ func GetActiveObject[T struct{}](classId *windows.GUID, interfaceId *windows.GUI
 	if hr != windows.S_OK {
 		return nil, windows.Errno(hr)
 	}
+	return
+}
+
+// GetUserDefaultLCID retrieves current user default locale.
+func GetUserDefaultLCID() (lcid uint32) {
+	ret, _, _ := procGetUserDefaultLCID.Call()
+	lcid = uint32(ret)
 	return
 }

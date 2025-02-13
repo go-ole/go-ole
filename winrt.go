@@ -19,10 +19,19 @@ var (
 	procWindowsCreateString       = modcombase.NewProc("WindowsCreateString")
 	procWindowsDeleteString       = modcombase.NewProc("WindowsDeleteString")
 	procWindowsGetStringRawBuffer = modcombase.NewProc("WindowsGetStringRawBuffer")
+	procRoUninitialize            = modcombase.NewProc("RoUninitialize")
 )
 
 func RoInitialize(thread_type uint32) (err error) {
 	hr, _, _ := procRoInitialize.Call(uintptr(thread_type))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func RoUninitialize() (err error) {
+	hr, _, _ = procRoUninitialize.Call()
 	if hr != 0 {
 		err = NewError(hr)
 	}
