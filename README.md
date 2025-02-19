@@ -21,6 +21,31 @@ cd /path/to/go-ole/example/excel
 go run excel.go
 ```
 
+## Testing
+
+1. Download a release from https://github.com/go-ole/test-com-server
+2. Register the COM server
+   - On Windows 32-bit: 
+     
+     `c:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /codebase /nologo c:\path\to\TestCOMServer.dll`
+   - On Windows 64-bit:
+   
+     `c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo c:\path\to\TestCOMServer.dll`
+3. `go test`
+
+## Multithreading
+
+You have two solutions for handling gothreads and multithreading.
+
+1. You may lock the function or gothread to a single thread.
+    ```go
+    runtime.LockOSThread()
+    defer runtime.UnlockOSThread()
+    ```
+2. Use [scjalliance/comshim](https://github.com/scjalliance/comshim)
+
+The key to any solution is that you must call `CoUninitialize()` or `Uninitialize()` for every `CoInitialize()` or `Initialize()`.
+
 ## Continuous Integration
 
 Continuous integration configuration has been added for both Travis-CI and AppVeyor. You will have to add these to your own account for your fork in order for it to run.
