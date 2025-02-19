@@ -152,6 +152,13 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 				vargs[n] = NewVariant(VT_DISPATCH, int64(uintptr(unsafe.Pointer(v.(*IDispatch)))))
 			case **IDispatch:
 				vargs[n] = NewVariant(VT_DISPATCH|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(**IDispatch)))))
+			case Nothing:
+				switch v {
+				case EMPTY:
+					vargs[n] = NewVariant(VT_EMPTY, 0)
+				case NULL:
+					vargs[n] = NewVariant(VT_NULL, 0)
+				}
 			case nil:
 				vargs[n] = NewVariant(VT_NULL, 0)
 			case *VARIANT:
