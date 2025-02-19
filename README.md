@@ -44,7 +44,7 @@ You have two solutions for handling gothreads and multithreading.
     ```
 2. Use [scjalliance/comshim](https://github.com/scjalliance/comshim)
 
-The key to any solution is that you must call `CoUninitialize()` or `Uninitialize()` for every `CoInitialize()` or `Initialize()`.
+The key to any solution is that you must call `CoUninitialize()` for every `CoInitialize()`.
 
 ## Continuous Integration
 
