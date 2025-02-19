@@ -1,9 +1,15 @@
+//go:build windows
 // +build windows
 
 package ole
 
 import (
+	"errors"
 	"unsafe"
+)
+
+var (
+	success = errors.New("The operation completed successfully.")
 )
 
 var (
@@ -117,8 +123,11 @@ func safeArrayCreate(variantType VT, dimensions uint32, bounds *SafeArrayBound) 
 		uintptr(variantType),
 		uintptr(dimensions),
 		uintptr(unsafe.Pointer(bounds)))
-	safearray = (*SafeArray)(unsafe.Pointer(&sa))
-	return
+	if !(errors.Is(err, success) || err.Error() == success.Error()) { // errors.Is not working as expected
+		return nil, err
+	}
+	saPtr := (**uintptr)(unsafe.Pointer(&sa)) // create Pointer of SafeArray-Pointer to solve possible misuse of unsafe.Pointer warning
+	return (*SafeArray)(unsafe.Pointer(*saPtr)), nil
 }
 
 // safeArrayCreateEx creates SafeArray.
@@ -129,9 +138,13 @@ func safeArrayCreateEx(variantType VT, dimensions uint32, bounds *SafeArrayBound
 		uintptr(variantType),
 		uintptr(dimensions),
 		uintptr(unsafe.Pointer(bounds)),
-		extra)
-	safearray = (*SafeArray)(unsafe.Pointer(sa))
-	return
+		extra,
+	)
+	if !(errors.Is(err, success) || err.Error() == success.Error()) { // errors.Is not working as expected
+		return nil, err
+	}
+	saPtr := (**uintptr)(unsafe.Pointer(&sa)) // create Pointer of SafeArray-Pointer to solve possible misuse of unsafe.Pointer warning
+	return (*SafeArray)(unsafe.Pointer(*saPtr)), nil
 }
 
 // safeArrayCreateVector creates SafeArray.
@@ -141,9 +154,13 @@ func safeArrayCreateVector(variantType VT, lowerBound int32, length uint32) (saf
 	sa, _, err := procSafeArrayCreateVector.Call(
 		uintptr(variantType),
 		uintptr(lowerBound),
-		uintptr(length))
-	safearray = (*SafeArray)(unsafe.Pointer(sa))
-	return
+		uintptr(length),
+	)
+	if !(errors.Is(err, success) || err.Error() == success.Error()) { // errors.Is not working as expected
+		return nil, err
+	}
+	saPtr := (**uintptr)(unsafe.Pointer(&sa)) // create Pointer of SafeArray-Pointer to solve possible misuse of unsafe.Pointer warning
+	return (*SafeArray)(unsafe.Pointer(*saPtr)), nil
 }
 
 // safeArrayCreateVectorEx creates SafeArray.
@@ -154,9 +171,13 @@ func safeArrayCreateVectorEx(variantType VT, lowerBound int32, length uint32, ex
 		uintptr(variantType),
 		uintptr(lowerBound),
 		uintptr(length),
-		extra)
-	safearray = (*SafeArray)(unsafe.Pointer(sa))
-	return
+		extra,
+	)
+	if !(errors.Is(err, success) || err.Error() == success.Error()) { // errors.Is not working as expected
+		return nil, err
+	}
+	saPtr := (**uintptr)(unsafe.Pointer(&sa)) // create Pointer of SafeArray-Pointer to solve possible misuse of unsafe.Pointer warning
+	return (*SafeArray)(unsafe.Pointer(*saPtr)), nil
 }
 
 // safeArrayDestroy destroys SafeArray object.
