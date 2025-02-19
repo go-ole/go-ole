@@ -49,3 +49,8 @@ func (v *OleError) Description() string {
 func (v *OleError) SubError() error {
 	return v.subError
 }
+
+// Unwrap returns parent error, if there is one.
+func (v *OleError) Unwrap() error {
+	return v.subError
+}
