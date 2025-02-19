@@ -89,9 +89,9 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			case *bool:
 				vargs[n] = NewVariant(VT_BOOL|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*bool)))))
 			case uint8:
-				vargs[n] = NewVariant(VT_I1, int64(v.(uint8)))
+				vargs[n] = NewVariant(VT_UI1, int64(v.(uint8)))
 			case *uint8:
-				vargs[n] = NewVariant(VT_I1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint8)))))
+				vargs[n] = NewVariant(VT_UI1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint8)))))
 			case int8:
 				vargs[n] = NewVariant(VT_I1, int64(v.(int8)))
 			case *int8:
