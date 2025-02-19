@@ -1,6 +1,6 @@
 // Package is meant to retrieve and process safe array data returned from COM.
 
-package legacy
+package safearray
 
 // SafeArrayBound defines the SafeArray boundaries.
 type SafeArrayBound struct {

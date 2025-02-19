@@ -1,9 +1,10 @@
 //go:build windows
 // +build windows
 
-package ole
+package winrt
 
 import (
+	"github.com/go-ole/go-ole"
 	"reflect"
 	"syscall"
 	"unicode/utf8"
@@ -13,13 +14,13 @@ import (
 )
 
 var (
-	procRoInitialize              = modcombase.NewProc("RoInitialize")
-	procRoActivateInstance        = modcombase.NewProc("RoActivateInstance")
-	procRoGetActivationFactory    = modcombase.NewProc("RoGetActivationFactory")
-	procWindowsCreateString       = modcombase.NewProc("WindowsCreateString")
-	procWindowsDeleteString       = modcombase.NewProc("WindowsDeleteString")
-	procWindowsGetStringRawBuffer = modcombase.NewProc("WindowsGetStringRawBuffer")
-	procRoUninitialize            = modcombase.NewProc("RoUninitialize")
+	procRoInitialize              = ole.modcombase.NewProc("RoInitialize")
+	procRoActivateInstance        = ole.modcombase.NewProc("RoActivateInstance")
+	procRoGetActivationFactory    = ole.modcombase.NewProc("RoGetActivationFactory")
+	procWindowsCreateString       = ole.modcombase.NewProc("WindowsCreateString")
+	procWindowsDeleteString       = ole.modcombase.NewProc("WindowsDeleteString")
+	procWindowsGetStringRawBuffer = ole.modcombase.NewProc("WindowsGetStringRawBuffer")
+	procRoUninitialize            = ole.modcombase.NewProc("RoUninitialize")
 )
 
 func RoInitialize(thread_type uint32) (err error) {

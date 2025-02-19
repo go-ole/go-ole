@@ -1,8 +1,9 @@
 // Helper for converting SafeArray to array of objects.
 
-package legacy
+package safearray
 
 import (
+	"github.com/go-ole/go-ole/legacy"
 	"unsafe"
 )
 
@@ -38,55 +39,55 @@ func (sac *SafeArrayConversion) ToValueArray() (values []interface{}) {
 	vt, _ := safeArrayGetVartype(sac.Array)
 
 	for i := int32(0); i < totalElements; i++ {
-		switch VT(vt) {
-		case VT_BOOL:
+		switch legacy.VT(vt) {
+		case legacy.VT_BOOL:
 			var v bool
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_I1:
+		case legacy.VT_I1:
 			var v int8
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_I2:
+		case legacy.VT_I2:
 			var v int16
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_I4:
+		case legacy.VT_I4:
 			var v int32
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_I8:
+		case legacy.VT_I8:
 			var v int64
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_UI1:
+		case legacy.VT_UI1:
 			var v uint8
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_UI2:
+		case legacy.VT_UI2:
 			var v uint16
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_UI4:
+		case legacy.VT_UI4:
 			var v uint32
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_UI8:
+		case legacy.VT_UI8:
 			var v uint64
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_R4:
+		case legacy.VT_R4:
 			var v float32
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_R8:
+		case legacy.VT_R8:
 			var v float64
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v
-		case VT_BSTR:
+		case legacy.VT_BSTR:
 			v, _ := safeArrayGetElementString(sac.Array, i)
 			values[i] = v
-		case VT_VARIANT:
+		case legacy.VT_VARIANT:
 			var v VARIANT
 			safeArrayGetElement(sac.Array, i, unsafe.Pointer(&v))
 			values[i] = v.Value()

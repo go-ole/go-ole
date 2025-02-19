@@ -25,10 +25,8 @@ const (
 	// Requires COM operations on the same thread as Initialized.
 	ApartmentThreaded = windows.COINIT_APARTMENTTHREADED
 
-	// You probably neither want to nor need to use this for `Initialize()`. Included only for completeness.
 	DisableOle1DDE = windows.COINIT_DISABLE_OLE1DDE
 
-	// You probably neither want to nor need to use this for `Initialize()`. Included only for completeness.
 	SpeedOverMemory = windows.COINIT_SPEED_OVER_MEMORY
 )
 

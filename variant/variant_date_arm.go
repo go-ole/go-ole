@@ -1,7 +1,7 @@
 //go:build windows && arm
 // +build windows,arm
 
-package legacy
+package variant
 
 import (
 	"errors"

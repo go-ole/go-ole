@@ -1,7 +1,7 @@
 //go:build windows && 386
 // +build windows,386
 
-package legacy
+package variant
 
 import (
 	"errors"

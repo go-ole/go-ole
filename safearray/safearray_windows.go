@@ -1,9 +1,10 @@
 //go:build windows
 // +build windows
 
-package legacy
+package safearray
 
 import (
+	"github.com/go-ole/go-ole/legacy"
 	"unsafe"
 )
 
@@ -44,7 +45,7 @@ var (
 // AKA: SafeArrayAccessData in Windows API.
 // Todo: Test
 func safeArrayAccessData(safearray *SafeArray) (element uintptr, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayAccessData.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&element))))
@@ -55,7 +56,7 @@ func safeArrayAccessData(safearray *SafeArray) (element uintptr, err error) {
 //
 // AKA: SafeArrayUnaccessData in Windows API.
 func safeArrayUnaccessData(safearray *SafeArray) (err error) {
-	err = convertHresultToError(procSafeArrayUnaccessData.Call(uintptr(unsafe.Pointer(safearray))))
+	err = legacy.convertHresultToError(procSafeArrayUnaccessData.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
@@ -63,7 +64,7 @@ func safeArrayUnaccessData(safearray *SafeArray) (err error) {
 //
 // AKA: SafeArrayAllocData in Windows API.
 func safeArrayAllocData(safearray *SafeArray) (err error) {
-	err = convertHresultToError(procSafeArrayAllocData.Call(uintptr(unsafe.Pointer(safearray))))
+	err = legacy.convertHresultToError(procSafeArrayAllocData.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
@@ -71,7 +72,7 @@ func safeArrayAllocData(safearray *SafeArray) (err error) {
 //
 // AKA: SafeArrayAllocDescriptor in Windows API.
 func safeArrayAllocDescriptor(dimensions uint32) (safearray *SafeArray, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayAllocDescriptor.Call(uintptr(dimensions), uintptr(unsafe.Pointer(&safearray))))
 	return
 }
@@ -79,8 +80,8 @@ func safeArrayAllocDescriptor(dimensions uint32) (safearray *SafeArray, err erro
 // safeArrayAllocDescriptorEx allocates SafeArray.
 //
 // AKA: SafeArrayAllocDescriptorEx in Windows API.
-func safeArrayAllocDescriptorEx(variantType VT, dimensions uint32) (safearray *SafeArray, err error) {
-	err = convertHresultToError(
+func safeArrayAllocDescriptorEx(variantType legacy.VT, dimensions uint32) (safearray *SafeArray, err error) {
+	err = legacy.convertHresultToError(
 		procSafeArrayAllocDescriptorEx.Call(
 			uintptr(variantType),
 			uintptr(dimensions),
@@ -92,7 +93,7 @@ func safeArrayAllocDescriptorEx(variantType VT, dimensions uint32) (safearray *S
 //
 // AKA: SafeArrayCopy in Windows API.
 func safeArrayCopy(original *SafeArray) (safearray *SafeArray, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayCopy.Call(
 			uintptr(unsafe.Pointer(original)),
 			uintptr(unsafe.Pointer(&safearray))))
@@ -103,7 +104,7 @@ func safeArrayCopy(original *SafeArray) (safearray *SafeArray, err error) {
 //
 // AKA: SafeArrayCopyData in Windows API.
 func safeArrayCopyData(original *SafeArray, duplicate *SafeArray) (err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayCopyData.Call(
 			uintptr(unsafe.Pointer(original)),
 			uintptr(unsafe.Pointer(duplicate))))
@@ -113,7 +114,7 @@ func safeArrayCopyData(original *SafeArray, duplicate *SafeArray) (err error) {
 // safeArrayCreate creates SafeArray.
 //
 // AKA: SafeArrayCreate in Windows API.
-func safeArrayCreate(variantType VT, dimensions uint32, bounds *SafeArrayBound) (safearray *SafeArray, err error) {
+func safeArrayCreate(variantType legacy.VT, dimensions uint32, bounds *SafeArrayBound) (safearray *SafeArray, err error) {
 	sa, _, err := procSafeArrayCreate.Call(
 		uintptr(variantType),
 		uintptr(dimensions),
@@ -125,7 +126,7 @@ func safeArrayCreate(variantType VT, dimensions uint32, bounds *SafeArrayBound) 
 // safeArrayCreateEx creates SafeArray.
 //
 // AKA: SafeArrayCreateEx in Windows API.
-func safeArrayCreateEx(variantType VT, dimensions uint32, bounds *SafeArrayBound, extra uintptr) (safearray *SafeArray, err error) {
+func safeArrayCreateEx(variantType legacy.VT, dimensions uint32, bounds *SafeArrayBound, extra uintptr) (safearray *SafeArray, err error) {
 	sa, _, err := procSafeArrayCreateEx.Call(
 		uintptr(variantType),
 		uintptr(dimensions),
@@ -138,7 +139,7 @@ func safeArrayCreateEx(variantType VT, dimensions uint32, bounds *SafeArrayBound
 // safeArrayCreateVector creates SafeArray.
 //
 // AKA: SafeArrayCreateVector in Windows API.
-func safeArrayCreateVector(variantType VT, lowerBound int32, length uint32) (safearray *SafeArray, err error) {
+func safeArrayCreateVector(variantType legacy.VT, lowerBound int32, length uint32) (safearray *SafeArray, err error) {
 	sa, _, err := procSafeArrayCreateVector.Call(
 		uintptr(variantType),
 		uintptr(lowerBound),
@@ -150,7 +151,7 @@ func safeArrayCreateVector(variantType VT, lowerBound int32, length uint32) (saf
 // safeArrayCreateVectorEx creates SafeArray.
 //
 // AKA: SafeArrayCreateVectorEx in Windows API.
-func safeArrayCreateVectorEx(variantType VT, lowerBound int32, length uint32, extra uintptr) (safearray *SafeArray, err error) {
+func safeArrayCreateVectorEx(variantType legacy.VT, lowerBound int32, length uint32, extra uintptr) (safearray *SafeArray, err error) {
 	sa, _, err := procSafeArrayCreateVectorEx.Call(
 		uintptr(variantType),
 		uintptr(lowerBound),
@@ -164,7 +165,7 @@ func safeArrayCreateVectorEx(variantType VT, lowerBound int32, length uint32, ex
 //
 // AKA: SafeArrayDestroy in Windows API.
 func safeArrayDestroy(safearray *SafeArray) (err error) {
-	err = convertHresultToError(procSafeArrayDestroy.Call(uintptr(unsafe.Pointer(safearray))))
+	err = legacy.convertHresultToError(procSafeArrayDestroy.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
@@ -172,7 +173,7 @@ func safeArrayDestroy(safearray *SafeArray) (err error) {
 //
 // AKA: SafeArrayDestroyData in Windows API.
 func safeArrayDestroyData(safearray *SafeArray) (err error) {
-	err = convertHresultToError(procSafeArrayDestroyData.Call(uintptr(unsafe.Pointer(safearray))))
+	err = legacy.convertHresultToError(procSafeArrayDestroyData.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
@@ -180,7 +181,7 @@ func safeArrayDestroyData(safearray *SafeArray) (err error) {
 //
 // AKA: SafeArrayDestroyDescriptor in Windows API.
 func safeArrayDestroyDescriptor(safearray *SafeArray) (err error) {
-	err = convertHresultToError(procSafeArrayDestroyDescriptor.Call(uintptr(unsafe.Pointer(safearray))))
+	err = legacy.convertHresultToError(procSafeArrayDestroyDescriptor.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
@@ -207,7 +208,7 @@ func safeArrayGetElementSize(safearray *SafeArray) (length *uint32, err error) {
 
 // safeArrayGetElement retrieves element at given index.
 func safeArrayGetElement(safearray *SafeArray, index int32, pv unsafe.Pointer) error {
-	return convertHresultToError(
+	return legacy.convertHresultToError(
 		procSafeArrayGetElement.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&index)),
@@ -217,7 +218,7 @@ func safeArrayGetElement(safearray *SafeArray, index int32, pv unsafe.Pointer) e
 // safeArrayGetElementString retrieves element at given index and converts to string.
 func safeArrayGetElementString(safearray *SafeArray, index int32) (str string, err error) {
 	var element *int16
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayGetElement.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&index)),
@@ -231,7 +232,7 @@ func safeArrayGetElementString(safearray *SafeArray, index int32) (str string, e
 //
 // AKA: SafeArrayGetIID in Windows API.
 func safeArrayGetIID(safearray *SafeArray) (guid *GUID, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayGetIID.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&guid))))
@@ -245,7 +246,7 @@ func safeArrayGetIID(safearray *SafeArray) (guid *GUID, err error) {
 //
 // AKA: SafeArrayGetLBound in Windows API.
 func safeArrayGetLBound(safearray *SafeArray, dimension uint32) (lowerBound int32, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayGetLBound.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(dimension),
@@ -260,7 +261,7 @@ func safeArrayGetLBound(safearray *SafeArray, dimension uint32) (lowerBound int3
 //
 // AKA: SafeArrayGetUBound in Windows API.
 func safeArrayGetUBound(safearray *SafeArray, dimension uint32) (upperBound int32, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayGetUBound.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(dimension),
@@ -272,7 +273,7 @@ func safeArrayGetUBound(safearray *SafeArray, dimension uint32) (upperBound int3
 //
 // AKA: SafeArrayGetVartype in Windows API.
 func safeArrayGetVartype(safearray *SafeArray) (varType uint16, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayGetVartype.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&varType))))
@@ -286,7 +287,7 @@ func safeArrayGetVartype(safearray *SafeArray) (varType uint16, err error) {
 //
 // AKA: SafeArrayLock in Windows API.
 func safeArrayLock(safearray *SafeArray) (err error) {
-	err = convertHresultToError(procSafeArrayLock.Call(uintptr(unsafe.Pointer(safearray))))
+	err = legacy.convertHresultToError(procSafeArrayLock.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
@@ -294,7 +295,7 @@ func safeArrayLock(safearray *SafeArray) (err error) {
 //
 // AKA: SafeArrayUnlock in Windows API.
 func safeArrayUnlock(safearray *SafeArray) (err error) {
-	err = convertHresultToError(procSafeArrayUnlock.Call(uintptr(unsafe.Pointer(safearray))))
+	err = legacy.convertHresultToError(procSafeArrayUnlock.Call(uintptr(unsafe.Pointer(safearray))))
 	return
 }
 
@@ -303,7 +304,7 @@ func safeArrayUnlock(safearray *SafeArray) (err error) {
 //
 // AKA: SafeArrayPutElement in Windows API.
 func safeArrayPutElement(safearray *SafeArray, index int64, element uintptr) (err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayPutElement.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&index)),
@@ -317,7 +318,7 @@ func safeArrayPutElement(safearray *SafeArray, index int64, element uintptr) (er
 //
 // XXX: Must implement IRecordInfo interface for this to return.
 func safeArrayGetRecordInfo(safearray *SafeArray) (recordInfo interface{}, err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArrayGetRecordInfo.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&recordInfo))))
@@ -330,7 +331,7 @@ func safeArrayGetRecordInfo(safearray *SafeArray) (recordInfo interface{}, err e
 //
 // XXX: Must implement IRecordInfo interface for this to return.
 func safeArraySetRecordInfo(safearray *SafeArray, recordInfo interface{}) (err error) {
-	err = convertHresultToError(
+	err = legacy.convertHresultToError(
 		procSafeArraySetRecordInfo.Call(
 			uintptr(unsafe.Pointer(safearray)),
 			uintptr(unsafe.Pointer(&recordInfo))))
