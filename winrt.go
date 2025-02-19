@@ -14,6 +14,7 @@ import (
 
 var (
 	procRoInitialize              = modcombase.NewProc("RoInitialize")
+	procRoUninitialize            = modcombase.NewProc("RoUninitialize")
 	procRoActivateInstance        = modcombase.NewProc("RoActivateInstance")
 	procRoGetActivationFactory    = modcombase.NewProc("RoGetActivationFactory")
 	procWindowsCreateString       = modcombase.NewProc("WindowsCreateString")
@@ -23,6 +24,14 @@ var (
 
 func RoInitialize(thread_type uint32) (err error) {
 	hr, _, _ := procRoInitialize.Call(uintptr(thread_type))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func RoUninitialize() (err error) {
+	hr, _, _ = procRoUninitialize.Call()
 	if hr != 0 {
 		err = NewError(hr)
 	}
