@@ -3,16 +3,10 @@ name: Test
 on: [pull_request, push, pull_request_target]
 
 jobs:
-  build:
+  download:
     runs-on: windows-latest
-    env:
-      DOWNLOADPLATFORM: '${{ matrix.arch }}'
     permissions:
       contents: read
-    strategy:
-      matrix:
-        go: [ '1.18', '1.23', 'stable' ]
-        arch: [ 'x64', 'x86' ]
     steps:
       - name: 'Checkout Project'
         uses: actions/checkout@v4
@@ -22,13 +16,20 @@ jobs:
         with:
           repository: 'go-ole/test-com-server'
           latest: true
-          fileName: 'test-com-server-${{ matrix.arch }}.zip'
+          fileName: 'test-com-server-x64.zip'
           zipBall: true
           extract: true
-      - name: 'Unzip COM Test Release'
-        run: 7z e test-com-server-${{ matrix.arch }}.zip -oc:./ > NUL
       - name: 'Register Assembly'
-        run: .\build\register-assembly.bat
+        run: 'c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\TestCOMServer.dll'
+
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        go: [ '1.18', '1.23', 'stable' ]
+    steps:
       - name: Setup go
         uses: actions/setup-go@v5
         with:
