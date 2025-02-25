@@ -31,7 +31,7 @@ func RoInitialize(thread_type uint32) (err error) {
 }
 
 func RoUninitialize() (err error) {
-	hr, _, _ = procRoUninitialize.Call()
+	hr, _, _ := procRoUninitialize.Call()
 	if hr != 0 {
 		err = NewError(hr)
 	}
