@@ -17,12 +17,13 @@ jobs:
           repository: 'go-ole/test-com-server'
           latest: true
           fileName: 'test-com-server-x64.zip'
+          out-file-path: 'test-com-server'
           zipBall: true
           extract: true
       - name: 'List directory - DEBUG TO FIND TESTCOMServer'
         run: 'dir ${{ github.workspace }}'
       - name: 'Register Assembly'
-        run: 'c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\TestCOMServer.dll'
+        run: 'c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\TestCOMServer.dll'
 
   build:
     runs-on: windows-latest
