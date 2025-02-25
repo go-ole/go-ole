@@ -16,7 +16,7 @@ jobs:
         with:
           repository: 'go-ole/test-com-server'
           latest: true
-          fileName: 'test-com-server-x32.zip'
+          fileName: 'test-com-server-x86.zip'
           out-file-path: 'test-com-server'
           zipBall: true
           extract: true

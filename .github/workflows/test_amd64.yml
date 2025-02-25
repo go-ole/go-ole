@@ -21,7 +21,7 @@ jobs:
           zipBall: true
           extract: true
       - name: 'List directory - DEBUG TO FIND TESTCOMServer'
-        run: 'dir ${{ github.workspace }}'
+        run: 'dir ${{ github.workspace }}\test-com-server'
       - name: 'Register Assembly'
         run: 'c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\TestCOMServer.dll'
 
