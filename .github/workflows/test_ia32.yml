@@ -1,4 +1,4 @@
-name: Test
+name: Test 32-bit Architectures
 
 on: [pull_request, push, pull_request_target]
 
@@ -21,9 +21,9 @@ jobs:
           zipBall: true
           extract: true
       - name: 'List directory - DEBUG TO FIND TESTCOMServer'
-        run: 'dir ${{ github.workspace }}\test-com-server'
+        run: 'dir ${{ github.workspace }}\test-com-server\x86'
       - name: 'Register Assembly'
-        run: 'c:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\TestCOMServer.dll'
+        run: 'c:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\x86\TestCOMServer.dll'
 
   build:
     runs-on: windows-latest
