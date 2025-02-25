@@ -1,0 +1,49 @@
+name: Test 32x-bit Architectures
+
+on: [pull_request, push, pull_request_target]
+
+jobs:
+  download:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 'Download COM Test Release'
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'go-ole/test-com-server'
+          latest: true
+          fileName: 'test-com-server-x86.zip'
+          out-file-path: 'test-com-server'
+          zipBall: true
+          extract: true
+      - name: 'Register Assembly'
+        run: 'c:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\x86\Release\TestCOMServer.dll'
+
+  build:
+    runs-on: windows-latest
+    needs: download
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        go: [ '1.12', '1.23', 'stable' ]
+        arch: [ '386', 'arm' ]
+    env:
+      GOARCH: ${{ matrix.arch }}
+    steps:
+      - name: 'Checkout Project'
+        uses: actions/checkout@v4
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          check-latest: true
+      - name: 'Go Version'
+        run: go version
+      - name: 'Go Get'
+        run: go get -v -t
+      - name: 'Go Build'
+        run: go build
+      - name: Run tests
+        run: go test -v -cover
