@@ -8,9 +8,6 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: 'Checkout Project'
-        uses: actions/checkout@v4
-
       - name: 'Download COM Test Release'
         uses: robinraju/release-downloader@v1
         with:
@@ -35,6 +32,9 @@ jobs:
     env:
       GOARCH: ${{ matrix.arch }}
     steps:
+      - name: 'Checkout Project'
+        uses: actions/checkout@v4
+
       - name: Setup go
         uses: actions/setup-go@v5
         with:
