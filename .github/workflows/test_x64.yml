@@ -27,7 +27,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        go: [ '1.12', '1.23', 'stable' ]
+        go: [ '1.18', '1.23', 'stable' ]
         arch: [ 'amd64', 'arm64' ]
     #        arch: [ 'amd64', 'arm64', 'loong64', 'mips64', 'mips64le', 'ppc64', 'ppc64le', 'riscv64', 's390x' ]
     env:

@@ -1,4 +1,4 @@
-name: Test 32x-bit Architectures
+name: Test 32-bit Architectures
 
 on: [pull_request, push, pull_request_target]
 
@@ -27,7 +27,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        go: [ '1.12', '1.23', 'stable' ]
+        go: [ '1.18', '1.23', 'stable' ]
         arch: [ '386', 'arm' ]
     env:
       GOARCH: ${{ matrix.arch }}
