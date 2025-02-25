@@ -44,7 +44,7 @@ jobs:
       - name: 'Go Version'
         run: go version
       - name: 'Go Get'
-        run: go get -v -t ./...
+        run: go get -v -t
       - name: 'Go Build'
         run: go build
       - name: Run tests
