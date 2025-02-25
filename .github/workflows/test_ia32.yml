@@ -20,8 +20,6 @@ jobs:
           out-file-path: 'test-com-server'
           zipBall: true
           extract: true
-      - name: 'List directory - DEBUG TO FIND TESTCOMServer'
-        run: 'dir ${{ github.workspace }}\test-com-server\x86\Release'
       - name: 'Register Assembly'
         run: 'c:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\x86\Release\TestCOMServer.dll'
 
@@ -44,7 +42,9 @@ jobs:
           check-latest: true
       - name: 'Go Version'
         run: go version
-      - name: 'Go Guild'
+      - name: 'Go Get'
+        run: go get -v -t ./...
+      - name: 'Go Build'
         run: go build
       - name: Run tests
         run: go test
