@@ -23,7 +23,7 @@ func wrapCOMExecute(t *testing.T, callback func(*testing.T)) {
 	callback(t)
 }
 
-func wrapDispatch(t *testing.T, ClassID, UnknownInterfaceID, DispatchInterfaceID *windows.GUID, callback func(*testing.T, *IUnknown, *IDispatch)) {
+func wrapDispatch(t *testing.T, ClassID, UnknownInterfaceID, DispatchInterfaceID windows.GUID, callback func(*testing.T, *IUnknown, *IDispatch)) {
 	var unknown *IUnknown
 	var dispatch *IDispatch
 	var err error

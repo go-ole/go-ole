@@ -50,7 +50,7 @@ func (obj *IActivationFactory) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
-func (obj *IActivationFactory) GetInterfaceIds() ([]*windows.GUID, error) {
+func (obj *IActivationFactory) GetInterfaceIds() ([]windows.GUID, error) {
 	return GetInterfaceIdsOnIInspectable(obj)
 }
 

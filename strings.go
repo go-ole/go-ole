@@ -79,24 +79,24 @@ func lpOleStrLen(p *uint16) (length int64) {
 }
 
 // SysAllocString allocates memory for string and copies string into memory.
-func SysAllocString(v string) (ss *int16) {
+func SysAllocString(v string) (ss *uint16) {
 	pss, _, _ := procSysAllocString.Call(uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(v))))
-	ss = (*int16)(unsafe.Pointer(pss))
+	ss = (*uint16)(unsafe.Pointer(pss))
 	return
 }
 
 // SysAllocStringLen copies up to length of given string returning pointer.
-func SysAllocStringLen(v string) (ss *int16) {
+func SysAllocStringLen(v string) (ss *uint16) {
 	utf16 := utf16.Encode([]rune(v + "\x00"))
 	ptr := &utf16[0]
 
 	pss, _, _ := procSysAllocStringLen.Call(uintptr(unsafe.Pointer(ptr)), uintptr(len(utf16)-1))
-	ss = (*int16)(unsafe.Pointer(pss))
+	ss = (*uint16)(unsafe.Pointer(pss))
 	return
 }
 
 // SysFreeString frees string system memory. This must be called with SysAllocString.
-func SysFreeString(v *int16) (err error) {
+func SysFreeString(v *uint16) (err error) {
 	hr, _, _ := procSysFreeString.Call(uintptr(unsafe.Pointer(v)))
 	if hr != 0 {
 		err = NewError(hr)

@@ -58,17 +58,17 @@ func RoActivateInstance(classId string) (obj *IInspectable, err error) {
 		uintptr(unsafe.Pointer(hClassId)),
 		uintptr(unsafe.Pointer(&obj)))
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return
 	default:
-		err = hr
+		err = windows.Errno(hr)
 	}
 
 	return
 }
 
-func RoGetActivationFactory(classId string, interfaceId *windows.GUID) (obj *IActivationFactory, err error) {
+func RoGetActivationFactory(classId string, interfaceId windows.GUID) (obj *IActivationFactory, err error) {
 	hClassId, err := NewHString(classId)
 	if err != nil {
 		return nil, err
@@ -80,11 +80,11 @@ func RoGetActivationFactory(classId string, interfaceId *windows.GUID) (obj *IAc
 		uintptr(unsafe.Pointer(interfaceId)),
 		uintptr(unsafe.Pointer(&obj)))
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return
 	default:
-		err = hr
+		err = windows.Errno(hr)
 	}
 
 	return

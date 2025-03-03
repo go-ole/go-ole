@@ -17,7 +17,7 @@ type IConnectionPoint struct {
 	GetConnectionPointContainer uintptr
 	advise                      uintptr
 	unadvise                    uintptr
-	EnumConnections             uintptr
+	enumConnections             uintptr
 }
 
 func (obj *IConnectionPoint) QueryInterfaceAddress() uintptr {
@@ -40,7 +40,7 @@ func (obj *IConnectionPoint) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
-func (obj *IConnectionPoint) GetConnectionInterface() (interfaceID *windows.GUID, err error) {
+func (obj *IConnectionPoint) GetConnectionInterface() (interfaceID windows.GUID, err error) {
 	hr, _, _ := windows.Syscall(
 		obj.getConnectionInterface,
 		2,

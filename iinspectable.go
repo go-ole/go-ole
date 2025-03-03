@@ -3,8 +3,6 @@
 package ole
 
 import (
-	"encoding/binary"
-	"reflect"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -65,7 +63,7 @@ func (obj *IInspectable) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
-func (obj *IInspectable) GetInterfaceIds() ([]*windows.GUID, error) {
+func (obj *IInspectable) GetInterfaceIds() ([]windows.GUID, error) {
 	return GetInterfaceIdsOnIInspectable(obj)
 }
 
@@ -77,7 +75,7 @@ func (obj *IInspectable) GetTrustLevel() TrustLevel {
 	return GetTrustLevelOnIInspectable(obj)
 }
 
-func GetInterfaceIdsOnIInspectable(obj *IsIInspectable) (interfaceIds []*windows.GUID, err error) {
+func GetInterfaceIdsOnIInspectable(obj *IsIInspectable) (interfaceIds []windows.GUID, err error) {
 	var count uint32
 	var array uintptr
 	hr, _, _ := windows.Syscall(
@@ -94,19 +92,7 @@ func GetInterfaceIdsOnIInspectable(obj *IsIInspectable) (interfaceIds []*windows
 	}
 	defer TaskMemoryFreePointer(unsafe.Pointer(&array))
 
-	interfaceIds = make([]*windows.GUID, count)
-	byteCount := count * uint32(unsafe.Sizeof(windows.GUID{}))
-	sliceHeader := reflect.SliceHeader{Data: array, Len: int(byteCount), Cap: int(byteCount)}
-	byteSlice := *(*[]byte)(unsafe.Pointer(&sliceHeader))
-	reader := bytes.NewReader(byteSlice)
-	for i := range interfaceIds {
-		guid := windows.GUID{}
-		err = binary.Read(reader, binary.LittleEndian, &guid)
-		if err != nil {
-			return
-		}
-		interfaceIds[i] = &guid
-	}
+	interfaceIds = (*[count]windows.GUID)(unsafe.Pointer(array))[:]
 
 	return
 }

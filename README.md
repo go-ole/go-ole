@@ -151,6 +151,37 @@ func main() {
 If performance is important, then please note that you may want to call to the native conversion functions `ole.[Type]ToVariant`
 when dispatching.
 
+### Memory Usage
+
+All COM/OLE interfaces should implement `Release()` and you must call it. With Go 1.24, you may use `runtime.AddCleanup()`
+for freeing up memory. Whenever, you are done with an COM or OLE object, then call `Release()` to free up the memory. Do
+not assume that once Go frees the reference that Windows will also free the memory allocated on its end or the COM
+server.
+
+COM is a shared memory protocol that allows two programs to interact without really knowing about the other. It is like
+SOAP or RPC, except Windows controls the flow and the memory between the processes. Neither Go nor the library will tell
+Windows when it is ready to free the memory. Barring any defects with the `Release()` code, it is the only way Windows
+will know. Windows should also free memory when you call `ole.Uninitialize()` or close the application. This should not
+be relied on and should not be considered proper usage.
+
+Please also be aware that `unsafe.Pointer()` does not create a reference count for variables. Go may free memory that
+needs to be available to COM server. Care has been taken to ensure this works properly, but this unsafe behavior is
+tricky and there will be bugs. Most likely, the reason something doesn't always work as expected and is flaky is because
+Go garbage collected memory that was needed for COM communication. A memory pointer was passed to Windows to give to the
+COM Server that was accidentally freed. The way to solve this is to keep a reference alive.
+
+1. `runtime.KeepAlive()`
+2. ```go
+   var val int32
+   windows.Syscall(address, 1, uintptr(unsafe.Pointer(&val)))
+   return val
+   ```
+
+The library will need to be audited to ensure that memory that needs to stick around does so. Part of this might be
+keeping the unsafe code within the local scope or to return values.
+
+**Note:** Please report any defects that you feel is caused by the improper handling of memory by the library.
+
 ## Testing
 
 1. Download a release from https://github.com/go-ole/test-com-server

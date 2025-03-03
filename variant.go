@@ -433,13 +433,13 @@ func ClassIdToVariant(i any) any {
 	}
 }
 
-// VariantToClassId converts *VARIANT to *windows.GUID
+// VariantToClassId converts *VARIANT to windows.GUID
 func VariantToClassId(variant *VARIANT) any {
 	if variant.VT == VT_CLSID|VT_BYREF {
 		return (*windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
 	}
 	if variant.VT == VT_CLSID {
-		return &(windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
+		return (windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
 	}
 }
 

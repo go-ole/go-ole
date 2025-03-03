@@ -21,7 +21,7 @@ func (obj *IConnectionPointContainer) EnumConnectionPoints(points interface{}) e
 	return NewError(E_NOTIMPL)
 }
 
-func (obj *IConnectionPointContainer) FindConnectionPoint(iid *windows.GUID) (point *IConnectionPoint, err error) {
+func (obj *IConnectionPointContainer) FindConnectionPoint(iid windows.GUID) (point *IConnectionPoint, err error) {
 	hr, _, _ := windows.Syscall(
 		obj.findConnectionPoint,
 		3,
@@ -46,7 +46,7 @@ func QueryIConnectionPointContainerFromIUnknown(unknown *IsIUnknown) (obj *IConn
 	return
 }
 
-func (obj *IDispatch) ConnectObject(interfaceId *windows.GUID, unknown IsIUnknown) (cookie uint32, err error) {
+func (obj *IDispatch) ConnectObject(interfaceId windows.GUID, unknown IsIUnknown) (cookie uint32, err error) {
 	container, err := QueryIConnectionPointContainerFromIUnknown(obj)
 	if err != nil {
 		return
@@ -90,7 +90,7 @@ func (obj *IDispatch) ConnectObject(interfaceId *windows.GUID, unknown IsIUnknow
 }
 
 // ConnectObject creates a connection point between two services for communication.
-func ConnectObject(dispatch *IDispatch, iid *windows.GUID, idisp interface{}) (cookie uint32, err error) {
+func ConnectObject(dispatch *IDispatch, iid windows.GUID, idisp interface{}) (cookie uint32, err error) {
 	unknown, err := dispatch.QueryInterface(IID_IConnectionPointContainer)
 	if err != nil {
 		return

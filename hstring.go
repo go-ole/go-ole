@@ -28,7 +28,7 @@ func NewHString(s string) (hstring HString, err error) {
 		uintptr(len),
 		uintptr(unsafe.Pointer(&hstring)))
 	if hr != 0 {
-		err = NewError(hr)
+		err = windows.Errno(hr)
 	}
 	return
 }
@@ -37,7 +37,7 @@ func NewHString(s string) (hstring HString, err error) {
 func DeleteHString(hstring HString) (err error) {
 	hr, _, _ := procWindowsDeleteString.Call(uintptr(hstring))
 	if hr != 0 {
-		err = NewError(hr)
+		err = windows.Errno(hr)
 	}
 	return
 }

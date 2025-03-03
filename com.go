@@ -70,7 +70,8 @@ const (
 type InitializeResult uint32
 
 const (
-	SuccessfullyInitialized InitializeResult = iota << 1
+	UnknownInitializeResult InitializeResult = iota
+	SuccessfullyInitialized
 	AlreadyInitialized
 	IncompatibleConcurrencyModelAlreadyInitialized
 )
@@ -84,7 +85,7 @@ var bSecurityInit bool = false
 func Initialize(model ConcurrencyModel) (InitializeResult, error) {
 	err := windows.CoInitializeEx(0, uint32(model))
 
-	switch err {
+	switch windows.Handle(err) {
 	case windows.S_OK:
 		return SuccessfullyInitialized, nil
 	case windows.S_FALSE:
@@ -92,7 +93,7 @@ func Initialize(model ConcurrencyModel) (InitializeResult, error) {
 	case windows.RPC_E_CHANGED_MODE:
 		return IncompatibleConcurrencyModelAlreadyInitialized, nil
 	default:
-		return nil, err
+		return UnknownInitializeResult, err
 	}
 }
 
@@ -155,7 +156,7 @@ func CoInitializeSecurity(cAuthSvc int32,
 			uintptr(dwCapabilities), // Cloaking
 			uintptr(0))              // reserved parameter
 		if hr != 0 {
-			err = NewError(hr)
+			err = windows.Handle(hr)
 		} else {
 			// COM Security initialization done make global flag true.
 			bSecurityInit = true
@@ -165,7 +166,7 @@ func CoInitializeSecurity(cAuthSvc int32,
 }
 
 // CreateInstance of single uninitialized object with GUID.
-func CreateInstance[T IsIUnknown](clsid *windows.GUID, iid *windows.GUID) (unk *T, err error) {
+func CreateInstance[T IsIUnknown](clsid windows.GUID, iid windows.GUID) (unk *T, err error) {
 	if iid == nil {
 		iid = IID_IUnknown
 	}
@@ -176,7 +177,7 @@ func CreateInstance[T IsIUnknown](clsid *windows.GUID, iid *windows.GUID) (unk *
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&unk)))
 	if hr != 0 {
-		err = NewError(hr)
+		err = windows.Handle(hr)
 	}
 	return
 }
@@ -185,15 +186,15 @@ func CreateInstance[T IsIUnknown](clsid *windows.GUID, iid *windows.GUID) (unk *
 //
 // [T] must be a virtual table structure. This function is unsafe(!!!) and will attempt to populate whatever type you
 // pass.
-func GetActiveObject[T struct{}](classId *windows.GUID, interfaceId *windows.GUID) (obj *T, err error) {
+func GetActiveObject[T struct{}](classId windows.GUID, interfaceId windows.GUID) (obj *T, err error) {
 	if interfaceId == nil {
 		interfaceId = IID_IUnknown
 	}
 	hr, _, _ := procGetActiveObject.Call(
-		uintptr(unsafe.Pointer(classId)),
+		uintptr(unsafe.Pointer(&classId)),
 		uintptr(unsafe.Pointer(interfaceId)),
 		uintptr(unsafe.Pointer(&obj)))
-	if hr != windows.S_OK {
+	if windows.Handle(hr) != windows.S_OK {
 		return nil, windows.Errno(hr)
 	}
 	return
@@ -207,7 +208,7 @@ func GetUserDefaultLCID() (lcid uint32) {
 }
 
 // GetObject retrieves pointer to active object.
-func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, interfaceId *windows.GUID) (unk *T, err error) {
+func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, interfaceId windows.GUID) (unk *T, err error) {
 	if bindOpts != nil {
 		bindOpts.CbStruct = uint32(unsafe.Sizeof(windows.BIND_OPTS3{}))
 	}
@@ -219,7 +220,7 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 		bindOpts,
 		interfaceId,
 		uintptr(unsafe.Pointer(&unk)))
-	if hr != windows.S_OK {
+	if windows.Handle(hr) != windows.S_OK {
 		err = hr
 	}
 	return
@@ -236,7 +237,7 @@ func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispa
 		uintptr(unsafe.Pointer(ptinfo)),
 		uintptr(unsafe.Pointer(&disp)))
 	if hr != 0 {
-		err = NewError(hr)
+		err = windows.Handle(hr)
 	}
 	return
 }
@@ -250,7 +251,7 @@ func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
 		uintptr(GetUserDefaultLCID()),
 		uintptr(unsafe.Pointer(&pptinfo)))
 	if hr != 0 {
-		err = NewError(hr)
+		err = windows.Handle(hr)
 	}
 	return
 }
