@@ -1,6 +1,6 @@
-package ole
+//go:build windows
 
-import "github.com/go-ole/go-ole/legacy"
+package ole
 
 // CreateObject creates object from programID based on interface type.
 //
@@ -13,7 +13,7 @@ func CreateObject(programID string) (unknown *IUnknown, err error) {
 		return
 	}
 
-	unknown, err = legacy.CreateInstance(classID, legacy.IID_IUnknown)
+	unknown, err = CreateInstance(classID, IID_IUnknown)
 	if err != nil {
 		return
 	}
@@ -32,7 +32,7 @@ func GetObject(programID string) (unknown *IUnknown, err error) {
 		return
 	}
 
-	unknown, err = legacy.GetActiveObject(classID, legacy.IID_IUnknown)
+	unknown, err = GetActiveObject(classID, IID_IUnknown)
 	if err != nil {
 		return
 	}
@@ -42,7 +42,7 @@ func GetObject(programID string) (unknown *IUnknown, err error) {
 
 // CallMethod calls method on IDispatch with parameters.
 func CallMethod(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_METHOD, params)
+	return disp.InvokeWithOptionalArgs(name, DISPATCH_METHOD, params)
 }
 
 // MustCallMethod calls method on IDispatch with parameters or panics.
@@ -56,7 +56,7 @@ func MustCallMethod(disp *IDispatch, name string, params ...interface{}) (result
 
 // GetProperty retrieves property from IDispatch.
 func GetProperty(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYGET, params)
+	return disp.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYGET, params)
 }
 
 // MustGetProperty retrieves property from IDispatch or panics.
@@ -70,7 +70,7 @@ func MustGetProperty(disp *IDispatch, name string, params ...interface{}) (resul
 
 // PutProperty mutates property.
 func PutProperty(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYPUT, params)
+	return disp.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYPUT, params)
 }
 
 // MustPutProperty mutates property or panics.
@@ -84,7 +84,7 @@ func MustPutProperty(disp *IDispatch, name string, params ...interface{}) (resul
 
 // PutPropertyRef mutates property reference.
 func PutPropertyRef(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYPUTREF, params)
+	return disp.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYPUTREF, params)
 }
 
 // MustPutPropertyRef mutates property reference or panics.
@@ -94,28 +94,4 @@ func MustPutPropertyRef(disp *IDispatch, name string, params ...interface{}) (re
 		panic(err.Error())
 	}
 	return r
-}
-
-func ForEach(disp *IDispatch, f func(v *VARIANT) error) error {
-	newEnum, err := disp.GetProperty("_NewEnum")
-	if err != nil {
-		return err
-	}
-	defer newEnum.Clear()
-
-	enum, err := newEnum.ToIUnknown().IEnumVARIANT(legacy.IID_IEnumVariant)
-	if err != nil {
-		return err
-	}
-	defer enum.Release()
-
-	for item, length, err := enum.Next(1); length > 0; item, length, err = enum.Next(1) {
-		if err != nil {
-			return err
-		}
-		if ferr := f(&item); ferr != nil {
-			return ferr
-		}
-	}
-	return nil
 }

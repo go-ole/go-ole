@@ -3,11 +3,15 @@
 package ole
 
 import (
-	"errors"
 	"golang.org/x/sys/windows"
 )
 
-type IEnumVariant struct {
+type ConnectData struct {
+	unknown uintptr
+	Cookie  uint32
+}
+
+type IEnumConnections struct {
 	// IUnknown
 	QueryInterface uintptr
 	addRef         uintptr
@@ -19,31 +23,27 @@ type IEnumVariant struct {
 	clone uintptr
 }
 
-var (
-	EnumOutOfMemoryError = errors.New("IEnumVariant: OutOfMemoryError")
-)
-
-func (v *IEnumVariant) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *IEnumConnections) QueryInterfaceAddress() uintptr {
+	return obj.QueryInterface
 }
 
-func (v *IEnumVariant) AddRefAddress() uintptr {
-	return v.addRef
+func (obj *IEnumConnections) AddRefAddress() uintptr {
+	return obj.addRef
 }
 
-func (v *IEnumVariant) ReleaseAddress() uintptr {
-	return v.release
+func (obj *IEnumConnections) ReleaseAddress() uintptr {
+	return obj.release
 }
 
-func (obj *IEnumVariant) AddRef() uint32 {
+func (obj *IEnumConnections) AddRef() uint32 {
 	return AddRefOnIUnknown(obj)
 }
 
-func (obj *IEnumVariant) Release() uint32 {
+func (obj *IEnumConnections) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
-func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
+func (obj *IEnumConnections) Clone() (cloned *IEnumConnections, err error) {
 	hr, _, _ := windows.Syscall(
 		v.clone,
 		2,
@@ -61,7 +61,7 @@ func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 	}
 }
 
-func (obj *IEnumVariant) Reset() bool {
+func (obj *IEnumConnections) Reset() bool {
 	hr, _, _ := windows.Syscall(
 		obj.reset,
 		1,
@@ -79,7 +79,7 @@ func (obj *IEnumVariant) Reset() bool {
 	}
 }
 
-func (obj *IEnumVariant) Skip(numSkip uint) bool {
+func (obj *IEnumConnections) Skip(numSkip uint) bool {
 	hr, _, _ := windows.Syscall(
 		enum.skip,
 		2,
@@ -97,7 +97,9 @@ func (obj *IEnumVariant) Skip(numSkip uint) bool {
 	}
 }
 
-func (obj *IEnumVariant) Next(numRetrieve uint) (array VARIANT, length uint, hasLess bool) {
+func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) {
+	var length uint
+	var array []ConnectData
 	hr, _, _ := windows.Syscall6(
 		v.next,
 		4,
@@ -108,18 +110,13 @@ func (obj *IEnumVariant) Next(numRetrieve uint) (array VARIANT, length uint, has
 		0,
 		0)
 
-	switch hr {
-	case windows.S_OK:
-		hasLess = false
-	case windows.S_FALSE:
-		hasLess = true
-	default:
-		hasLess = false
-	}
+	// New unsafe array conversion since Go 1.17.
+	connectData = (*[length]ConnectData)(unsafe.Pointer(ptr))[:]
+
 	return
 }
 
-func (v *IEnumVariant) ForEach(callback func(v *VARIANT) error) error {
+func (v *IEnumConnections) ForEach(callback func(v *VARIANT) error) error {
 	v.Reset()
 	for item, length, hasLess := v.Next(1); length > 0; item, length, err = v.Next(1) {
 		if hasLess {
@@ -131,16 +128,4 @@ func (v *IEnumVariant) ForEach(callback func(v *VARIANT) error) error {
 		}
 	}
 	return nil
-}
-
-func QueryIEnumVariantFromIUnknown(unknown *IsIUnknown) (enum *IEnumVariant, err error) {
-	if unknown == nil {
-		return nil, ComInterfaceIsNilPointer
-	}
-
-	enum, err = QueryInterfaceOnIUnknown[IEnumVariant](unknown, IID_IEnumVariant)
-	if err != nil {
-		return nil, err
-	}
-	return
 }

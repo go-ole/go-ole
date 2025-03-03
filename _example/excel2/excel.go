@@ -6,7 +6,6 @@ package main
 import (
 	"fmt"
 	"github.com/go-ole/go-ole"
-	"github.com/go-ole/go-ole/legacy"
 	"log"
 	"os"
 
@@ -81,9 +80,10 @@ func showMethodsAndProperties(i *ole.IDispatch) {
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
-	legacy.CoInitialize(0)
+	ole.Initialize(ole.Multithreaded)
+	defer ole.Uninitialize()
 	unknown, _ := oleutil.CreateObject("Excel.Application")
-	excel, _ := unknown.QueryInterface(legacy.IID_IDispatch)
+	excel, _ := unknown.QueryInterface(ole.IID_IDispatch)
 	oleutil.PutProperty(excel, "Visible", true)
 
 	workbooks := oleutil.MustGetProperty(excel, "Workbooks").ToIDispatch()
@@ -94,5 +94,4 @@ func main() {
 	workbooks.Release()
 	// oleutil.CallMethod(excel, "Quit")
 	excel.Release()
-	legacy.CoUninitialize()
 }

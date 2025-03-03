@@ -1,15 +1,14 @@
 //go:build windows
-// +build windows
 
 package safearray
 
 import (
-	"github.com/go-ole/go-ole/legacy"
+	"github.com/go-ole/go-ole"
 	"unsafe"
 )
 
 func safeArrayFromByteSlice(slice []byte) *SafeArray {
-	array, _ := safeArrayCreateVector(legacy.VT_UI1, 0, uint32(len(slice)))
+	array, _ := safeArrayCreateVector(ole.VT_UI1, 0, uint32(len(slice)))
 
 	if array == nil {
 		panic("Could not convert []byte to SAFEARRAY")
@@ -22,7 +21,7 @@ func safeArrayFromByteSlice(slice []byte) *SafeArray {
 }
 
 func safeArrayFromStringSlice(slice []string) *SafeArray {
-	array, _ := safeArrayCreateVector(legacy.VT_BSTR, 0, uint32(len(slice)))
+	array, _ := safeArrayCreateVector(ole.VT_BSTR, 0, uint32(len(slice)))
 
 	if array == nil {
 		panic("Could not convert []string to SAFEARRAY")

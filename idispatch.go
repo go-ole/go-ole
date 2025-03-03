@@ -1,14 +1,97 @@
+//go:build windows
+
 package ole
 
 import (
-	"github.com/go-ole/go-ole/legacy"
-	"math/big"
-	"syscall"
-	"time"
+	"golang.org/x/sys/windows"
 	"unsafe"
 )
 
-type IsIDispatch interface {
+const (
+	DISPATCH_METHOD         int16 = 1
+	DISPATCH_PROPERTYGET          = 2
+	DISPATCH_PROPERTYPUT          = 4
+	DISPATCH_PROPERTYPUTREF       = 8
+)
+
+const (
+	DISPID_UNKNOWN     int32 = -1
+	DISPID_VALUE             = 0
+	DISPID_PROPERTYPUT       = -3
+	DISPID_NEWENUM           = -4
+	DISPID_EVALUATE          = -5
+	DISPID_CONSTRUCTOR       = -6
+	DISPID_DESTRUCTOR        = -7
+	DISPID_COLLECT           = -8
+)
+
+// DISPPARAMS are the arguments that passed to methods or property.
+type DISPPARAMS struct {
+	rgvarg            uintptr
+	rgdispidNamedArgs uintptr
+	cArgs             uint32
+	cNamedArgs        uint32
+}
+
+// PARAMDATA defines parameter data type.
+type PARAMDATA struct {
+	Name *int16
+	Vt   uint16
+}
+
+// METHODDATA defines method info.
+type METHODDATA struct {
+	Name     *uint16
+	Data     *PARAMDATA
+	Dispid   int32
+	Meth     uint32
+	CC       int32
+	CArgs    uint32
+	Flags    uint16
+	VtReturn uint32
+}
+
+// INTERFACEDATA defines interface info.
+type INTERFACEDATA struct {
+	MethodData *METHODDATA
+	CMembers   uint32
+}
+
+// TYPEDESC defines data type.
+type TYPEDESC struct {
+	Hreftype uint32
+	VT       uint16
+}
+
+// IDLDESC defines IDL info.
+type IDLDESC struct {
+	DwReserved uint32
+	WIDLFlags  uint16
+}
+
+// TYPEATTR defines type info.
+type TYPEATTR struct {
+	Guid             windows.GUID
+	Lcid             uint32
+	dwReserved       uint32
+	MemidConstructor int32
+	MemidDestructor  int32
+	LpstrSchema      *uint16
+	CbSizeInstance   uint32
+	Typekind         int32
+	CFuncs           uint16
+	CVars            uint16
+	CImplTypes       uint16
+	CbSizeVft        uint16
+	CbAlignment      uint16
+	WTypeFlags       uint16
+	WMajorVerNum     uint16
+	WMinorVerNum     uint16
+	TdescAlias       TYPEDESC
+	IdldescType      IDLDESC
+}
+
+type IDispatchAddresses interface {
 	IsIUnknown
 	GetTypeInfoCountAddress() uintptr
 	GetTypeInfoAddress() uintptr
@@ -17,12 +100,14 @@ type IsIDispatch interface {
 }
 
 type IDispatch struct {
-	QueryInterface   uintptr
-	AddRef           uintptr
-	Release          uintptr
-	GetTypeInfoCount uintptr
-	GetTypeInfo      uintptr
-	GetIDsOfNames    uintptr
+	// IUnknown
+	QueryInterface uintptr
+	addRef         uintptr
+	release        uintptr
+	// IDispatch
+	getTypeInfoCount uintptr
+	getTypeInfo      uintptr
+	getIDsOfNames    uintptr
 	Invoke           uintptr
 }
 
@@ -31,78 +116,117 @@ func (v *IDispatch) QueryInterfaceAddress() uintptr {
 }
 
 func (v *IDispatch) AddRefAddress() uintptr {
-	return v.QueryInterface
+	return v.addRef
 }
 
 func (v *IDispatch) ReleaseAddress() uintptr {
-	return v.QueryInterface
+	return v.release
 }
 
 func (v *IDispatch) GetTypeInfoCountAddress() uintptr {
-	return v.GetTypeInfoCount
+	return v.getTypeInfoCount
 }
 
 func (v *IDispatch) GetTypeInfoAddress() uintptr {
-	return v.GetTypeInfo
+	return v.getTypeInfo
 }
 
 func (v *IDispatch) GetIDsOfNamesAddress() uintptr {
-	return v.GetIDsOfNames
+	return v.getIDsOfNames
 }
 
 func (v *IDispatch) InvokeAddress() uintptr {
 	return v.Invoke
 }
 
-func GetIDsOfNameOnIDispatch(dispatch *IsIDispatch, names []string) (dispid []int32, err error) {
-	wnames := make([]*uint16, len(names))
+func (obj *IDispatch) AddRef() uint32 {
+	return AddRefOnIUnknown(obj)
+}
+
+func (obj *IDispatch) Release() uint32 {
+	return ReleaseOnIUnknown(obj)
+}
+
+func (obj *IDispatch) HasTypeInfo() bool {
+	var ret uint
+	hr, _, _ := windows.Syscall(
+		obj.getTypeInfoCount,
+		2,
+		uintptr(unsafe.Pointer(obj)),
+		uintptr(unsafe.Pointer(&ret)),
+		0)
+
+	if hr == windows.E_NOTIMPL {
+		return false
+	}
+
+	return ret == 1
+}
+
+func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
+	var ret uint
+	hr, _, _ := windows.Syscall6(
+		obj.getTypeInfo,
+		4,
+		uintptr(unsafe.Pointer(obj)),
+		uintptr(0),
+		uintptr(GetUserDefaultLCID()),
+		uintptr(unsafe.Pointer(&ret)),
+		0,
+		0)
+
+	if hr == windows.DISP_E_BADINDEX {
+		return nil
+	}
+
+	return
+}
+
+func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err error) {
+	wNames := make([]*uint16, len(names))
 	for i := 0; i < len(names); i++ {
-		wnames[i] = windows.UTF16PtrFromString(names[i])
+		wNames[i] = windows.UTF16PtrFromString(names[i])
 	}
 	dispid = make([]int32, len(names))
 	namelen := uint32(len(names))
 	hr, _, _ := windows.Syscall6(
-		dispatch.GetIDsOfNamesAddress(),
+		obj.getIDsOfNames,
 		6,
 		uintptr(unsafe.Pointer(dispatch)),
 		uintptr(unsafe.Pointer(IID_NULL)),
-		uintptr(unsafe.Pointer(&wnames[0])),
+		uintptr(unsafe.Pointer(&wNames[0])),
 		uintptr(namelen),
 		uintptr(GetUserDefaultLCID()),
 		uintptr(unsafe.Pointer(&dispid[0])))
-	if hr != 0 {
-		err = NewError(hr)
+
+	if hr != windows.S_OK {
+		err = hr
+		return
 	}
-	return
-}
 
-func InvokeOnIDispatch(dispatch *IsIDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
-	result, err = invoke(v, dispid, dispatch, params...)
-	return
-}
+	ret = make(map[string]int32, len(names))
+	for i := 0; i < int(namelen); i++ {
+		ret[names[i]] = dispid[i]
+	}
 
-func GetTypeInfoCountOnIDispatch(dispatch *IsIDispatch) (c uint32, err error) {
-	c, err = getTypeInfoCount(v)
-	return
-}
-
-func GetTypeInfoOnIDispatch(dispatch *IsIDispatch) (tinfo *legacy.ITypeInfo, err error) {
-	tinfo, err = getTypeInfo(v)
 	return
 }
 
 // GetSingleIDOfName is a helper that returns single display ID for IDispatch name.
 //
-// This replaces the common pattern of attempting to get a single name from the list of available
-// IDs. It gives the first ID, if it is available.
-func (v *IDispatch) GetSingleIDOfName(name string) (displayID int32, err error) {
-	var displayIDs []int32
-	displayIDs, err = v.GetIDsOfName([]string{name})
+// This replaces the common pattern of attempting to get a single name from the list of available IDs. It gives the
+// first ID, if it is available.
+func (obj *IDispatch) GetSingleIDOfName(name string) (displayID int32, err error) {
+	displayIDs, err := obj.GetIDsOfNames([]string{name})
 	if err != nil {
 		return
 	}
-	displayID = displayIDs[0]
+	displayID = displayIDs[name]
 	return
+}
+
+func (obj *IDispatch) Invoke() (result *VARIANT, err error) {
+
 }
 
 // InvokeWithOptionalArgs accepts arguments as an array, works like Invoke.
@@ -112,16 +236,16 @@ func (v *IDispatch) GetSingleIDOfName(name string) (displayID int32, err error) 
 // Passing params as an array is a workaround that could be fixed in later versions of Go that
 // prevent passing empty params. During testing it was discovered that this is an acceptable way of
 // getting around not being able to pass params normally.
-func (v *IDispatch) InvokeWithOptionalArgs(name string, dispatch int16, params []interface{}) (result *VARIANT, err error) {
+func (obj *IDispatch) InvokeWithOptionalArgs(name string, dispatch int16, params []interface{}) (result *VARIANT, err error) {
 	displayID, err := v.GetSingleIDOfName(name)
 	if err != nil {
 		return
 	}
 
 	if len(params) < 1 {
-		result, err = v.Invoke(displayID, dispatch)
+		result, err = obj.Invoke(displayID, dispatch)
 	} else {
-		result, err = v.Invoke(displayID, dispatch, params...)
+		result, err = obj.Invoke(displayID, dispatch, params...)
 	}
 
 	return
@@ -129,7 +253,7 @@ func (v *IDispatch) InvokeWithOptionalArgs(name string, dispatch int16, params [
 
 // CallMethod invokes named function with arguments on object.
 func (v *IDispatch) CallMethod(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, legacy.DISPATCH_METHOD, params)
+	return v.InvokeWithOptionalArgs(name, lDISPATCH_METHOD, params)
 }
 
 // GetProperty retrieves the property with the name with the ability to pass arguments.
@@ -138,45 +262,36 @@ func (v *IDispatch) CallMethod(name string, params ...interface{}) (*VARIANT, er
 // feature. Or at least, should not allow for this feature. Some servers don't follow best practices
 // and this is provided for those edge cases.
 func (v *IDispatch) GetProperty(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYGET, params)
+	return v.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYGET, params)
 }
 
 // PutProperty attempts to mutate a property in the object.
 func (v *IDispatch) PutProperty(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, legacy.DISPATCH_PROPERTYPUT, params)
+	return v.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYPUT, params)
+}
+
+func QueryIDispatchFromIUnknown(unknown *IsIUnknown) (dispatch *IDispatch, err error) {
+	if unknown == nil {
+		return nil, ComInterfaceIsNilPointer
+	}
+
+	dispatch, err = QueryInterfaceOnIUnknown[IDispatch](unknown, IID_IDispatch)
+	if err != nil {
+		return nil, err
+	}
+	return
+}
+
+func InvokeOnIDispatch(dispatch *IDispatchAddresses, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
+	result, err = invoke(v, dispid, dispatch, params...)
+	return
 }
 
 func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {
 	return
 }
 
-func getTypeInfoCount(disp *ole.IDispatch) (c uint32, err error) {
-	hr, _, _ := syscall.Syscall(
-		disp.VTable().GetTypeInfoCount,
-		2,
-		uintptr(unsafe.Pointer(disp)),
-		uintptr(unsafe.Pointer(&c)),
-		0)
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func getTypeInfo(disp *ole.IDispatch) (tinfo *ITypeInfo, err error) {
-	hr, _, _ := syscall.Syscall(
-		disp.VTable().GetTypeInfo,
-		3,
-		uintptr(unsafe.Pointer(disp)),
-		uintptr(GetUserDefaultLCID()),
-		uintptr(unsafe.Pointer(&tinfo)))
-	if hr != 0 {
-		err = NewError(hr)
-	}
-	return
-}
-
-func invoke(disp *ole.IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
+func MakeDisplayParams(dispatch int16, params ...interface{}) {
 	var dispparams DISPPARAMS
 
 	if dispatch&DISPATCH_PROPERTYPUT != 0 {
@@ -188,6 +303,7 @@ func invoke(disp *ole.IDispatch, dispid int32, dispatch int16, params ...interfa
 		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(&dispnames[0]))
 		dispparams.cNamedArgs = 1
 	}
+
 	var vargs []VARIANT
 	if len(params) > 0 {
 		vargs = make([]VARIANT, len(params))
@@ -287,12 +403,15 @@ func invoke(disp *ole.IDispatch, dispid int32, dispatch int16, params ...interfa
 		dispparams.rgvarg = uintptr(unsafe.Pointer(&vargs[0]))
 		dispparams.cArgs = uint32(len(params))
 	}
+}
+
+func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
 
 	result = new(VARIANT)
 	var excepInfo EXCEPINFO
 	VariantInit(result)
-	hr, _, _ := syscall.Syscall9(
-		disp.VTable().Invoke,
+	hr, _, _ := windows.Syscall9(
+		disp.Invoke,
 		9,
 		uintptr(unsafe.Pointer(disp)),
 		uintptr(dispid),
@@ -314,7 +433,7 @@ func invoke(disp *ole.IDispatch, dispid int32, dispatch int16, params ...interfa
 			SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
 		}
 		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
-			*(params[n].(*string)) = LpOleStrToString(*(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
+			*(params[n].(*string)) = windows.UTF16PtrToString(*(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
 		}
 	}
 	return

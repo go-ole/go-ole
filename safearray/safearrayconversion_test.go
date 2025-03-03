@@ -1,11 +1,9 @@
 //go:build windows
-// +build windows
 
 package safearray
 
 import (
 	"fmt"
-	"github.com/go-ole/go-ole/legacy"
 	"strings"
 	"testing"
 )
@@ -18,7 +16,7 @@ func TestSafeArrayConversionString(t *testing.T) {
 
 	clsid, err := CLSIDFromProgID("QBXMLRP2.RequestProcessor.1")
 	if err != nil {
-		if err.(*legacy.OleError).Code() == legacy.CO_E_CLASSSTRING {
+		if err == ole.CO_E_CLASSSTRING {
 			return
 		}
 		t.Log(err)
@@ -46,7 +44,7 @@ func TestSafeArrayConversionString(t *testing.T) {
 	}
 
 	var result *VARIANT
-	_, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD, "", "Test Application 1", 1)
+	_, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, "", "Test Application 1", 1)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -58,7 +56,7 @@ func TestSafeArrayConversionString(t *testing.T) {
 		t.FailNow()
 	}
 
-	result, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD, "", 2)
+	result, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, "", 2)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -72,7 +70,7 @@ func TestSafeArrayConversionString(t *testing.T) {
 		t.FailNow()
 	}
 
-	result, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_PROPERTYGET, ticket)
+	result, err = dispatch.Invoke(dispid[0], ole.DISPATCH_PROPERTYGET, ticket)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -101,7 +99,7 @@ func TestSafeArrayConversionString(t *testing.T) {
 		t.FailNow()
 	}
 
-	_, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD, ticket)
+	_, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, ticket)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
@@ -113,7 +111,7 @@ func TestSafeArrayConversionString(t *testing.T) {
 		t.FailNow()
 	}
 
-	_, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD)
+	_, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()

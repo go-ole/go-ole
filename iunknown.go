@@ -1,3 +1,5 @@
+//go:build windows
+
 package ole
 
 import (
@@ -21,44 +23,28 @@ type IsIUnknown interface {
 
 type IUnknown struct {
 	QueryInterface uintptr
-	AddRef         uintptr
-	Release        uintptr
+	addRef         uintptr
+	release        uintptr
 }
 
-func (vd *IUnknown) QueryInterfaceAddress() uintptr {
-	return vd.QueryInterface
+func (v *IUnknown) QueryInterfaceAddress() uintptr {
+	return v.QueryInterface
 }
 
-func (vd *IUnknown) AddRefAddress() uintptr {
-	return vd.AddRef
+func (v *IUnknown) AddRefAddress() uintptr {
+	return v.addRef
 }
 
-func (vd *IUnknown) ReleaseAddress() uintptr {
-	return vd.Release
+func (v *IUnknown) ReleaseAddress() uintptr {
+	return v.release
 }
 
-func QueryIDispatchFromIUnknown(unknown *IsIUnknown, interfaceID *windows.GUID) (dispatch *IDispatch, err error) {
-	if unknown == nil {
-		return nil, ComInterfaceIsNilPointer
-	}
-
-	dispatch, err = QueryInterfaceOnIUnknown[IDispatch](unknown, interfaceID)
-	if err != nil {
-		return nil, err
-	}
-	return
+func (obj *IUnknown) AddRef() uint32 {
+	return AddRefOnIUnknown(obj)
 }
 
-func QueryIEnumVARIANTFromIUnknown(unknown *IsIUnknown, interfaceID *windows.GUID) (enum *IEnumVARIANT, err error) {
-	if unknown == nil {
-		return nil, ComInterfaceIsNilPointer
-	}
-
-	enum, err = QueryInterfaceOnIUnknown[IEnumVARIANT](unknown, interfaceID)
-	if err != nil {
-		return nil, err
-	}
-	return
+func (obj *IUnknown) Release() uint32 {
+	return ReleaseOnIUnknown(obj)
 }
 
 // QueryInterfaceOnIUnknown converts IUnknown to another COM interface.

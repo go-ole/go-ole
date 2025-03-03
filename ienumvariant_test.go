@@ -1,23 +1,23 @@
 //go:build windows
-// +build windows
 
-package legacy
+package ole
 
 import (
+	"golang.org/x/sys/windows"
 	"testing"
 )
 
 func TestIEnumVariant_wmi(t *testing.T) {
 	var err error
-	var classID *GUID
+	var classID *windows.GUID
 
-	IID_ISWbemLocator := &GUID{0x76a6415b, 0xcb41, 0x11d1, [8]byte{0x8b, 0x02, 0x00, 0x60, 0x08, 0x06, 0xd9, 0xb6}}
+	IID_ISWbemLocator := &windows.GUID{0x76a6415b, 0xcb41, 0x11d1, [8]byte{0x8b, 0x02, 0x00, 0x60, 0x08, 0x06, 0xd9, 0xb6}}
 
-	err = CoInitialize(0)
+	err = Initialize(0)
 	if err != nil {
 		t.Errorf("Initialize error: %v", err)
 	}
-	defer CoUninitialize()
+	defer Uninitialize()
 
 	classID, err = ClassIDFrom("WbemScripting.SWbemLocator")
 	if err != nil {

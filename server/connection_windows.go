@@ -1,7 +1,7 @@
 //go:build windows
 // +build windows
 
-package oleutil
+package server
 
 import (
 	"github.com/go-ole/go-ole"
@@ -18,8 +18,8 @@ func ConnectObject(disp *ole.IDispatch, iid *legacy.GUID, idisp interface{}) (co
 		return
 	}
 
-	container := (*legacy.IConnectionPointContainer)(unsafe.Pointer(unknown))
-	var point *legacy.IConnectionPoint
+	container := (*ole.IConnectionPointContainer)(unsafe.Pointer(unknown))
+	var point *ole.IConnectionPoint
 	err = container.FindConnectionPoint(iid, &point)
 	if err != nil {
 		return

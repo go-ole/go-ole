@@ -1,6 +1,6 @@
 // This file is here so go get succeeds as without it errors with:
 // no buildable Go source files in ...
 //
-// +build !windows
+//go:build !windows
 
-package oleutil
+package safearray

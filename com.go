@@ -1,5 +1,4 @@
 //go:build windows
-// +build windows
 
 package ole
 
@@ -13,21 +12,59 @@ var (
 	procCoInitializeSecurity = modole32.NewProc("CoInitializeSecurity")
 	procGetActiveObject      = modoleaut32.NewProc("GetActiveObject")
 	procGetUserDefaultLCID   = modkernel32.NewProc("GetUserDefaultLCID")
+	procCoCreateInstance     = modole32.NewProc("CoCreateInstance")
+	procCoGetObject          = modole32.NewProc("CoGetObject")
+	procGetActiveObject      = modoleaut32.NewProc("GetActiveObject")
+	procCreateDispTypeInfo   = modoleaut32.NewProc("CreateDispTypeInfo")
+	procCreateStdDispatch    = modoleaut32.NewProc("CreateStdDispatch")
+	procCopyMemory           = modkernel32.NewProc("RtlMoveMemory")
+)
+
+const (
+	CLSCTX_INPROC_SERVER   = 1
+	CLSCTX_INPROC_HANDLER  = 2
+	CLSCTX_LOCAL_SERVER    = 4
+	CLSCTX_INPROC_SERVER16 = 8
+	CLSCTX_REMOTE_SERVER   = 16
+	CLSCTX_ALL             = CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER
+	CLSCTX_INPROC          = CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER
+	CLSCTX_SERVER          = CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER | CLSCTX_REMOTE_SERVER
+)
+
+const (
+	CC_FASTCALL = iota
+	CC_CDECL
+	CC_MSCPASCAL
+	CC_PASCAL = CC_MSCPASCAL
+	CC_MACPASCAL
+	CC_STDCALL
+	CC_FPFASTCALL
+	CC_SYSCALL
+	CC_MPWCDECL
+	CC_MPWPASCAL
+	CC_MAX = CC_MPWPASCAL
+)
+
+const (
+	TKIND_ENUM      = 1
+	TKIND_RECORD    = 2
+	TKIND_MODULE    = 3
+	TKIND_INTERFACE = 4
+	TKIND_DISPATCH  = 5
+	TKIND_COCLASS   = 6
+	TKIND_ALIAS     = 7
+	TKIND_UNION     = 8
+	TKIND_MAX       = 9
 )
 
 // The `ConcurrencyModel` aliases the COINIT_* constants so that the `Initialize()` function is type checked and limited
 type ConcurrencyModel uint32
 
 const (
-	// Requires concurrency control
-	Multithreaded ConcurrencyModel = windows.COINIT_MULTITHREADED
-
-	// Requires COM operations on the same thread as Initialized.
-	ApartmentThreaded = windows.COINIT_APARTMENTTHREADED
-
-	DisableOle1DDE = windows.COINIT_DISABLE_OLE1DDE
-
-	SpeedOverMemory = windows.COINIT_SPEED_OVER_MEMORY
+	Multithreaded     ConcurrencyModel = windows.COINIT_MULTITHREADED     // Requires concurrency control
+	ApartmentThreaded                  = windows.COINIT_APARTMENTTHREADED // Requires COM operations on the same thread as Initialized.
+	DisableOle1DDE                     = windows.COINIT_DISABLE_OLE1DDE
+	SpeedOverMemory                    = windows.COINIT_SPEED_OVER_MEMORY
 )
 
 // The result from calling `CoInitializeEx()` to prevent exposing syscall windows dependency.
@@ -38,6 +75,9 @@ const (
 	AlreadyInitialized
 	IncompatibleConcurrencyModelAlreadyInitialized
 )
+
+// This is to enable calling COM Security initialization multiple times
+var bSecurityInit bool = false
 
 // Setup COM for the application.
 //
@@ -81,14 +121,14 @@ func Uninitialize() error {
 	windows.CoUninitialize()
 }
 
-// Free memory owned by COM by Pointer
+// TaskMemoryFreePointer frees memory owned by COM by Pointer.
 //
 // COM Function: CoTaskMemFree
 func TaskMemoryFreePointer(address unsafe.Pointer) {
 	windows.CoTaskMemFree(address)
 }
 
-// Free memory owned by COM by `uintptr`
+// TaskMemoryFreeAddress frees memory owned by COM by `uintptr`.
 //
 // COM Function: CoTaskMemFree
 func TaskMemoryFreeAddress(address uintptr) {
@@ -96,9 +136,9 @@ func TaskMemoryFreeAddress(address uintptr) {
 	windows.CoTaskMemFree(p)
 }
 
-// coInitializeSecurity: Registers security and sets the default security values
+// CoInitializeSecurity registers security and sets the default security values
 // for the process.
-func coInitializeSecurity(cAuthSvc int32,
+func CoInitializeSecurity(cAuthSvc int32,
 	dwAuthnLevel uint32,
 	dwImpLevel uint32,
 	dwCapabilities uint32) (err error) {
@@ -125,13 +165,21 @@ func coInitializeSecurity(cAuthSvc int32,
 	return
 }
 
-// CoInitializeSecurity: Registers security and sets the default security values
-// for the process.
-func CoInitializeSecurity(cAuthSvc int32,
-	dwAuthnLevel uint32,
-	dwImpLevel uint32,
-	dwCapabilities uint32) (err error) {
-	return coInitializeSecurity(cAuthSvc, dwAuthnLevel, dwImpLevel, dwCapabilities)
+// CreateInstance of single uninitialized object with GUID.
+func CreateInstance[T IsIUnknown](clsid *windows.GUID, iid *windows.GUID) (unk *T, err error) {
+	if iid == nil {
+		iid = IID_IUnknown
+	}
+	hr, _, _ := procCoCreateInstance.Call(
+		uintptr(unsafe.Pointer(clsid)),
+		0,
+		CLSCTX_SERVER,
+		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(&unk)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
 }
 
 // GetActiveObject retrieves virtual table to active object.
@@ -157,4 +205,58 @@ func GetUserDefaultLCID() (lcid uint32) {
 	ret, _, _ := procGetUserDefaultLCID.Call()
 	lcid = uint32(ret)
 	return
+}
+
+// GetObject retrieves pointer to active object.
+func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, interfaceId *windows.GUID) (unk *T, err error) {
+	if bindOpts != nil {
+		bindOpts.CbStruct = uint32(unsafe.Sizeof(windows.BIND_OPTS3{}))
+	}
+	if interfaceId == nil {
+		interfaceId = IID_IUnknown
+	}
+	hr := windows.CoGetObject(
+		windows.StringToUTF16Ptr(programID),
+		bindOpts,
+		interfaceId,
+		uintptr(unsafe.Pointer(&unk)))
+	if hr != windows.S_OK {
+		err = hr
+	}
+	return
+}
+
+// CreateStdDispatch provides default IDispatch implementation for IUnknown.
+//
+// This handles default IDispatch implementation for objects. It has a few limitations with only supporting one
+// language. It will also only return default exception codes.
+func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispatch, err error) {
+	hr, _, _ := procCreateStdDispatch.Call(
+		uintptr(unsafe.Pointer(unk)),
+		v,
+		uintptr(unsafe.Pointer(ptinfo)),
+		uintptr(unsafe.Pointer(&disp)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+// CreateDispTypeInfo provides default ITypeInfo implementation for IDispatch.
+//
+// This will not handle the full implementation of the interface.
+func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
+	hr, _, _ := procCreateDispTypeInfo.Call(
+		uintptr(unsafe.Pointer(idata)),
+		uintptr(GetUserDefaultLCID()),
+		uintptr(unsafe.Pointer(&pptinfo)))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+// RtlMoveMemory moves location of a block of memory.
+func RtlMoveMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
+	procCopyMemory.Call(uintptr(dest), uintptr(src), uintptr(length))
 }

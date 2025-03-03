@@ -1,10 +1,8 @@
 //go:build windows
-// +build windows
 
-package legacy
+package ole
 
 import (
-	"github.com/go-ole/go-ole"
 	"testing"
 )
 
@@ -17,20 +15,19 @@ func TestIUnknown(t *testing.T) {
 
 	var err error
 
-	err = CoInitialize(0)
+	err = Initialize(0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer CoUninitialize()
+	defer Uninitialize()
 
-	var unknown *ole.IUnknown
+	var unknown *IUnknown
 
-	// oleutil.CreateObject()
 	unknown, err = CreateInstance(CLSID_COMEchoTestObject, IID_IUnknown)
+	defer unknown.Release()
 	if err != nil {
 		t.Fatal(err)
 		return
 	}
-	unknown.Release()
 }

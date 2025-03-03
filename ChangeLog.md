@@ -41,6 +41,9 @@
   * `NewHString`. Use ``
   * `DeleteHString`. Use ``
   * `HString`. Use ``
+  * `OleError` is gone. Uses `golang.org/x/sys/windows` package and its types which also implement `error`.
+  
+    You may also use `GetErrorDescription` to get the error message if the `sys/windows` does not provide this.
 
 # Version 1.x.x
 

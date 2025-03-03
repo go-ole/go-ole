@@ -1,16 +1,21 @@
+//go:build windows
+
 package safearray
 
-import "github.com/go-ole/go-ole/legacy"
+import (
+	"github.com/go-ole/go-ole"
+	"golang.org/x/sys/windows"
+)
 
 // This tests more than one function. It tests all of the functions needed in
 // order to retrieve an SafeArray populated with Strings.
 func Example_safeArrayGetElementString() {
-	CoInitialize(0)
-	defer CoUninitialize()
+	ole.Initialize(0)
+	defer ole.Uninitialize()
 
-	clsid, err := CLSIDFromProgID("QBXMLRP2.RequestProcessor.1")
+	clsid, err := ole.CLSIDFromProgID("QBXMLRP2.RequestProcessor.1")
 	if err != nil {
-		if err.(*legacy.OleError).Code() == legacy.CO_E_CLASSSTRING {
+		if err == windows.CO_E_CLASSSTRING {
 			return
 		}
 	}
@@ -33,7 +38,7 @@ func Example_safeArrayGetElementString() {
 	}
 
 	var result *VARIANT
-	_, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD, "", "Test Application 1", 1)
+	_, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, "", "Test Application 1", 1)
 	if err != nil {
 		return
 	}
@@ -43,7 +48,7 @@ func Example_safeArrayGetElementString() {
 		return
 	}
 
-	result, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD, "", 2)
+	result, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, "", 2)
 	if err != nil {
 		return
 	}
@@ -55,7 +60,7 @@ func Example_safeArrayGetElementString() {
 		return
 	}
 
-	result, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_PROPERTYGET, ticket)
+	result, err = dispatch.Invoke(dispid[0], ole.DISPATCH_PROPERTYGET, ticket)
 	if err != nil {
 		return
 	}
@@ -93,7 +98,7 @@ func Example_safeArrayGetElementString() {
 		return
 	}
 
-	_, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD, ticket)
+	_, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD, ticket)
 	if err != nil {
 		return
 	}
@@ -103,7 +108,7 @@ func Example_safeArrayGetElementString() {
 		return
 	}
 
-	_, err = dispatch.Invoke(dispid[0], legacy.DISPATCH_METHOD)
+	_, err = dispatch.Invoke(dispid[0], ole.DISPATCH_METHOD)
 	if err != nil {
 		return
 	}
