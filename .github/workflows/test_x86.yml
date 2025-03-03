@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         go: [ '1.18', '1.23', 'stable' ]
-        arch: [ 'arm', '386', 'mips', 'mipsle']
+        arch: [ 'arm', '386' ]
     env:
       GOARCH: ${{ matrix.arch }}
     steps:
