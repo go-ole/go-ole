@@ -27,7 +27,7 @@ jobs:
       contents: read
     strategy:
       matrix:
-        go: [ '1.18', '1.23', 'stable' ]
+        go: [ '1.23', 'stable' ]
         arch: [ 'arm', '386' ]
     env:
       GOARCH: ${{ matrix.arch }}

@@ -14,7 +14,6 @@ var (
 	procGetUserDefaultLCID   = modkernel32.NewProc("GetUserDefaultLCID")
 	procCoCreateInstance     = modole32.NewProc("CoCreateInstance")
 	procCoGetObject          = modole32.NewProc("CoGetObject")
-	procGetActiveObject      = modoleaut32.NewProc("GetActiveObject")
 	procCreateDispTypeInfo   = modoleaut32.NewProc("CreateDispTypeInfo")
 	procCreateStdDispatch    = modoleaut32.NewProc("CreateStdDispatch")
 	procCopyMemory           = modkernel32.NewProc("RtlMoveMemory")
@@ -83,7 +82,7 @@ var bSecurityInit bool = false
 //
 // COM Function: CoInitializeEx
 func Initialize(model ConcurrencyModel) (InitializeResult, error) {
-	err = windows.CoInitializeEx(0, uint32(model))
+	err := windows.CoInitializeEx(0, uint32(model))
 
 	switch err {
 	case windows.S_OK:

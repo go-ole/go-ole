@@ -20,16 +20,16 @@ type IConnectionPoint struct {
 	EnumConnections             uintptr
 }
 
-func (v *IConnectionPoint) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *IConnectionPoint) QueryInterfaceAddress() uintptr {
+	return obj.QueryInterface
 }
 
-func (v *IConnectionPoint) AddRefAddress() uintptr {
-	return v.addRef
+func (obj *IConnectionPoint) AddRefAddress() uintptr {
+	return obj.addRef
 }
 
-func (v *IConnectionPoint) ReleaseAddress() uintptr {
-	return v.release
+func (obj *IConnectionPoint) ReleaseAddress() uintptr {
+	return obj.release
 }
 
 func (obj *IConnectionPoint) AddRef() uint32 {
@@ -79,6 +79,6 @@ func (obj *IConnectionPoint) Unadvise(cookie uint32) (err error) {
 	return
 }
 
-func (v *IConnectionPoint) EnumConnections(p *unsafe.Pointer) error {
-	return NewError(E_NOTIMPL)
+func (obj *IConnectionPoint) EnumConnections(p *unsafe.Pointer) error {
+	return windows.E_NOTIMPL
 }

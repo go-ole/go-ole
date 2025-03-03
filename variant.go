@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	VariantTypeTrue  int16 = 0xffff
+	VariantTypeTrue  int32 = 0xffff
 	VariantTypeFalse       = 0
 )
 
@@ -245,8 +245,8 @@ func RegisterVariantConverters() {
 	conversions.from[VT_NULL] = VariantToNull
 	conversions.from[VT_EMPTY] = VariantToEmpty
 
-	conversions.from[VT_HRESULT] = VariantToHResult
-	conversions.from[VT_ERROR] = VariantToHResult
+	conversions.from[VT_HRESULT] = VariantToHandle
+	conversions.from[VT_ERROR] = VariantToError
 	conversions.to[reflect.TypeFor[windows.Handle]().Name()] = HResultToVariant
 
 	conversions.from[VT_UNKNOWN] = VariantToComObject[*IUnknown]
@@ -383,16 +383,16 @@ func ErrorToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_ERROR, Val: int64(i.(windows.Handle))}
 }
 
-func VariantToHResult(variant *VARIANT) any {
-	return windows.Handle(uintptr(variant.Val))
-}
-
-func ErrorToVariant(i any) *VARIANT {
-	return &VARIANT{VT: VT_HRESULT, Val: int64(i.(windows.Handle))}
-}
-
 func VariantToError(variant *VARIANT) any {
 	return windows.Handle(uintptr(variant.Val))
+}
+
+func VariantToHandle(variant *VARIANT) any {
+	return windows.Handle(uintptr(variant.Val))
+}
+
+func HandleToVariant(i any) *VARIANT {
+	return &VARIANT{VT: VT_HRESULT, Val: int64(i.(windows.Handle))}
 }
 
 func IUnknownToVariant(i any) *VARIANT {

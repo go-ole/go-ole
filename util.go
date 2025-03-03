@@ -26,13 +26,13 @@ func CreateObject(programID string) (unknown *IUnknown, err error) {
 // Only supports IUnknown.
 //
 // Program ID can be either program ID or application string.
-func GetObject(programID string) (unknown *IUnknown, err error) {
+func GetObjectFromString[T IsIUnknown](programID string) (unknown *T, err error) {
 	classID, err := LookupClassId(programID)
 	if err != nil {
 		return
 	}
 
-	unknown, err = GetActiveObject(classID, IID_IUnknown)
+	unknown, err = GetActiveObject[T](classID, IID_IUnknown)
 	if err != nil {
 		return
 	}

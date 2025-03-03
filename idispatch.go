@@ -108,7 +108,7 @@ type IDispatch struct {
 	getTypeInfoCount uintptr
 	getTypeInfo      uintptr
 	getIDsOfNames    uintptr
-	Invoke           uintptr
+	invoke           uintptr
 }
 
 func (v *IDispatch) QueryInterfaceAddress() uintptr {
@@ -136,7 +136,7 @@ func (v *IDispatch) GetIDsOfNamesAddress() uintptr {
 }
 
 func (v *IDispatch) InvokeAddress() uintptr {
-	return v.Invoke
+	return v.invoke
 }
 
 func (obj *IDispatch) AddRef() uint32 {
@@ -225,7 +225,7 @@ func (obj *IDispatch) GetSingleIDOfName(name string) (displayID int32, err error
 	return
 }
 
-func (obj *IDispatch) Invoke() (result *VARIANT, err error) {
+func (obj *IDispatch) Invoke(name string, dispatch int16) (result *VARIANT, err error) {
 
 }
 
@@ -253,7 +253,7 @@ func (obj *IDispatch) InvokeWithOptionalArgs(name string, dispatch int16, params
 
 // CallMethod invokes named function with arguments on object.
 func (v *IDispatch) CallMethod(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, lDISPATCH_METHOD, params)
+	return v.InvokeWithOptionalArgs(name, DISPATCH_METHOD, params)
 }
 
 // GetProperty retrieves the property with the name with the ability to pass arguments.
@@ -282,8 +282,8 @@ func QueryIDispatchFromIUnknown(unknown *IsIUnknown) (dispatch *IDispatch, err e
 	return
 }
 
-func InvokeOnIDispatch(dispatch *IDispatchAddresses, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
-	result, err = invoke(v, dispid, dispatch, params...)
+func InvokeOnIDispatch(obj *IDispatchAddresses, displayId int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
+	result, err = invoke(obj, displayId, dispatch, params...)
 	return
 }
 
@@ -291,7 +291,7 @@ func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {
 	return
 }
 
-func MakeDisplayParams(dispatch int16, params ...interface{}) {
+func MakeDisplayParams(dispatch int16, params ...interface{}) DISPPARAMS {
 	var dispparams DISPPARAMS
 
 	if dispatch&DISPATCH_PROPERTYPUT != 0 {
@@ -403,22 +403,24 @@ func MakeDisplayParams(dispatch int16, params ...interface{}) {
 		dispparams.rgvarg = uintptr(unsafe.Pointer(&vargs[0]))
 		dispparams.cArgs = uint32(len(params))
 	}
+
+	return dispparams
 }
 
 func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
-
+	dispParams := MakeDisplayParams(dispatch, params...)
 	result = new(VARIANT)
 	var excepInfo EXCEPINFO
 	VariantInit(result)
 	hr, _, _ := windows.Syscall9(
-		disp.Invoke,
+		disp.invoke,
 		9,
 		uintptr(unsafe.Pointer(disp)),
 		uintptr(dispid),
 		uintptr(unsafe.Pointer(IID_NULL)),
 		uintptr(GetUserDefaultLCID()),
 		uintptr(dispatch),
-		uintptr(unsafe.Pointer(&dispparams)),
+		uintptr(unsafe.Pointer(&dispParams)),
 		uintptr(unsafe.Pointer(result)),
 		uintptr(unsafe.Pointer(&excepInfo)),
 		0)
