@@ -90,12 +90,15 @@ func Initialize(model ConcurrencyModel) (InitializeResult, error) {
 	}
 
 	hr := err.(windows.Errno)
+
 	if hr == 1 {
 		return AlreadyInitialized, nil
 	}
-	if hr == windows.RPC_E_CHANGED_MODE {
+
+	if uintptr(hr) == uintptr(windows.RPC_E_CHANGED_MODE) {
 		return IncompatibleConcurrencyModelAlreadyInitialized, nil
 	}
+
 	return UnknownInitializeResult, err
 }
 
