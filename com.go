@@ -3,7 +3,6 @@
 package ole
 
 import (
-	"errors"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -86,13 +85,15 @@ var bSecurityInit bool = false
 func Initialize(model ConcurrencyModel) (InitializeResult, error) {
 	err := windows.CoInitializeEx(0, uint32(model))
 
-	if err == nil || uintptr(err) == uintptr(0) {
+	if err == nil {
 		return SuccessfullyInitialized, nil
 	}
-	if uintptr(err) == uintptr(1) {
+
+	hr := err.(syscall.Errno)
+	if hr == 1 {
 		return AlreadyInitialized, nil
 	}
-	if errors.Is(err, windows.RPC_E_CHANGED_MODE) {
+	if hr == windows.RPC_E_CHANGED_MODE {
 		return IncompatibleConcurrencyModelAlreadyInitialized, nil
 	}
 	return UnknownInitializeResult, err
