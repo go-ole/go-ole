@@ -3,6 +3,7 @@
 package ole
 
 import (
+	"errors"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -85,10 +86,10 @@ var bSecurityInit bool = false
 func Initialize(model ConcurrencyModel) (InitializeResult, error) {
 	err := windows.CoInitializeEx(0, uint32(model))
 
-	if err == nil || err == 0 {
+	if err == nil || uintptr(err) == uintptr(0) {
 		return SuccessfullyInitialized, nil
 	}
-	if err == 1 {
+	if uintptr(err) == uintptr(1) {
 		return AlreadyInitialized, nil
 	}
 	if errors.Is(err, windows.RPC_E_CHANGED_MODE) {
@@ -167,14 +168,11 @@ func CoInitializeSecurity(cAuthSvc int32,
 
 // CreateInstance of single uninitialized object with GUID.
 func CreateInstance[T IsIUnknown](clsid windows.GUID, iid windows.GUID) (unk *T, err error) {
-	if iid == nil {
-		iid = IID_IUnknown
-	}
 	hr, _, _ := procCoCreateInstance.Call(
-		uintptr(unsafe.Pointer(clsid)),
+		uintptr(unsafe.Pointer(&clsid)),
 		0,
 		CLSCTX_SERVER,
-		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(&iid)),
 		uintptr(unsafe.Pointer(&unk)))
 	if hr != 0 {
 		err = windows.Errno(hr)
@@ -187,12 +185,9 @@ func CreateInstance[T IsIUnknown](clsid windows.GUID, iid windows.GUID) (unk *T,
 // [T] must be a virtual table structure. This function is unsafe(!!!) and will attempt to populate whatever type you
 // pass.
 func GetActiveObject[T struct{}](classId windows.GUID, interfaceId windows.GUID) (obj *T, err error) {
-	if interfaceId == nil {
-		interfaceId = IID_IUnknown
-	}
 	hr, _, _ := procGetActiveObject.Call(
 		uintptr(unsafe.Pointer(&classId)),
-		uintptr(unsafe.Pointer(interfaceId)),
+		uintptr(unsafe.Pointer(&interfaceId)),
 		uintptr(unsafe.Pointer(&obj)))
 	if hr != 0 {
 		return nil, windows.Errno(hr)
