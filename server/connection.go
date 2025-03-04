@@ -28,29 +28,75 @@ type stdDispatchVtbl struct {
 	pInvoke           uintptr
 }
 
-// ConnectObject creates a connection point between two services for communication.
-func MakeStdDispatch(disp *ole.IDispatch, iid windows.GUID, idisp interface{}) (cookie uint32, err error) {
-	unknown, err := disp.QueryInterface(legacy.IID_IConnectionPointContainer)
+func (obj *stdDispatch) QueryInterfaceAddress() uintptr {
+	return obj.lpVtbl.QueryInterface
+}
+
+func (obj *stdDispatch) AddRefAddress() uintptr {
+	return obj.lpVtbl.addRef
+}
+
+func (obj *stdDispatch) ReleaseAddress() uintptr {
+	return obj.lpVtbl.release
+}
+
+func ConnectObject(obj *IDispatch, interfaceId windows.GUID, unknown IsIUnknown) (cookie uint32, err error) {
+	container, err := ole.QueryIConnectionPointContainerFromIUnknown(obj)
 	if err != nil {
 		return
 	}
 
-	container := (*ole.IConnectionPointContainer)(unsafe.Pointer(unknown))
-	var point *ole.IConnectionPoint
-	err = container.FindConnectionPoint(iid, &point)
+	defer container.Release()
+
+	point, err := container.FindConnectionPoint(interfaceId)
 	if err != nil {
 		return
 	}
-	if edisp, ok := idisp.(*ole.IUnknown); ok {
-		cookie, err = point.Advise(edisp)
-		container.Release()
-		if err != nil {
-			return
-		}
+
+	defer point.Release()
+
+	cookie, err = point.Advise(unknown)
+	rv := reflect.ValueOf(obj).Elem()
+	if rv.Type().Kind() == reflect.Struct {
+		dest := &stdDispatch[ole.IDispatch]{}
+		dest.lpVtbl = &stdDispatchVtbl{}
+		dest.lpVtbl.pQueryInterface = windows.NewCallback(dispQueryInterface)
+		dest.lpVtbl.pAddRef = windows.NewCallback(dispAddRef)
+		dest.lpVtbl.pRelease = windows.NewCallback(dispRelease)
+		dest.lpVtbl.pGetTypeInfoCount = windows.NewCallback(dispGetTypeInfoCount)
+		dest.lpVtbl.pGetTypeInfo = windows.NewCallback(dispGetTypeInfo)
+		dest.lpVtbl.pGetIDsOfNames = windows.NewCallback(dispGetIDsOfNames)
+		dest.lpVtbl.pInvoke = windows.NewCallback(dispInvoke)
+		dest.iface = obj
+		dest.iid = interfaceId
+
+		cookie, err = point.Advise(dest)
+
+		return
 	}
+
+	return 0, windows.E_INVALIDARG
+}
+
+// ConnectObject creates a connection point between two services for communication.
+func MakeStdDispatch[T IsIUnknown](disp *T, iid windows.GUID, idisp T) (cookie uint32, err error) {
+	container, err := ole.QueryIConnectionPointContainerFromIUnknown(disp)
+	if err != nil {
+		return
+	}
+
+	defer container.Release()
+
+	point, err := container.FindConnectionPoint(interfaceId)
+	if err != nil {
+		return
+	}
+
+	defer point.Release()
+
 	rv := reflect.ValueOf(disp).Elem()
 	if rv.Type().Kind() == reflect.Struct {
-		dest := &stdDispatch{}
+		dest := &stdDispatch[T]{}
 		dest.lpVtbl = &stdDispatchVtbl{}
 		dest.lpVtbl.pQueryInterface = syscall.NewCallback(dispQueryInterface)
 		dest.lpVtbl.pAddRef = syscall.NewCallback(dispAddRef)
@@ -61,16 +107,11 @@ func MakeStdDispatch(disp *ole.IDispatch, iid windows.GUID, idisp interface{}) (
 		dest.lpVtbl.pInvoke = syscall.NewCallback(dispInvoke)
 		dest.iface = disp
 		dest.iid = iid
-		cookie, err = point.Advise((*ole.IUnknown)(unsafe.Pointer(dest)))
-		container.Release()
-		if err != nil {
-			point.Release()
-			return
-		}
+
+		cookie, err = point.Advise(dest)
+
 		return
 	}
-
-	container.Release()
 
 	return 0, windows.E_INVALIDARG
 }

@@ -85,16 +85,16 @@ var bSecurityInit bool = false
 func Initialize(model ConcurrencyModel) (InitializeResult, error) {
 	err := windows.CoInitializeEx(0, uint32(model))
 
-	switch windows.Handle(err) {
-	case windows.S_OK:
+	if err == nil || err == 0 {
 		return SuccessfullyInitialized, nil
-	case windows.S_FALSE:
-		return AlreadyInitialized, nil
-	case windows.RPC_E_CHANGED_MODE:
-		return IncompatibleConcurrencyModelAlreadyInitialized, nil
-	default:
-		return UnknownInitializeResult, err
 	}
+	if err == 1 {
+		return AlreadyInitialized, nil
+	}
+	if errors.Is(err, windows.RPC_E_CHANGED_MODE) {
+		return IncompatibleConcurrencyModelAlreadyInitialized, nil
+	}
+	return UnknownInitializeResult, err
 }
 
 // Initialize COM as multithreaded.
@@ -117,7 +117,7 @@ func InitializeApartmentThreaded() (InitializeResult, error) {
 // completed that were pending before the application closed.
 //
 // COM Function: CoUninitialize
-func Uninitialize() error {
+func Uninitialize() {
 	windows.CoUninitialize()
 }
 
@@ -156,7 +156,7 @@ func CoInitializeSecurity(cAuthSvc int32,
 			uintptr(dwCapabilities), // Cloaking
 			uintptr(0))              // reserved parameter
 		if hr != 0 {
-			err = windows.Handle(hr)
+			err = windows.Errno(hr)
 		} else {
 			// COM Security initialization done make global flag true.
 			bSecurityInit = true
@@ -177,7 +177,7 @@ func CreateInstance[T IsIUnknown](clsid windows.GUID, iid windows.GUID) (unk *T,
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&unk)))
 	if hr != 0 {
-		err = windows.Handle(hr)
+		err = windows.Errno(hr)
 	}
 	return
 }
@@ -194,7 +194,7 @@ func GetActiveObject[T struct{}](classId windows.GUID, interfaceId windows.GUID)
 		uintptr(unsafe.Pointer(&classId)),
 		uintptr(unsafe.Pointer(interfaceId)),
 		uintptr(unsafe.Pointer(&obj)))
-	if windows.Handle(hr) != windows.S_OK {
+	if hr != 0 {
 		return nil, windows.Errno(hr)
 	}
 	return
@@ -212,17 +212,15 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 	if bindOpts != nil {
 		bindOpts.CbStruct = uint32(unsafe.Sizeof(windows.BIND_OPTS3{}))
 	}
-	if interfaceId == nil {
-		interfaceId = IID_IUnknown
-	}
 	hr := windows.CoGetObject(
 		windows.StringToUTF16Ptr(programID),
 		bindOpts,
 		interfaceId,
 		uintptr(unsafe.Pointer(&unk)))
-	if windows.Handle(hr) != windows.S_OK {
-		err = hr
+	if hr == nil || hr == 0 {
+		return
 	}
+	err = hr
 	return
 }
 
@@ -237,7 +235,7 @@ func CreateStdDispatch(unk *IUnknown, v uintptr, ptinfo *IUnknown) (disp *IDispa
 		uintptr(unsafe.Pointer(ptinfo)),
 		uintptr(unsafe.Pointer(&disp)))
 	if hr != 0 {
-		err = windows.Handle(hr)
+		err = windows.Errno(hr)
 	}
 	return
 }
@@ -251,7 +249,7 @@ func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
 		uintptr(GetUserDefaultLCID()),
 		uintptr(unsafe.Pointer(&pptinfo)))
 	if hr != 0 {
-		err = windows.Handle(hr)
+		err = windows.Errno(hr)
 	}
 	return
 }
