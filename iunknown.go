@@ -50,7 +50,7 @@ func (obj *IUnknown) Release() uint32 {
 // QueryInterfaceOnIUnknown converts IUnknown to another COM interface.
 //
 // T must be a COM interface virtual table, this is an unsafe action.
-func QueryInterfaceOnIUnknown[T any](unknown *IsIUnknown, interfaceID windows.GUID) (*T, error) {
+func QueryInterfaceOnIUnknown[T any](unknown IsIUnknown, interfaceID windows.GUID) (*T, error) {
 	if unknown == nil {
 		return nil, ComInterfaceIsNilPointer
 	}
@@ -78,7 +78,7 @@ func QueryInterfaceOnIUnknown[T any](unknown *IsIUnknown, interfaceID windows.GU
 // MustQueryInterfaceOnIUnknown converts IUnknown to another COM interface or panics.
 //
 // T must be a COM interface virtual table, this is an unsafe action.
-func MustQueryInterfaceOnIUnknown[T any](unknown *IsIUnknown, interfaceID windows.GUID) *T {
+func MustQueryInterfaceOnIUnknown[T any](unknown IsIUnknown, interfaceID windows.GUID) *T {
 	if unknown == nil {
 		panic(ComInterfaceIsNilPointer)
 	}
@@ -89,7 +89,7 @@ func MustQueryInterfaceOnIUnknown[T any](unknown *IsIUnknown, interfaceID window
 	return ret
 }
 
-func AddRefOnIUnknown(unknown *IsIUnknown) uint32 {
+func AddRefOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}
@@ -97,7 +97,7 @@ func AddRefOnIUnknown(unknown *IsIUnknown) uint32 {
 	return uint32(ret)
 }
 
-func ReleaseOnIUnknown(unknown *IsIUnknown) uint32 {
+func ReleaseOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}

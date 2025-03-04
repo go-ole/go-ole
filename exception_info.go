@@ -54,7 +54,7 @@ func (e *EXCEPINFO) Clear() {
 	freeBSTR := func(s *uint16) {
 		// SysFreeString don't return errors and is safe for call's on NULL.
 		// https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-sysfreestring
-		_ = SysFreeString((*int16)(unsafe.Pointer(s)))
+		_ = SysFreeString((*uint16)(unsafe.Pointer(s)))
 	}
 
 	if e.bstrSource != nil {

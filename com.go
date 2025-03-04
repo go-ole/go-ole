@@ -89,7 +89,7 @@ func Initialize(model ConcurrencyModel) (InitializeResult, error) {
 		return SuccessfullyInitialized, nil
 	}
 
-	hr := err.(syscall.Errno)
+	hr := err.(windows.Errno)
 	if hr == 1 {
 		return AlreadyInitialized, nil
 	}
@@ -213,7 +213,7 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 		bindOpts,
 		&interfaceId,
 		&uintptr(unsafe.Pointer(&unk)))
-	if hr == nil || hr == 0 {
+	if hr == nil {
 		return
 	}
 	err = hr
