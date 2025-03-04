@@ -4,6 +4,7 @@ package ole
 
 import (
 	"golang.org/x/sys/windows"
+	"syscall"
 	"unsafe"
 )
 
@@ -41,7 +42,7 @@ func (obj *IConnectionPoint) Release() uint32 {
 }
 
 func (obj *IConnectionPoint) GetConnectionInterface() (interfaceID windows.GUID, err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.getConnectionInterface,
 		2,
 		uintptr(unsafe.Pointer(obj)),
@@ -54,7 +55,7 @@ func (obj *IConnectionPoint) GetConnectionInterface() (interfaceID windows.GUID,
 }
 
 func (obj *IConnectionPoint) Advise(unknown *IsIUnknown) (cookie uint32, err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.advise,
 		3,
 		uintptr(unsafe.Pointer(obj)),
@@ -67,7 +68,7 @@ func (obj *IConnectionPoint) Advise(unknown *IsIUnknown) (cookie uint32, err err
 }
 
 func (obj *IConnectionPoint) Unadvise(cookie uint32) (err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.unadvise,
 		2,
 		uintptr(unsafe.Pointer(obj)),

@@ -4,6 +4,7 @@ package ole
 
 import (
 	"golang.org/x/sys/windows"
+	"syscall"
 	"unsafe"
 )
 
@@ -22,7 +23,7 @@ func (obj *IConnectionPointContainer) EnumConnectionPoints(points interface{}) e
 }
 
 func (obj *IConnectionPointContainer) FindConnectionPoint(iid windows.GUID) (point *IConnectionPoint, err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.findConnectionPoint,
 		3,
 		uintptr(unsafe.Pointer(obj)),

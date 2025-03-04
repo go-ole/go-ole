@@ -3,6 +3,7 @@
 package ole
 
 import (
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -63,7 +64,7 @@ func (obj *IActivationFactory) GetTrustLevel() TrustLevel {
 }
 
 func (obj *IActivationFactory) ActivateInstance() (ret *IInspectable, err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.activateInstance,
 		2,
 		uintptr(unsafe.Pointer(obj)),

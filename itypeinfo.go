@@ -3,7 +3,6 @@
 package ole
 
 import (
-	"golang.org/x/sys/windows"
 	"unsafe"
 )
 
@@ -48,7 +47,7 @@ func (v *ITypeInfo) ReleaseAddress() uintptr {
 
 // TODO: refactor to not be a function pointer.
 func (v *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		uintptr(v.getTypeAttr),
 		2,
 		uintptr(unsafe.Pointer(v)),

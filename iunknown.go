@@ -56,7 +56,7 @@ func QueryInterfaceOnIUnknown[T any](unknown IsIUnknown, interfaceID windows.GUI
 	}
 
 	var ret *T
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		unknown.QueryInterfaceAddress(),
 		3,
 		uintptr(unsafe.Pointer(unknown)),
@@ -93,7 +93,7 @@ func AddRefOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}
-	ret, _, _ := windows.Syscall(unknown.AddRefAddress(), 1, uintptr(unsafe.Pointer(unknown)), 0, 0)
+	ret, _, _ := syscall.Syscall(unknown.AddRefAddress(), 1, uintptr(unsafe.Pointer(unknown)), 0, 0)
 	return uint32(ret)
 }
 
@@ -101,6 +101,6 @@ func ReleaseOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}
-	ret, _, _ := windows.Syscall(unknown.ReleaseAddress(), 1, uintptr(unsafe.Pointer(unknown)), 0, 0)
+	ret, _, _ := syscall.Syscall(unknown.ReleaseAddress(), 1, uintptr(unsafe.Pointer(unknown)), 0, 0)
 	return uint32(ret)
 }

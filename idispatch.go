@@ -149,7 +149,7 @@ func (obj *IDispatch) Release() uint32 {
 
 func (obj *IDispatch) HasTypeInfo() bool {
 	var ret uint
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.getTypeInfoCount,
 		2,
 		uintptr(unsafe.Pointer(obj)),
@@ -165,7 +165,7 @@ func (obj *IDispatch) HasTypeInfo() bool {
 
 func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
 	var ret uint
-	hr, _, _ := windows.Syscall6(
+	hr, _, _ := syscall.Syscall6(
 		obj.getTypeInfo,
 		4,
 		uintptr(unsafe.Pointer(obj)),
@@ -189,7 +189,7 @@ func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err e
 	}
 	dispid = make([]int32, len(names))
 	namelen := uint32(len(names))
-	hr, _, _ := windows.Syscall6(
+	hr, _, _ := syscall.Syscall6(
 		obj.getIDsOfNames,
 		6,
 		uintptr(unsafe.Pointer(dispatch)),
@@ -412,7 +412,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 	result = new(VARIANT)
 	var excepInfo EXCEPINFO
 	VariantInit(result)
-	hr, _, _ := windows.Syscall9(
+	hr, _, _ := syscall.Syscall9(
 		disp.invoke,
 		9,
 		uintptr(unsafe.Pointer(disp)),

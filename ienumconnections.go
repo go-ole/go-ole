@@ -4,6 +4,7 @@ package ole
 
 import (
 	"golang.org/x/sys/windows"
+	"syscall"
 )
 
 type ConnectData struct {
@@ -44,7 +45,7 @@ func (obj *IEnumConnections) Release() uint32 {
 }
 
 func (obj *IEnumConnections) Clone() (cloned *IEnumConnections, err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		v.clone,
 		2,
 		uintptr(unsafe.Pointer(obj)),
@@ -62,7 +63,7 @@ func (obj *IEnumConnections) Clone() (cloned *IEnumConnections, err error) {
 }
 
 func (obj *IEnumConnections) Reset() bool {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.reset,
 		1,
 		uintptr(unsafe.Pointer(obj)),
@@ -80,7 +81,7 @@ func (obj *IEnumConnections) Reset() bool {
 }
 
 func (obj *IEnumConnections) Skip(numSkip uint) bool {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		enum.skip,
 		2,
 		uintptr(unsafe.Pointer(obj)),
@@ -100,7 +101,7 @@ func (obj *IEnumConnections) Skip(numSkip uint) bool {
 func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) {
 	var length uint
 	var array []ConnectData
-	hr, _, _ := windows.Syscall6(
+	hr, _, _ := syscall.Syscall6(
 		v.next,
 		4,
 		uintptr(unsafe.Pointer(obj)),

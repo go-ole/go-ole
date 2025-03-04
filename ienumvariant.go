@@ -44,7 +44,7 @@ func (obj *IEnumVariant) Release() uint32 {
 }
 
 func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		v.clone,
 		2,
 		uintptr(unsafe.Pointer(obj)),
@@ -62,7 +62,7 @@ func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 }
 
 func (obj *IEnumVariant) Reset() bool {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		obj.reset,
 		1,
 		uintptr(unsafe.Pointer(obj)),
@@ -80,7 +80,7 @@ func (obj *IEnumVariant) Reset() bool {
 }
 
 func (obj *IEnumVariant) Skip(numSkip uint) bool {
-	hr, _, _ := windows.Syscall(
+	hr, _, _ := syscall.Syscall(
 		enum.skip,
 		2,
 		uintptr(unsafe.Pointer(obj)),
@@ -98,7 +98,7 @@ func (obj *IEnumVariant) Skip(numSkip uint) bool {
 }
 
 func (obj *IEnumVariant) Next(numRetrieve uint) (array VARIANT, length uint, hasLess bool) {
-	hr, _, _ := windows.Syscall6(
+	hr, _, _ := syscall.Syscall6(
 		v.next,
 		4,
 		uintptr(unsafe.Pointer(obj)),
