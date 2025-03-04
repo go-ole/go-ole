@@ -211,8 +211,8 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 	hr := windows.CoGetObject(
 		windows.StringToUTF16Ptr(programID),
 		bindOpts,
-		interfaceId,
-		uintptr(unsafe.Pointer(&unk)))
+		&interfaceId,
+		&uintptr(unsafe.Pointer(&unk)))
 	if hr == nil || hr == 0 {
 		return
 	}
