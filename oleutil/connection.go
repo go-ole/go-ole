@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package oleutil
@@ -27,21 +28,21 @@ type stdDispatchVtbl struct {
 	pInvoke           uintptr
 }
 
-func dispQueryInterface(this *ole.IUnknown, iid *ole.GUID, punk **ole.IUnknown) uint32 {
+func dispQueryInterface(this *ole.IUnknown, iid *ole.GUID, punk **ole.IUnknown) uintptr {
 	pthis := (*stdDispatch)(unsafe.Pointer(this))
 	*punk = nil
 	if ole.IsEqualGUID(iid, ole.IID_IUnknown) ||
 		ole.IsEqualGUID(iid, ole.IID_IDispatch) {
 		dispAddRef(this)
 		*punk = this
-		return ole.S_OK
+		return uintptr(ole.S_OK)
 	}
 	if ole.IsEqualGUID(iid, pthis.iid) {
 		dispAddRef(this)
 		*punk = this
-		return ole.S_OK
+		return uintptr(ole.S_OK)
 	}
-	return ole.E_NOINTERFACE
+	return uintptr(ole.E_NOINTERFACE)
 }
 
 func dispAddRef(this *ole.IUnknown) int32 {
