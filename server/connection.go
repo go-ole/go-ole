@@ -116,7 +116,7 @@ func MakeStdDispatch[T IsIUnknown](disp *T, iid windows.GUID, idisp T) (cookie u
 	return 0, windows.E_INVALIDARG
 }
 
-func dispQueryInterface(this *interface{}, iid windows.GUID, punk **IUnknown) uint32 {
+func dispQueryInterface(this *interface{}, iid windows.GUID, punk **IUnknown) uintptr {
 	pthis := (*stdDispatch)(unsafe.Pointer(this))
 	*punk = nil
 	if cmp.Equal(iid, IID_IUnknown) || cmp.Equal(iid, IID_IDispatch) {
