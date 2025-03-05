@@ -33,6 +33,6 @@ type SafeArray struct {
 	FeaturesFlag uint16
 	ElementsSize uint32
 	LocksAmount  uint32
-	Data         uint32
+	Data         uintptr
 	Bounds       [16]byte
 }
