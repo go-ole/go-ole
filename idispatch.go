@@ -156,7 +156,7 @@ func (obj *IDispatch) HasTypeInfo() bool {
 		uintptr(unsafe.Pointer(&ret)),
 		0)
 
-	if hr == windows.E_NOTIMPL {
+	if windows.Handle(hr) == windows.E_NOTIMPL {
 		return false
 	}
 
@@ -175,7 +175,7 @@ func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
 		0,
 		0)
 
-	if hr == windows.DISP_E_BADINDEX {
+	if windows.Handle(hr) == windows.DISP_E_BADINDEX {
 		return nil
 	}
 
@@ -199,8 +199,8 @@ func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err e
 		uintptr(GetUserDefaultLCID()),
 		uintptr(unsafe.Pointer(&dispid[0])))
 
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 		return
 	}
 
@@ -427,7 +427,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 	if hr != 0 {
 		excepInfo.renderStrings()
 		excepInfo.Clear()
-		err = NewErrorWithSubError(hr, excepInfo.description, excepInfo)
+		err = errors.Join(windows.Errno(hr), errors.New(excepInfo.description))
 	}
 	for i, varg := range vargs {
 		n := len(params) - i - 1

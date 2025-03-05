@@ -29,8 +29,8 @@ func (obj *IConnectionPointContainer) FindConnectionPoint(iid windows.GUID) (poi
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(iid)),
 		uintptr(unsafe.Pointer(&point)))
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 	}
 	return
 }

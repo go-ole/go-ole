@@ -48,8 +48,8 @@ func (obj *IConnectionPoint) GetConnectionInterface() (interfaceID windows.GUID,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&interfaceID)),
 		0)
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 	}
 	return
 }
@@ -61,8 +61,8 @@ func (obj *IConnectionPoint) Advise(unknown *IsIUnknown) (cookie uint32, err err
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(unknown)),
 		uintptr(unsafe.Pointer(&cookie)))
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 	}
 	return
 }
@@ -74,12 +74,12 @@ func (obj *IConnectionPoint) Unadvise(cookie uint32) (err error) {
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(cookie),
 		0)
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 	}
 	return
 }
 
 func (obj *IConnectionPoint) EnumConnections(p *unsafe.Pointer) error {
-	return windows.E_NOTIMPL
+	return MethodNotImplementedError
 }

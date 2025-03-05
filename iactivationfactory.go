@@ -72,8 +72,8 @@ func (obj *IActivationFactory) ActivateInstance() (ret *IInspectable, err error)
 		0,
 	)
 
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 	}
 
 	return
