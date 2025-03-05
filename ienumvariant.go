@@ -5,6 +5,7 @@ package ole
 import (
 	"errors"
 	"golang.org/x/sys/windows"
+	"syscall"
 )
 
 type IEnumVariant struct {

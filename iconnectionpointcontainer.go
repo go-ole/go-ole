@@ -18,8 +18,28 @@ type IConnectionPointContainer struct {
 	findConnectionPoint  uintptr
 }
 
+func (v *IConnectionPointContainer) QueryInterfaceAddress() uintptr {
+	return v.QueryInterface
+}
+
+func (v *IConnectionPointContainer) AddRefAddress() uintptr {
+	return v.addRef
+}
+
+func (v *IConnectionPointContainer) ReleaseAddress() uintptr {
+	return v.release
+}
+
+func (obj *IConnectionPointContainer) AddRef() uint32 {
+	return AddRefOnIUnknown(obj)
+}
+
+func (obj *IConnectionPointContainer) Release() uint32 {
+	return ReleaseOnIUnknown(obj)
+}
+
 func (obj *IConnectionPointContainer) EnumConnectionPoints(points interface{}) error {
-	return NewError(E_NOTIMPL)
+	return MethodNotImplementedError
 }
 
 func (obj *IConnectionPointContainer) FindConnectionPoint(iid windows.GUID) (point *IConnectionPoint, err error) {
@@ -27,7 +47,7 @@ func (obj *IConnectionPointContainer) FindConnectionPoint(iid windows.GUID) (poi
 		obj.findConnectionPoint,
 		3,
 		uintptr(unsafe.Pointer(obj)),
-		uintptr(unsafe.Pointer(iid)),
+		uintptr(unsafe.Pointer(&iid)),
 		uintptr(unsafe.Pointer(&point)))
 	if hr != 0 {
 		err = windows.Errno(hr)
@@ -35,12 +55,12 @@ func (obj *IConnectionPointContainer) FindConnectionPoint(iid windows.GUID) (poi
 	return
 }
 
-func QueryIConnectionPointContainerFromIUnknown(unknown *IsIUnknown) (obj *IConnectionPointContainer, err error) {
+func QueryIConnectionPointContainerFromIUnknown(unknown IsIUnknown) (obj *IConnectionPointContainer, err error) {
 	if unknown == nil {
 		return nil, ComInterfaceIsNilPointer
 	}
 
-	enum, err = QueryInterfaceOnIUnknown[IConnectionPointContainer](unknown, IID_IConnectionPointContainer)
+	obj, err = QueryInterfaceOnIUnknown[*IConnectionPointContainer](unknown, IID_IConnectionPointContainer)
 	if err != nil {
 		return nil, err
 	}

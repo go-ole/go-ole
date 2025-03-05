@@ -4,6 +4,7 @@ package ole
 
 import (
 	"golang.org/x/sys/windows"
+	"syscall"
 	"unsafe"
 )
 
@@ -185,7 +186,7 @@ func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
 func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err error) {
 	wNames := make([]*uint16, len(names))
 	for i := 0; i < len(names); i++ {
-		wNames[i] = windows.UTF16PtrFromString(names[i])
+		wNames[i], _ = windows.UTF16PtrFromString(names[i])
 	}
 	dispid = make([]int32, len(names))
 	namelen := uint32(len(names))

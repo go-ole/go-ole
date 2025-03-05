@@ -4,6 +4,7 @@ package ole
 
 import (
 	"errors"
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
