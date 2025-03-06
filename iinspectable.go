@@ -93,7 +93,7 @@ func GetInterfaceIdsOnIInspectable(obj IsIInspectable) (interfaceIds []windows.G
 	}
 	defer TaskMemoryFreePointer(unsafe.Pointer(&array))
 
-	interfaceIds = (*[count]windows.GUID)(unsafe.Pointer(array))[:]
+	interfaceIds = (*[*count]windows.GUID)(unsafe.Pointer(array))[:]
 
 	return
 }
