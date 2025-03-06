@@ -224,7 +224,7 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 		windows.StringToUTF16Ptr(programID),
 		bindOpts,
 		&interfaceId,
-		*uintptr(unsafe.Pointer(&unk)))
+		&unk)
 	if hr == nil {
 		return
 	}
@@ -263,8 +263,8 @@ func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
 }
 
 // RtlMoveMemory moves location of a block of memory.
-func RtlMoveMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
-	procCopyMemory.Call(uintptr(dest), uintptr(src), uintptr(length))
+func RtlMoveMemory(dest interface{}, src interface{}, length uint32) {
+	procCopyMemory.Call(uintptr(unsafe.Pointer(&dest)), uintptr(unsafe.Pointer(&src)), uintptr(length))
 }
 
 // CreateObject creates object from programID based on interface type.
