@@ -100,9 +100,9 @@ func (obj *IEnumConnections) Skip(numSkip uint) bool {
 }
 
 func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) {
-	var length uint
+	var length int
 	var array []ConnectData
-	hr, _, _ := syscall.Syscall6(
+	syscall.Syscall6(
 		obj.next,
 		4,
 		uintptr(unsafe.Pointer(obj)),
