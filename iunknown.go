@@ -16,21 +16,25 @@ type IsIUnknown interface {
 }
 
 type IUnknown struct {
+	VirtualTable *IUnknownVirtualTable
+}
+
+type IUnknownVirtualTable struct {
 	QueryInterface uintptr
-	addRef         uintptr
-	release        uintptr
+	AddRef         uintptr
+	Release        uintptr
 }
 
 func (obj *IUnknown) QueryInterfaceAddress() uintptr {
-	return obj.QueryInterface
+	return obj.VirtualTable.QueryInterface
 }
 
 func (obj *IUnknown) AddRefAddress() uintptr {
-	return obj.addRef
+	return obj.VirtualTable.AddRef
 }
 
 func (obj *IUnknown) ReleaseAddress() uintptr {
-	return obj.release
+	return obj.VirtualTable.Release
 }
 
 func (obj *IUnknown) AddRef() uint32 {

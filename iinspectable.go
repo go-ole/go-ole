@@ -24,36 +24,40 @@ type IsIInspectable interface {
 }
 
 type IInspectable struct {
+	VirtualTable *IInspectableVirtualTable
+}
+
+type IInspectableVirtualTable struct {
 	QueryInterface      uintptr
-	addRef              uintptr
-	release             uintptr
-	getIIds             uintptr
-	getRuntimeClassName uintptr
-	getTrustLevel       uintptr
+	AddRef              uintptr
+	Release             uintptr
+	GetIIds             uintptr
+	GetRuntimeClassName uintptr
+	GetTrustLevel       uintptr
 }
 
 func (obj *IInspectable) QueryInterfaceAddress() uintptr {
-	return obj.QueryInterface
+	return obj.VirtualTable.QueryInterface
 }
 
 func (obj *IInspectable) AddRefAddress() uintptr {
-	return obj.addRef
+	return obj.VirtualTable.AddRef
 }
 
 func (obj *IInspectable) ReleaseAddress() uintptr {
-	return obj.release
+	return obj.VirtualTable.Release
 }
 
 func (obj *IInspectable) GetInterfaceIdsAddress() uintptr {
-	return obj.getIIds
+	return obj.VirtualTable.GetIIds
 }
 
 func (obj *IInspectable) GetRuntimeClassNameAddress() uintptr {
-	return obj.getRuntimeClassName
+	return obj.VirtualTable.GetRuntimeClassName
 }
 
 func (obj *IInspectable) GetTrustLevelAddress() uintptr {
-	return obj.getTrustLevel
+	return obj.VirtualTable.GetTrustLevel
 }
 
 func (obj *IInspectable) AddRef() uint32 {

@@ -10,6 +10,10 @@ import (
 )
 
 type IActivationFactory struct {
+	VirtualTable *IActivationFactoryVirtualTable
+}
+
+type IActivationFactoryVirtualTable struct {
 	QueryInterface      uintptr
 	addRef              uintptr
 	release             uintptr
@@ -20,27 +24,27 @@ type IActivationFactory struct {
 }
 
 func (obj *IActivationFactory) QueryInterfaceAddress() uintptr {
-	return obj.QueryInterface
+	return obj.VirtualTable.QueryInterface
 }
 
 func (obj *IActivationFactory) AddRefAddress() uintptr {
-	return obj.addRef
+	return obj.VirtualTable.addRef
 }
 
 func (obj *IActivationFactory) ReleaseAddress() uintptr {
-	return obj.release
+	return obj.VirtualTable.release
 }
 
 func (obj *IActivationFactory) GetInterfaceIdsAddress() uintptr {
-	return obj.getIIds
+	return obj.VirtualTable.getIIds
 }
 
 func (obj *IActivationFactory) GetRuntimeClassNameAddress() uintptr {
-	return obj.getRuntimeClassName
+	return obj.VirtualTable.getRuntimeClassName
 }
 
 func (obj *IActivationFactory) GetTrustLevelAddress() uintptr {
-	return obj.getTrustLevel
+	return obj.VirtualTable.getTrustLevel
 }
 
 func (obj *IActivationFactory) AddRef() uint32 {
@@ -65,7 +69,7 @@ func (obj *IActivationFactory) GetTrustLevel() TrustLevel {
 
 func (obj *IActivationFactory) ActivateInstance() (ret *IInspectable, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.activateInstance,
+		obj.VirtualTable.activateInstance,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&ret)),

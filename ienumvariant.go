@@ -10,15 +10,19 @@ import (
 )
 
 type IEnumVariant struct {
+	VirtualTable *IEnumVariantVirtualTable
+}
+
+type IEnumVariantVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
-	addRef         uintptr
-	release        uintptr
+	AddRef         uintptr
+	Release        uintptr
 	// IEnumVARIANT
-	next  uintptr
-	skip  uintptr
-	reset uintptr
-	clone uintptr
+	Next  uintptr
+	Skip  uintptr
+	Reset uintptr
+	Clone uintptr
 }
 
 var (
@@ -26,15 +30,15 @@ var (
 )
 
 func (v *IEnumVariant) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+	return v.VirtualTable.QueryInterface
 }
 
 func (v *IEnumVariant) AddRefAddress() uintptr {
-	return v.addRef
+	return v.VirtualTable.AddRef
 }
 
 func (v *IEnumVariant) ReleaseAddress() uintptr {
-	return v.release
+	return v.VirtualTable.Release
 }
 
 func (obj *IEnumVariant) AddRef() uint32 {
@@ -47,7 +51,7 @@ func (obj *IEnumVariant) Release() uint32 {
 
 func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.clone,
+		obj.VirtualTable.Clone,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&cloned)),
@@ -65,7 +69,7 @@ func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 
 func (obj *IEnumVariant) Reset() bool {
 	hr, _, _ := syscall.Syscall(
-		obj.reset,
+		obj.VirtualTable.Reset,
 		1,
 		uintptr(unsafe.Pointer(obj)),
 		0,
@@ -83,7 +87,7 @@ func (obj *IEnumVariant) Reset() bool {
 
 func (obj *IEnumVariant) Skip(numSkip uint) bool {
 	hr, _, _ := syscall.Syscall(
-		obj.skip,
+		obj.VirtualTable.Skip,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numSkip),
@@ -103,7 +107,7 @@ func (obj *IEnumVariant) Next(numRetrieve uint32) (ret []*VARIANT) {
 	var length uint32
 	var array []*VARIANT
 	syscall.Syscall6(
-		obj.next,
+		obj.VirtualTable.Next,
 		4,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numRetrieve),

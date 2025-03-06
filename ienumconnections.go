@@ -14,27 +14,31 @@ type ConnectData struct {
 }
 
 type IEnumConnections struct {
+	VirtualTable *IEnumConnectionsVirtualTable
+}
+
+type IEnumConnectionsVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
-	addRef         uintptr
-	release        uintptr
+	AddRef         uintptr
+	Release        uintptr
 	// IEnumVARIANT
-	next  uintptr
-	skip  uintptr
-	reset uintptr
-	clone uintptr
+	Next  uintptr
+	Skip  uintptr
+	Reset uintptr
+	Clone uintptr
 }
 
 func (obj *IEnumConnections) QueryInterfaceAddress() uintptr {
-	return obj.QueryInterface
+	return obj.VirtualTable.QueryInterface
 }
 
 func (obj *IEnumConnections) AddRefAddress() uintptr {
-	return obj.addRef
+	return obj.VirtualTable.AddRef
 }
 
 func (obj *IEnumConnections) ReleaseAddress() uintptr {
-	return obj.release
+	return obj.VirtualTable.Release
 }
 
 func (obj *IEnumConnections) AddRef() uint32 {
@@ -47,7 +51,7 @@ func (obj *IEnumConnections) Release() uint32 {
 
 func (obj *IEnumConnections) Clone() (cloned *IEnumConnections, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.clone,
+		obj.VirtualTable.Clone,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&cloned)),
@@ -65,7 +69,7 @@ func (obj *IEnumConnections) Clone() (cloned *IEnumConnections, err error) {
 
 func (obj *IEnumConnections) Reset() bool {
 	hr, _, _ := syscall.Syscall(
-		obj.reset,
+		obj.VirtualTable.Reset,
 		1,
 		uintptr(unsafe.Pointer(obj)),
 		0,
@@ -83,7 +87,7 @@ func (obj *IEnumConnections) Reset() bool {
 
 func (obj *IEnumConnections) Skip(numSkip uint) bool {
 	hr, _, _ := syscall.Syscall(
-		obj.skip,
+		obj.VirtualTable.Skip,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numSkip),
@@ -103,7 +107,7 @@ func (obj *IEnumConnections) Next(numRetrieve uint32) (ret []ConnectData) {
 	var length uint32
 	var array []ConnectData
 	syscall.Syscall6(
-		obj.next,
+		obj.VirtualTable.Next,
 		4,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numRetrieve),

@@ -9,22 +9,26 @@ import (
 )
 
 type IProvideClassInfo struct {
+	VirtualTable *IProvideClassInfoVirtualTable
+}
+
+type IProvideClassInfoVirtualTable struct {
 	QueryInterface uintptr
-	addRef         uintptr
-	release        uintptr
-	getClassInfo   uintptr
+	AddRef         uintptr
+	Release        uintptr
+	GetClassInfo   uintptr
 }
 
-func (v *IProvideClassInfo) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *IProvideClassInfo) QueryInterfaceAddress() uintptr {
+	return obj.VirtualTable.QueryInterface
 }
 
-func (v *IProvideClassInfo) AddRefAddress() uintptr {
-	return v.addRef
+func (obj *IProvideClassInfo) AddRefAddress() uintptr {
+	return obj.VirtualTable.AddRef
 }
 
-func (v *IProvideClassInfo) ReleaseAddress() uintptr {
-	return v.release
+func (obj *IProvideClassInfo) ReleaseAddress() uintptr {
+	return obj.VirtualTable.Release
 }
 
 func (obj *IProvideClassInfo) AddRef() uint32 {
@@ -37,7 +41,7 @@ func (obj *IProvideClassInfo) Release() uint32 {
 
 func (obj *IProvideClassInfo) GetClassInfo() (info *ITypeInfo, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.getClassInfo,
+		obj.VirtualTable.GetClassInfo,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&info)),

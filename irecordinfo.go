@@ -10,38 +10,42 @@ import (
 )
 
 type IRecordInfo struct {
+	VirtualTable *IRecordInfoVirtualTable
+}
+
+type IRecordInfoVirtualTable struct {
 	QueryInterface uintptr
-	addRef         uintptr
-	release        uintptr
+	AddRef         uintptr
+	Release        uintptr
 	// IRecordInfo
-	recordInit       uintptr
-	recordClear      uintptr
-	recordCopy       uintptr
-	getGuid          uintptr
+	RecordInit       uintptr
+	RecordClear      uintptr
+	RecordCopy       uintptr
+	GetGuid          uintptr
 	GetName          uintptr
-	getSize          uintptr
+	GetSize          uintptr
 	GetTypeInfo      uintptr
 	GetField         uintptr
 	GetFieldNoCopy   uintptr
 	PutField         uintptr
 	PutFieldNoCopy   uintptr
 	GetFieldNames    uintptr
-	isMatchingType   uintptr
-	recordCreate     uintptr
-	recordCreateCopy uintptr
-	recordDestroy    uintptr
+	IsMatchingType   uintptr
+	RecordCreate     uintptr
+	RecordCreateCopy uintptr
+	RecordDestroy    uintptr
 }
 
 func (obj *IRecordInfo) QueryInterfaceAddress() uintptr {
-	return obj.QueryInterface
+	return obj.VirtualTable.QueryInterface
 }
 
 func (obj *IRecordInfo) AddRefAddress() uintptr {
-	return obj.addRef
+	return obj.VirtualTable.AddRef
 }
 
 func (obj *IRecordInfo) ReleaseAddress() uintptr {
-	return obj.release
+	return obj.VirtualTable.Release
 }
 
 func (obj *IRecordInfo) AddRef() uint32 {
@@ -54,7 +58,7 @@ func (obj *IRecordInfo) Release() uint32 {
 
 func (obj *IRecordInfo) GetGuid() (ret windows.GUID, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.getGuid,
+		obj.VirtualTable.GetGuid,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&ret)),
@@ -75,7 +79,7 @@ func (obj *IRecordInfo) GetGuid() (ret windows.GUID, err error) {
 
 func (obj *IRecordInfo) GetSize() (ret uint32, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.getSize,
+		obj.VirtualTable.GetSize,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&ret)),
@@ -94,7 +98,7 @@ func (obj *IRecordInfo) GetSize() (ret uint32, err error) {
 
 func (obj *IRecordInfo) RecordInit() (ret uintptr, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.recordInit,
+		obj.VirtualTable.RecordInit,
 		2,
 		uintptr(unsafe.Pointer(&obj)),
 		uintptr(unsafe.Pointer(&ret)),
@@ -113,7 +117,7 @@ func (obj *IRecordInfo) RecordInit() (ret uintptr, err error) {
 
 func (obj *IRecordInfo) RecordClear(existing uintptr) (err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.recordClear,
+		obj.VirtualTable.RecordClear,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -131,7 +135,7 @@ func (obj *IRecordInfo) RecordClear(existing uintptr) (err error) {
 
 func (obj *IRecordInfo) RecordCopy(existing uintptr) (copy uintptr, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.recordCopy,
+		obj.VirtualTable.RecordCopy,
 		3,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -150,7 +154,7 @@ func (obj *IRecordInfo) RecordCopy(existing uintptr) (copy uintptr, err error) {
 
 func (obj *IRecordInfo) RecordCreate() (ret uintptr, err error) {
 	ret, _, err = syscall.Syscall(
-		obj.recordCreate,
+		obj.VirtualTable.RecordCreate,
 		1,
 		uintptr(unsafe.Pointer(obj)),
 		0,
@@ -160,7 +164,7 @@ func (obj *IRecordInfo) RecordCreate() (ret uintptr, err error) {
 
 func (obj *IRecordInfo) RecordCreateCopy(existing uintptr) (ret uintptr, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.recordCreateCopy,
+		obj.VirtualTable.RecordCreateCopy,
 		3,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -183,7 +187,7 @@ func (obj *IRecordInfo) RecordCreateCopy(existing uintptr) (ret uintptr, err err
 
 func (obj *IRecordInfo) RecordDestroy(existing uintptr) (err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.recordDestroy,
+		obj.VirtualTable.RecordDestroy,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -201,7 +205,7 @@ func (obj *IRecordInfo) RecordDestroy(existing uintptr) (err error) {
 
 func (obj *IRecordInfo) Equals(recordInfo *IRecordInfo) (ret bool, err error) {
 	hr, _, err := syscall.Syscall(
-		obj.isMatchingType,
+		obj.VirtualTable.IsMatchingType,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&recordInfo)),

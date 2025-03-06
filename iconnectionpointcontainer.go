@@ -9,6 +9,10 @@ import (
 )
 
 type IConnectionPointContainer struct {
+	VirtualTable *IConnectionPointContainerVirtualTable
+}
+
+type IConnectionPointContainerVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
 	addRef         uintptr
@@ -18,16 +22,16 @@ type IConnectionPointContainer struct {
 	findConnectionPoint  uintptr
 }
 
-func (v *IConnectionPointContainer) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *IConnectionPointContainer) QueryInterfaceAddress() uintptr {
+	return obj.VirtualTable.QueryInterface
 }
 
-func (v *IConnectionPointContainer) AddRefAddress() uintptr {
-	return v.addRef
+func (obj *IConnectionPointContainer) AddRefAddress() uintptr {
+	return obj.VirtualTable.addRef
 }
 
-func (v *IConnectionPointContainer) ReleaseAddress() uintptr {
-	return v.release
+func (obj *IConnectionPointContainer) ReleaseAddress() uintptr {
+	return obj.VirtualTable.release
 }
 
 func (obj *IConnectionPointContainer) AddRef() uint32 {
@@ -44,7 +48,7 @@ func (obj *IConnectionPointContainer) EnumConnectionPoints(points interface{}) e
 
 func (obj *IConnectionPointContainer) FindConnectionPoint(iid windows.GUID) (point *IConnectionPoint, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.findConnectionPoint,
+		obj.VirtualTable.findConnectionPoint,
 		3,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&iid)),

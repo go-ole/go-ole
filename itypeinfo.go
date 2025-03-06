@@ -10,12 +10,16 @@ import (
 )
 
 type ITypeInfo struct {
+	VirtualTable *ITypeInfoVirtualTable
+}
+
+type ITypeInfoVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
 	AddRef         uintptr
 	Release        uintptr
 	// ITypeInfo
-	getTypeAttr          uintptr
+	GetTypeAttr          uintptr
 	GetTypeComp          uintptr
 	GetFuncDesc          uintptr
 	GetVarDesc           uintptr
@@ -37,21 +41,29 @@ type ITypeInfo struct {
 }
 
 func (obj *ITypeInfo) QueryInterfaceAddress() uintptr {
-	return obj.QueryInterface
+	return obj.VirtualTable.QueryInterface
 }
 
 func (obj *ITypeInfo) AddRefAddress() uintptr {
-	return obj.AddRef
+	return obj.VirtualTable.AddRef
 }
 
 func (obj *ITypeInfo) ReleaseAddress() uintptr {
-	return obj.Release
+	return obj.VirtualTable.Release
+}
+
+func (obj *ITypeInfo) AddRef() uint32 {
+	return AddRefOnIUnknown(obj)
+}
+
+func (obj *ITypeInfo) Release() uint32 {
+	return ReleaseOnIUnknown(obj)
 }
 
 // TODO: refactor to not be a function pointer.
 func (obj *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err error) {
 	hr, _, _ := syscall.Syscall(
-		uintptr(obj.getTypeAttr),
+		uintptr(obj.VirtualTable.GetTypeAttr),
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&tattr)),

@@ -102,43 +102,47 @@ type IDispatchAddresses interface {
 }
 
 type IDispatch struct {
+	VirtualTable *IDispatchVirtualTable
+}
+
+type IDispatchVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
-	addRef         uintptr
-	release        uintptr
+	AddRef         uintptr
+	Release        uintptr
 	// IDispatch
-	getTypeInfoCount uintptr
-	getTypeInfo      uintptr
-	getIDsOfNames    uintptr
-	invoke           uintptr
+	GetTypeInfoCount uintptr
+	GetTypeInfo      uintptr
+	GetIDsOfNames    uintptr
+	Invoke           uintptr
 }
 
-func (v *IDispatch) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *IDispatch) QueryInterfaceAddress() uintptr {
+	return obj.VirtualTable.QueryInterface
 }
 
-func (v *IDispatch) AddRefAddress() uintptr {
-	return v.addRef
+func (obj *IDispatch) AddRefAddress() uintptr {
+	return obj.VirtualTable.AddRef
 }
 
-func (v *IDispatch) ReleaseAddress() uintptr {
-	return v.release
+func (obj *IDispatch) ReleaseAddress() uintptr {
+	return obj.VirtualTable.Release
 }
 
-func (v *IDispatch) GetTypeInfoCountAddress() uintptr {
-	return v.getTypeInfoCount
+func (obj *IDispatch) GetTypeInfoCountAddress() uintptr {
+	return obj.VirtualTable.GetTypeInfoCount
 }
 
-func (v *IDispatch) GetTypeInfoAddress() uintptr {
-	return v.getTypeInfo
+func (obj *IDispatch) GetTypeInfoAddress() uintptr {
+	return obj.VirtualTable.GetTypeInfo
 }
 
-func (v *IDispatch) GetIDsOfNamesAddress() uintptr {
-	return v.getIDsOfNames
+func (obj *IDispatch) GetIDsOfNamesAddress() uintptr {
+	return obj.VirtualTable.GetIDsOfNames
 }
 
-func (v *IDispatch) InvokeAddress() uintptr {
-	return v.invoke
+func (obj *IDispatch) InvokeAddress() uintptr {
+	return obj.VirtualTable.Invoke
 }
 
 func (obj *IDispatch) AddRef() uint32 {
@@ -152,7 +156,7 @@ func (obj *IDispatch) Release() uint32 {
 func (obj *IDispatch) HasTypeInfo() bool {
 	var ret uint
 	hr, _, _ := syscall.Syscall(
-		obj.getTypeInfoCount,
+		obj.VirtualTable.GetTypeInfoCount,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&ret)),
@@ -167,7 +171,7 @@ func (obj *IDispatch) HasTypeInfo() bool {
 
 func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
 	hr, _, _ := syscall.Syscall6(
-		obj.getTypeInfo,
+		obj.VirtualTable.GetTypeInfo,
 		4,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(0),
@@ -191,7 +195,7 @@ func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err e
 	dispid := make([]int32, len(names))
 	namelen := uint32(len(names))
 	hr, _, _ := syscall.Syscall6(
-		obj.getIDsOfNames,
+		obj.VirtualTable.GetIDsOfNames,
 		6,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&IID_NULL)),

@@ -9,6 +9,10 @@ import (
 )
 
 type IConnectionPoint struct {
+	VirtualTable *IConnectionPointVirtualTable
+}
+
+type IConnectionPointVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
 	addRef         uintptr
@@ -22,15 +26,15 @@ type IConnectionPoint struct {
 }
 
 func (obj *IConnectionPoint) QueryInterfaceAddress() uintptr {
-	return obj.QueryInterface
+	return obj.VirtualTable.QueryInterface
 }
 
 func (obj *IConnectionPoint) AddRefAddress() uintptr {
-	return obj.addRef
+	return obj.VirtualTable.addRef
 }
 
 func (obj *IConnectionPoint) ReleaseAddress() uintptr {
-	return obj.release
+	return obj.VirtualTable.release
 }
 
 func (obj *IConnectionPoint) AddRef() uint32 {
@@ -43,7 +47,7 @@ func (obj *IConnectionPoint) Release() uint32 {
 
 func (obj *IConnectionPoint) GetConnectionInterface() (interfaceID windows.GUID, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.getConnectionInterface,
+		obj.VirtualTable.getConnectionInterface,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&interfaceID)),
@@ -56,7 +60,7 @@ func (obj *IConnectionPoint) GetConnectionInterface() (interfaceID windows.GUID,
 
 func (obj *IConnectionPoint) Advise(unknown *IsIUnknown) (cookie uint32, err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.advise,
+		obj.VirtualTable.advise,
 		3,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(unknown)),
@@ -69,7 +73,7 @@ func (obj *IConnectionPoint) Advise(unknown *IsIUnknown) (cookie uint32, err err
 
 func (obj *IConnectionPoint) Unadvise(cookie uint32) (err error) {
 	hr, _, _ := syscall.Syscall(
-		obj.unadvise,
+		obj.VirtualTable.unadvise,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(cookie),
