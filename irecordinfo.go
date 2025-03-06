@@ -32,16 +32,16 @@ type IRecordInfo struct {
 	recordDestroy    uintptr
 }
 
-func (v *IRecordInfo) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *IRecordInfo) QueryInterfaceAddress() uintptr {
+	return obj.QueryInterface
 }
 
-func (v *IRecordInfo) AddRefAddress() uintptr {
-	return v.addRef
+func (obj *IRecordInfo) AddRefAddress() uintptr {
+	return obj.addRef
 }
 
-func (v *IRecordInfo) ReleaseAddress() uintptr {
-	return v.release
+func (obj *IRecordInfo) ReleaseAddress() uintptr {
+	return obj.release
 }
 
 func (obj *IRecordInfo) AddRef() uint32 {
@@ -54,7 +54,7 @@ func (obj *IRecordInfo) Release() uint32 {
 
 func (obj *IRecordInfo) GetGuid() (ret windows.GUID, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.getGuid,
+		obj.getGuid,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&ret)),
@@ -64,17 +64,18 @@ func (obj *IRecordInfo) GetGuid() (ret windows.GUID, err error) {
 	case windows.S_OK:
 		return
 	case windows.TYPE_E_INVALIDSTATE:
-		return InvalidArgumentComError
+		err = InvalidArgumentComError
 	case windows.E_INVALIDARG:
-		return InvalidArgumentComError
+		err = InvalidArgumentComError
 	default:
-		return windows.Errno(hr)
+		err = windows.Errno(hr)
 	}
+	return
 }
 
 func (obj *IRecordInfo) GetSize() (ret uint32, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.getSize,
+		obj.getSize,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&ret)),
@@ -84,15 +85,16 @@ func (obj *IRecordInfo) GetSize() (ret uint32, err error) {
 	case windows.S_OK:
 		return
 	case windows.E_INVALIDARG:
-		return InvalidArgumentComError
+		err = InvalidArgumentComError
 	default:
-		return windows.Errno(hr)
+		err = windows.Errno(hr)
 	}
+	return
 }
 
 func (obj *IRecordInfo) RecordInit() (ret uintptr, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.recordInit,
+		obj.recordInit,
 		2,
 		uintptr(unsafe.Pointer(&obj)),
 		uintptr(unsafe.Pointer(&ret)),
@@ -102,15 +104,16 @@ func (obj *IRecordInfo) RecordInit() (ret uintptr, err error) {
 	case windows.S_OK:
 		return
 	case windows.E_INVALIDARG:
-		return InvalidArgumentComError
+		err = InvalidArgumentComError
 	default:
-		return windows.Errno(hr)
+		err = windows.Errno(hr)
 	}
+	return
 }
 
 func (obj *IRecordInfo) RecordClear(existing uintptr) (err error) {
 	hr, _, _ := syscall.Syscall(
-		v.recordClear,
+		obj.recordClear,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -128,7 +131,7 @@ func (obj *IRecordInfo) RecordClear(existing uintptr) (err error) {
 
 func (obj *IRecordInfo) RecordCopy(existing uintptr) (copy uintptr, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.recordCopy,
+		obj.recordCopy,
 		3,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -138,15 +141,16 @@ func (obj *IRecordInfo) RecordCopy(existing uintptr) (copy uintptr, err error) {
 	case windows.S_OK:
 		return
 	case windows.E_INVALIDARG:
-		return InvalidArgumentComError
+		err = InvalidArgumentComError
 	default:
-		return windows.Errno(hr)
+		err = windows.Errno(hr)
 	}
+	return
 }
 
 func (obj *IRecordInfo) RecordCreate() (ret uintptr, err error) {
 	ret, _, err := syscall.Syscall(
-		v.recordCreate,
+		obj.recordCreate,
 		1,
 		uintptr(unsafe.Pointer(obj)),
 		0,
@@ -156,7 +160,7 @@ func (obj *IRecordInfo) RecordCreate() (ret uintptr, err error) {
 
 func (obj *IRecordInfo) RecordCreateCopy(existing uintptr) (ret uintptr, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.recordCreateCopy,
+		obj.recordCreateCopy,
 		3,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -179,7 +183,7 @@ func (obj *IRecordInfo) RecordCreateCopy(existing uintptr) (ret uintptr, err err
 
 func (obj *IRecordInfo) RecordDestroy(existing uintptr) (err error) {
 	hr, _, _ := syscall.Syscall(
-		v.recordDestroy,
+		obj.recordDestroy,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
@@ -197,7 +201,7 @@ func (obj *IRecordInfo) RecordDestroy(existing uintptr) (err error) {
 
 func (obj *IRecordInfo) Equals(recordInfo *IRecordInfo) (ret bool, err error) {
 	hr, _, err := syscall.Syscall(
-		v.isMatchingType,
+		obj.isMatchingType,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&recordInfo)),

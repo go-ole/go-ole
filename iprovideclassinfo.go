@@ -37,7 +37,7 @@ func (obj *IProvideClassInfo) Release() uint32 {
 
 func (obj *IProvideClassInfo) GetClassInfo() (info *ITypeInfo, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.getClassInfo,
+		obj.getClassInfo,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&info)),
