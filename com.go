@@ -216,7 +216,7 @@ func GetUserDefaultLCID() (lcid uint32) {
 }
 
 // GetObject retrieves pointer to active object.
-func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, interfaceId windows.GUID) (unk *T, err error) {
+func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, interfaceId windows.GUID) (unk T, err error) {
 	if bindOpts != nil {
 		bindOpts.CbStruct = uint32(unsafe.Sizeof(windows.BIND_OPTS3{}))
 	}

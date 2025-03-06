@@ -190,15 +190,13 @@ func WrapParametersWithVariant(params ...any) (args []*VARIANT) {
 	}
 
 	args = make([]*VARIANT, len(params))
-	errs := make([]error, len(params))
 
 	for i, v := range params {
 		n := len(params) - i - 1
-		VariantInit(&args[n])
+		VariantInit(args[n])
 
 		// Attempt nil since we can't automate that
-		nilVal, ok := v.(nil)
-		if ok {
+		if v == nil {
 			args[n] = MakeNullVariant()
 			continue
 		}
