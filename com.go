@@ -224,7 +224,7 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 		windows.StringToUTF16Ptr(programID),
 		bindOpts,
 		&interfaceId,
-		&unk)
+		unk)
 	if hr == nil {
 		return
 	}
