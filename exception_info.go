@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 // EXCEPINFO defines exception info.
@@ -35,17 +37,17 @@ func (e *EXCEPINFO) renderStrings() {
 	if e.bstrSource == nil {
 		e.source = "<nil>"
 	} else {
-		e.source = BstrToString(e.bstrSource)
+		e.source = windows.UTF16PtrToString(e.bstrSource)
 	}
 	if e.bstrDescription == nil {
 		e.description = "<nil>"
 	} else {
-		e.description = BstrToString(e.bstrDescription)
+		e.description = windows.UTF16PtrToString(e.bstrDescription)
 	}
 	if e.bstrHelpFile == nil {
 		e.helpFile = "<nil>"
 	} else {
-		e.helpFile = BstrToString(e.bstrHelpFile)
+		e.helpFile = windows.UTF16PtrToString(e.bstrHelpFile)
 	}
 }
 
