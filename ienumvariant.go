@@ -6,6 +6,7 @@ import (
 	"errors"
 	"golang.org/x/sys/windows"
 	"syscall"
+	"unsafe"
 )
 
 type IEnumVariant struct {
