@@ -47,7 +47,7 @@ func (obj *IEnumVariant) Release() uint32 {
 
 func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.clone,
+		obj.clone,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&cloned)),
@@ -83,7 +83,7 @@ func (obj *IEnumVariant) Reset() bool {
 
 func (obj *IEnumVariant) Skip(numSkip uint) bool {
 	hr, _, _ := syscall.Syscall(
-		enum.skip,
+		obj.skip,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numSkip),
@@ -103,7 +103,7 @@ func (obj *IEnumVariant) Next(numRetrieve uint) (ret []*VARIANT) {
 	var length int
 	var array []*VARIANT
 	hr, _, _ := syscall.Syscall6(
-		v.next,
+		obj.next,
 		4,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numRetrieve),
@@ -118,9 +118,9 @@ func (obj *IEnumVariant) Next(numRetrieve uint) (ret []*VARIANT) {
 	return
 }
 
-func (v *IEnumVariant) ForEach(callback func(v *VARIANT) error) error {
-	v.Reset()
-	items := v.Next(100)
+func (obj *IEnumVariant) ForEach(callback func(v *VARIANT) error) error {
+	obj.Reset()
+	items := obj.Next(100)
 	for len(items) > 0 {
 		for _, item := range items {
 			err = callback(&item)
@@ -128,12 +128,12 @@ func (v *IEnumVariant) ForEach(callback func(v *VARIANT) error) error {
 				return err
 			}
 		}
-		items = v.Next(100)
+		items = obj.Next(100)
 	}
 	return nil
 }
 
-func QueryIEnumVariantFromIUnknown(unknown *IsIUnknown) (enum *IEnumVariant, err error) {
+func QueryIEnumVariantFromIUnknown(unknown IsIUnknown) (enum *IEnumVariant, err error) {
 	if unknown == nil {
 		return nil, ComInterfaceIsNilPointer
 	}
