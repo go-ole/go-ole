@@ -102,7 +102,7 @@ func (obj *IEnumVariant) Skip(numSkip uint) bool {
 func (obj *IEnumVariant) Next(numRetrieve uint) (ret []*VARIANT) {
 	var length int
 	var array []*VARIANT
-	hr, _, _ := syscall.Syscall6(
+	syscall.Syscall6(
 		obj.next,
 		4,
 		uintptr(unsafe.Pointer(obj)),

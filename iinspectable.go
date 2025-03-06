@@ -82,12 +82,12 @@ func GetInterfaceIdsOnIInspectable(obj IsIInspectable) (interfaceIds []windows.G
 	hr, _, _ := syscall.Syscall(
 		obj.GetInterfaceIdsAddress(),
 		3,
-		uintptr(unsafe.Pointer(obj)),
+		uintptr(unsafe.Pointer(&obj)),
 		uintptr(unsafe.Pointer(&count)),
 		uintptr(unsafe.Pointer(&array)),
 	)
 
-	if hr != windows.S_OK {
+	if windows.Handle(hr) != windows.S_OK {
 		err = hr
 		return
 	}
@@ -103,11 +103,11 @@ func GetRuntimeClassNameOnIInspectable(obj IsIInspectable) (s string, err error)
 	hr, _, _ := syscall.Syscall(
 		obj.GetRuntimeClassNameAddress(),
 		2,
-		uintptr(unsafe.Pointer(obj)),
+		uintptr(unsafe.Pointer(&obj)),
 		uintptr(unsafe.Pointer(&hString)),
 		0)
 
-	if hr != windows.S_OK {
+	if windows.Handle(hr) != windows.S_OK {
 		err = hr
 		return
 	}
@@ -119,10 +119,10 @@ func GetRuntimeClassNameOnIInspectable(obj IsIInspectable) (s string, err error)
 
 func GetTrustLevelOnIInspectable(obj IsIInspectable) TrustLevel {
 	var level uint32
-	hr, _, _ := syscall.Syscall(
+	syscall.Syscall(
 		obj.GetTrustLevelAddress(),
 		2,
-		uintptr(unsafe.Pointer(obj)),
+		uintptr(unsafe.Pointer(&obj)),
 		uintptr(unsafe.Pointer(&level)),
 		0)
 
