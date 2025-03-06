@@ -100,7 +100,7 @@ func (obj *IEnumConnections) Skip(numSkip uint) bool {
 }
 
 func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) {
-	var length int64
+	var length int
 	var array []ConnectData
 	syscall.Syscall6(
 		obj.next,
@@ -108,12 +108,12 @@ func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) 
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numRetrieve),
 		uintptr(unsafe.Pointer(&array[0])),
-		uintptr(unsafe.Pointer(&length)),
+		uintptr(unsafe.Pointer(length)),
 		0,
 		0)
 
 	// New unsafe array conversion since Go 1.17.
-	connectData = (*[length]ConnectData)(unsafe.Pointer(array))[:]
+	connectData = (*[length]ConnectData)(unsafe.Pointer(&array[0]))[:]
 
 	return
 }
