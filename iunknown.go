@@ -59,7 +59,7 @@ func QueryInterfaceOnIUnknown[T any](unknown IsIUnknown, interfaceID windows.GUI
 
 	switch windows.Handle(hr) {
 	case windows.S_OK:
-		return out, nil
+		return ret, nil
 	case windows.E_NOINTERFACE:
 		return nil, ComInterfaceNotImplementedError
 	case windows.E_POINTER:
