@@ -45,6 +45,6 @@ jobs:
       - name: 'Go Get'
         run: go get -v -t
       - name: 'Go Build'
-        run: go build -d=checkptr
+        run: go build
       - name: Run tests
         run: go test
