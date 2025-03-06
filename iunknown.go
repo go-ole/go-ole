@@ -3,7 +3,6 @@
 package ole
 
 import (
-	"errors"
 	"syscall"
 	"unsafe"
 
@@ -22,16 +21,16 @@ type IUnknown struct {
 	release        uintptr
 }
 
-func (v *IUnknown) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *IUnknown) QueryInterfaceAddress() uintptr {
+	return obj.QueryInterface
 }
 
-func (v *IUnknown) AddRefAddress() uintptr {
-	return v.addRef
+func (obj *IUnknown) AddRefAddress() uintptr {
+	return obj.addRef
 }
 
-func (v *IUnknown) ReleaseAddress() uintptr {
-	return v.release
+func (obj *IUnknown) ReleaseAddress() uintptr {
+	return obj.release
 }
 
 func (obj *IUnknown) AddRef() uint32 {
@@ -54,8 +53,8 @@ func QueryInterfaceOnIUnknown[T any](unknown IsIUnknown, interfaceID windows.GUI
 	hr, _, _ := syscall.Syscall(
 		unknown.QueryInterfaceAddress(),
 		3,
-		uintptr(unsafe.Pointer(unknown)),
-		uintptr(unsafe.Pointer(interfaceID)),
+		uintptr(unsafe.Pointer(&unknown)),
+		uintptr(unsafe.Pointer(&interfaceID)),
 		uintptr(unsafe.Pointer(&ret)))
 
 	switch hr {
@@ -88,7 +87,7 @@ func AddRefOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}
-	ret, _, _ := syscall.Syscall(unknown.AddRefAddress(), 1, uintptr(unsafe.Pointer(unknown)), 0, 0)
+	ret, _, _ := syscall.Syscall(unknown.AddRefAddress(), 1, uintptr(unsafe.Pointer(&unknown)), 0, 0)
 	return uint32(ret)
 }
 
@@ -96,6 +95,6 @@ func ReleaseOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}
-	ret, _, _ := syscall.Syscall(unknown.ReleaseAddress(), 1, uintptr(unsafe.Pointer(unknown)), 0, 0)
+	ret, _, _ := syscall.Syscall(unknown.ReleaseAddress(), 1, uintptr(unsafe.Pointer(&unknown)), 0, 0)
 	return uint32(ret)
 }

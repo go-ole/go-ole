@@ -5,6 +5,8 @@ package ole
 import (
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 type ITypeInfo struct {
@@ -34,28 +36,28 @@ type ITypeInfo struct {
 	ReleaseVarDesc       uintptr
 }
 
-func (v *ITypeInfo) QueryInterfaceAddress() uintptr {
-	return v.QueryInterface
+func (obj *ITypeInfo) QueryInterfaceAddress() uintptr {
+	return obj.QueryInterface
 }
 
-func (v *ITypeInfo) AddRefAddress() uintptr {
-	return v.AddRef
+func (obj *ITypeInfo) AddRefAddress() uintptr {
+	return obj.AddRef
 }
 
-func (v *ITypeInfo) ReleaseAddress() uintptr {
-	return v.Release
+func (obj *ITypeInfo) ReleaseAddress() uintptr {
+	return obj.Release
 }
 
 // TODO: refactor to not be a function pointer.
-func (v *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err error) {
+func (obj *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err error) {
 	hr, _, _ := syscall.Syscall(
-		uintptr(v.getTypeAttr),
+		uintptr(obj.getTypeAttr),
 		2,
 		uintptr(unsafe.Pointer(v)),
 		uintptr(unsafe.Pointer(&tattr)),
 		0)
 	if hr != 0 {
-		err = NewError(hr)
+		err = windows.Errno(hr)
 	}
 	return
 }

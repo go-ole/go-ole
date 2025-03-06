@@ -149,7 +149,7 @@ func (obj *IRecordInfo) RecordCopy(existing uintptr) (copy uintptr, err error) {
 }
 
 func (obj *IRecordInfo) RecordCreate() (ret uintptr, err error) {
-	ret, _, err := syscall.Syscall(
+	ret, _, err = syscall.Syscall(
 		obj.recordCreate,
 		1,
 		uintptr(unsafe.Pointer(obj)),
