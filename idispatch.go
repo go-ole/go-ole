@@ -193,7 +193,7 @@ func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err e
 		obj.getIDsOfNames,
 		6,
 		uintptr(unsafe.Pointer(obj)),
-		uintptr(unsafe.Pointer(IID_NULL)),
+		uintptr(unsafe.Pointer(&IID_NULL)),
 		uintptr(unsafe.Pointer(&wNames[0])),
 		uintptr(namelen),
 		uintptr(GetUserDefaultLCID()),
@@ -225,35 +225,26 @@ func (obj *IDispatch) GetSingleIDOfName(name string) (displayID int32, err error
 	return
 }
 
-func (obj *IDispatch) Invoke(name string, dispatch int16) (result *VARIANT, err error) {
-
-}
-
-// InvokeWithOptionalArgs accepts arguments as an array, works like Invoke.
-//
-// Accepts name and will attempt to retrieve Display ID to pass to Invoke.
-//
-// Passing params as an array is a workaround that could be fixed in later versions of Go that
-// prevent passing empty params. During testing it was discovered that this is an acceptable way of
-// getting around not being able to pass params normally.
-func (obj *IDispatch) InvokeWithOptionalArgs(name string, dispatch int16, params []interface{}) (result *VARIANT, err error) {
-	displayID, err := v.GetSingleIDOfName(name)
+func (obj *IDispatch) Invoke(name string, dispatch int16, params ...*VARIANT) (result *VARIANT, err error) {
+	displayID, err := obj.GetSingleIDOfName(name)
 	if err != nil {
 		return
 	}
-
-	if len(params) < 1 {
-		result, err = obj.Invoke(displayID, dispatch)
-	} else {
-		result, err = obj.Invoke(displayID, dispatch, params...)
-	}
-
-	return
+	return InvokeOnIDispatch(obj, displayID, dispatch, params...)
 }
 
 // CallMethod invokes named function with arguments on object.
-func (v *IDispatch) CallMethod(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, DISPATCH_METHOD, params)
+func (obj *IDispatch) CallMethod(name string, params ...*VARIANT) (*VARIANT, error) {
+	return obj.Invoke(name, DISPATCH_METHOD, params...)
+}
+
+// MustCallMethod calls method on IDispatch with parameters or panics.
+func (obj *IDispatch) MustCallMethod(name string, params ...interface{}) (result *VARIANT) {
+	result, err := obj.CallMethod(name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
+	return
 }
 
 // GetProperty retrieves the property with the name with the ability to pass arguments.
@@ -261,13 +252,45 @@ func (v *IDispatch) CallMethod(name string, params ...interface{}) (*VARIANT, er
 // Most of the time you will not need to pass arguments as most objects do not allow for this
 // feature. Or at least, should not allow for this feature. Some servers don't follow best practices
 // and this is provided for those edge cases.
-func (v *IDispatch) GetProperty(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYGET, params)
+func (obj *IDispatch) GetProperty(name string, params ...*VARIANT) (*VARIANT, error) {
+	return obj.Invoke(name, DISPATCH_PROPERTYGET, params...)
+}
+
+// MustGetProperty retrieves property from IDispatch or panics.
+func (obj *IDispatch) MustGetProperty(name string, params ...*VARIANT) (result *VARIANT) {
+	result, err := obj.GetProperty(name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
+	return
 }
 
 // PutProperty attempts to mutate a property in the object.
-func (v *IDispatch) PutProperty(name string, params ...interface{}) (*VARIANT, error) {
-	return v.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYPUT, params)
+func (obj *IDispatch) PutProperty(name string, params ...*VARIANT) (*VARIANT, error) {
+	return obj.Invoke(name, DISPATCH_PROPERTYPUT, params...)
+}
+
+// MustPutProperty mutates property or panics.
+func (obj *IDispatch) MustPutProperty(name string, params ...*VARIANT) (result *VARIANT) {
+	result, err := obj.PutProperty(name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
+	return r
+}
+
+// PutPropertyRef mutates property reference.
+func (obj *IDispatch) PutPropertyRef(name string, params ...*VARIANT) (result *VARIANT, err error) {
+	return obj.Invoke(name, DISPATCH_PROPERTYPUTREF, params)
+}
+
+// MustPutPropertyRef mutates property reference or panics.
+func (obj *IDispatch) MustPutPropertyRef(name string, params ...*VARIANT) (result *VARIANT) {
+	result, err := obj.PutPropertyRef(name, params...)
+	if err != nil {
+		panic(err.Error())
+	}
+	return
 }
 
 func QueryIDispatchFromIUnknown(unknown *IsIUnknown) (dispatch *IDispatch, err error) {
@@ -282,146 +305,21 @@ func QueryIDispatchFromIUnknown(unknown *IsIUnknown) (dispatch *IDispatch, err e
 	return
 }
 
-func InvokeOnIDispatch(obj *IDispatchAddresses, displayId int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
-	result, err = invoke(obj, displayId, dispatch, params...)
-	return
-}
-
-func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {
-	return
-}
-
-func MakeDisplayParams(dispatch int16, params ...interface{}) DISPPARAMS {
-	var dispparams DISPPARAMS
-
-	if dispatch&DISPATCH_PROPERTYPUT != 0 {
-		dispnames := [1]int32{DISPID_PROPERTYPUT}
-		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(&dispnames[0]))
-		dispparams.cNamedArgs = 1
-	} else if dispatch&DISPATCH_PROPERTYPUTREF != 0 {
-		dispnames := [1]int32{DISPID_PROPERTYPUT}
-		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(&dispnames[0]))
-		dispparams.cNamedArgs = 1
-	}
-
-	var vargs []VARIANT
-	if len(params) > 0 {
-		vargs = make([]VARIANT, len(params))
-		for i, v := range params {
-			//n := len(params)-i-1
-			n := len(params) - i - 1
-			VariantInit(&vargs[n])
-			switch vv := v.(type) {
-			case bool:
-				if vv {
-					vargs[n] = NewVariant(VT_BOOL, 0xffff)
-				} else {
-					vargs[n] = NewVariant(VT_BOOL, 0)
-				}
-			case *bool:
-				vargs[n] = NewVariant(VT_BOOL|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*bool)))))
-			case uint8:
-				vargs[n] = NewVariant(VT_UI1, int64(v.(uint8)))
-			case *uint8:
-				vargs[n] = NewVariant(VT_UI1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint8)))))
-			case int8:
-				vargs[n] = NewVariant(VT_I1, int64(v.(int8)))
-			case *int8:
-				vargs[n] = NewVariant(VT_I1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int8)))))
-			case int16:
-				vargs[n] = NewVariant(VT_I2, int64(v.(int16)))
-			case *int16:
-				vargs[n] = NewVariant(VT_I2|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int16)))))
-			case uint16:
-				vargs[n] = NewVariant(VT_UI2, int64(v.(uint16)))
-			case *uint16:
-				vargs[n] = NewVariant(VT_UI2|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint16)))))
-			case int32:
-				vargs[n] = NewVariant(VT_I4, int64(v.(int32)))
-			case *int32:
-				vargs[n] = NewVariant(VT_I4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int32)))))
-			case uint32:
-				vargs[n] = NewVariant(VT_UI4, int64(v.(uint32)))
-			case *uint32:
-				vargs[n] = NewVariant(VT_UI4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint32)))))
-			case int64:
-				vargs[n] = NewVariant(VT_I8, int64(v.(int64)))
-			case *int64:
-				vargs[n] = NewVariant(VT_I8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int64)))))
-			case uint64:
-				vargs[n] = NewVariant(VT_UI8, int64(uintptr(v.(uint64))))
-			case *uint64:
-				vargs[n] = NewVariant(VT_UI8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint64)))))
-			case int:
-				vargs[n] = NewVariant(VT_I4, int64(v.(int)))
-			case *int:
-				vargs[n] = NewVariant(VT_I4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int)))))
-			case uint:
-				vargs[n] = NewVariant(VT_UI4, int64(v.(uint)))
-			case *uint:
-				vargs[n] = NewVariant(VT_UI4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint)))))
-			case float32:
-				vargs[n] = NewVariant(VT_R4, *(*int64)(unsafe.Pointer(&vv)))
-			case *float32:
-				vargs[n] = NewVariant(VT_R4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float32)))))
-			case float64:
-				vargs[n] = NewVariant(VT_R8, *(*int64)(unsafe.Pointer(&vv)))
-			case *float64:
-				vargs[n] = NewVariant(VT_R8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float64)))))
-			case *big.Int:
-				vargs[n] = NewVariant(VT_DECIMAL, v.(*big.Int).Int64())
-			case string:
-				vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(v.(string))))))
-			case *string:
-				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*string)))))
-			case time.Time:
-				s := vv.Format("2006-01-02 15:04:05")
-				vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(s)))))
-			case *time.Time:
-				s := vv.Format("2006-01-02 15:04:05")
-				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(&s))))
-			case *ole.IDispatch:
-				vargs[n] = NewVariant(VT_DISPATCH, int64(uintptr(unsafe.Pointer(v.(*ole.IDispatch)))))
-			case **ole.IDispatch:
-				vargs[n] = NewVariant(VT_DISPATCH|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(**ole.IDispatch)))))
-			case nil:
-				vargs[n] = NewVariant(VT_NULL, 0)
-			case *VARIANT:
-				vargs[n] = NewVariant(VT_VARIANT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*VARIANT)))))
-			case []byte:
-				safeByteArray := safeArrayFromByteSlice(v.([]byte))
-				vargs[n] = NewVariant(VT_ARRAY|VT_UI1, int64(uintptr(unsafe.Pointer(safeByteArray))))
-				defer VariantClear(&vargs[n])
-			case []string:
-				safeByteArray := safeArrayFromStringSlice(v.([]string))
-				vargs[n] = NewVariant(VT_ARRAY|VT_BSTR, int64(uintptr(unsafe.Pointer(safeByteArray))))
-				defer VariantClear(&vargs[n])
-			default:
-				panic("unknown type")
-			}
-		}
-		dispparams.rgvarg = uintptr(unsafe.Pointer(&vargs[0]))
-		dispparams.cArgs = uint32(len(params))
-	}
-
-	return dispparams
-}
-
-func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
+func InvokeOnIDispatch(obj *IDispatchAddresses, displayId int32, dispatch int16, params ...*VARIANT) (result *VARIANT, err error) {
 	dispParams := MakeDisplayParams(dispatch, params...)
 	result = new(VARIANT)
 	var excepInfo EXCEPINFO
 	VariantInit(result)
 	hr, _, _ := syscall.Syscall9(
-		disp.invoke,
+		obj.InvokeAddress(),
 		9,
-		uintptr(unsafe.Pointer(disp)),
-		uintptr(dispid),
-		uintptr(unsafe.Pointer(IID_NULL)),
+		uintptr(unsafe.Pointer(obj)),
+		uintptr(displayId),
+		uintptr(unsafe.Pointer(&IID_NULL)),
 		uintptr(GetUserDefaultLCID()),
 		uintptr(dispatch),
 		uintptr(unsafe.Pointer(&dispParams)),
-		uintptr(unsafe.Pointer(result)),
+		uintptr(unsafe.Pointer(&result)),
 		uintptr(unsafe.Pointer(&excepInfo)),
 		0)
 	if hr != 0 {
@@ -429,70 +327,25 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		excepInfo.Clear()
 		err = errors.Join(windows.Errno(hr), errors.New(excepInfo.description))
 	}
-	for i, varg := range vargs {
-		n := len(params) - i - 1
-		if varg.VT == VT_BSTR && varg.Val != 0 {
-			SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
-		}
-		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
-			*(params[n].(*string)) = windows.UTF16PtrToString(*(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
-		}
-	}
 	return
 }
 
-// CallMethod calls method on IDispatch with parameters.
-func CallMethod(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, DISPATCH_METHOD, params)
-}
+func MakeDisplayParams(dispatch int16, params ...*VARIANT) DISPPARAMS {
+	var dispparams DISPPARAMS
 
-// MustCallMethod calls method on IDispatch with parameters or panics.
-func MustCallMethod(disp *IDispatch, name string, params ...interface{}) (result *VARIANT) {
-	r, err := CallMethod(disp, name, params...)
-	if err != nil {
-		panic(err.Error())
+	if dispatch&DISPATCH_PROPERTYPUT != 0 {
+		dispnames := [1]int32{DISPID_PROPERTYPUT}
+		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(unsafe.SliceData(dispnames)))
+		dispparams.cNamedArgs = 1
+	} else if dispatch&DISPATCH_PROPERTYPUTREF != 0 {
+		dispnames := [1]int32{DISPID_PROPERTYPUT}
+		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(unsafe.SliceData(dispnames)))
+		dispparams.cNamedArgs = 1
 	}
-	return r
-}
-
-// GetProperty retrieves property from IDispatch.
-func GetProperty(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYGET, params)
-}
-
-// MustGetProperty retrieves property from IDispatch or panics.
-func MustGetProperty(disp *IDispatch, name string, params ...interface{}) (result *VARIANT) {
-	r, err := GetProperty(disp, name, params...)
-	if err != nil {
-		panic(err.Error())
+	if len(params) > 0 {
+		dispparams.rgvarg = uintptr(unsafe.Pointer(unsafe.SliceData(params)))
+		dispparams.cArgs = uint32(len(params))
 	}
-	return r
-}
 
-// PutProperty mutates property.
-func PutProperty(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYPUT, params)
-}
-
-// MustPutProperty mutates property or panics.
-func MustPutProperty(disp *IDispatch, name string, params ...interface{}) (result *VARIANT) {
-	r, err := PutProperty(disp, name, params...)
-	if err != nil {
-		panic(err.Error())
-	}
-	return r
-}
-
-// PutPropertyRef mutates property reference.
-func PutPropertyRef(disp *IDispatch, name string, params ...interface{}) (result *VARIANT, err error) {
-	return disp.InvokeWithOptionalArgs(name, DISPATCH_PROPERTYPUTREF, params)
-}
-
-// MustPutPropertyRef mutates property reference or panics.
-func MustPutPropertyRef(disp *IDispatch, name string, params ...interface{}) (result *VARIANT) {
-	r, err := PutPropertyRef(disp, name, params...)
-	if err != nil {
-		panic(err.Error())
-	}
-	return r
+	return dispparams
 }

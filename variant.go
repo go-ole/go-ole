@@ -76,6 +76,107 @@ func WrapVariant[T any](val T) (*VARIANT, error) {
 	return callback(val), nil
 }
 
+//func MarshalDispatchParams(params ...interface{}) ([]VARIANT, error) {
+//	var vargs []VARIANT
+//	if len(params) > 0 {
+//		vargs = make([]VARIANT, len(params))
+//		for i, v := range params {
+//			//n := len(params)-i-1
+//			n := len(params) - i - 1
+//			VariantInit(&vargs[n])
+//			switch vv := v.(type) {
+//			case bool:
+//				if vv {
+//					vargs[n] = NewVariant(VT_BOOL, 0xffff)
+//				} else {
+//					vargs[n] = NewVariant(VT_BOOL, 0)
+//				}
+//			case *bool:
+//				vargs[n] = NewVariant(VT_BOOL|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*bool)))))
+//			case uint8:
+//				vargs[n] = NewVariant(VT_UI1, int64(v.(uint8)))
+//			case *uint8:
+//				vargs[n] = NewVariant(VT_UI1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint8)))))
+//			case int8:
+//				vargs[n] = NewVariant(VT_I1, int64(v.(int8)))
+//			case *int8:
+//				vargs[n] = NewVariant(VT_I1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int8)))))
+//			case int16:
+//				vargs[n] = NewVariant(VT_I2, int64(v.(int16)))
+//			case *int16:
+//				vargs[n] = NewVariant(VT_I2|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int16)))))
+//			case uint16:
+//				vargs[n] = NewVariant(VT_UI2, int64(v.(uint16)))
+//			case *uint16:
+//				vargs[n] = NewVariant(VT_UI2|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint16)))))
+//			case int32:
+//				vargs[n] = NewVariant(VT_I4, int64(v.(int32)))
+//			case *int32:
+//				vargs[n] = NewVariant(VT_I4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int32)))))
+//			case uint32:
+//				vargs[n] = NewVariant(VT_UI4, int64(v.(uint32)))
+//			case *uint32:
+//				vargs[n] = NewVariant(VT_UI4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint32)))))
+//			case int64:
+//				vargs[n] = NewVariant(VT_I8, int64(v.(int64)))
+//			case *int64:
+//				vargs[n] = NewVariant(VT_I8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int64)))))
+//			case uint64:
+//				vargs[n] = NewVariant(VT_UI8, int64(uintptr(v.(uint64))))
+//			case *uint64:
+//				vargs[n] = NewVariant(VT_UI8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint64)))))
+//			case int:
+//				vargs[n] = NewVariant(VT_I4, int64(v.(int)))
+//			case *int:
+//				vargs[n] = NewVariant(VT_I4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int)))))
+//			case uint:
+//				vargs[n] = NewVariant(VT_UI4, int64(v.(uint)))
+//			case *uint:
+//				vargs[n] = NewVariant(VT_UI4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint)))))
+//			case float32:
+//				vargs[n] = NewVariant(VT_R4, *(*int64)(unsafe.Pointer(&vv)))
+//			case *float32:
+//				vargs[n] = NewVariant(VT_R4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float32)))))
+//			case float64:
+//				vargs[n] = NewVariant(VT_R8, *(*int64)(unsafe.Pointer(&vv)))
+//			case *float64:
+//				vargs[n] = NewVariant(VT_R8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float64)))))
+//			case *big.Int:
+//				vargs[n] = NewVariant(VT_DECIMAL, v.(*big.Int).Int64())
+//			case string:
+//				vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(v.(string))))))
+//			case *string:
+//				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*string)))))
+//			case time.Time:
+//				s := vv.Format("2006-01-02 15:04:05")
+//				vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(s)))))
+//			case *time.Time:
+//				s := vv.Format("2006-01-02 15:04:05")
+//				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(&s))))
+//			case *ole.IDispatch:
+//				vargs[n] = NewVariant(VT_DISPATCH, int64(uintptr(unsafe.Pointer(v.(*ole.IDispatch)))))
+//			case **ole.IDispatch:
+//				vargs[n] = NewVariant(VT_DISPATCH|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(**ole.IDispatch)))))
+//			case nil:
+//				vargs[n] = NewVariant(VT_NULL, 0)
+//			case *VARIANT:
+//				vargs[n] = NewVariant(VT_VARIANT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*VARIANT)))))
+//			case []byte:
+//				safeByteArray := safeArrayFromByteSlice(v.([]byte))
+//				vargs[n] = NewVariant(VT_ARRAY|VT_UI1, int64(uintptr(unsafe.Pointer(safeByteArray))))
+//				defer VariantClear(&vargs[n])
+//			case []string:
+//				safeByteArray := safeArrayFromStringSlice(v.([]string))
+//				vargs[n] = NewVariant(VT_ARRAY|VT_BSTR, int64(uintptr(unsafe.Pointer(safeByteArray))))
+//				defer VariantClear(&vargs[n])
+//			default:
+//				panic("unknown type")
+//			}
+//		}
+//	}
+//	return vargs, nil
+//}
+
 // WrapParametersWithVariant converts arbitrary values to an array of *VARIANT.
 //
 // If the native type is unsupported, then you may need to call RegisterVariantConverter or RegisterToVariantConverter
@@ -109,48 +210,46 @@ func WrapParametersWithVariant(params ...any) (args []*VARIANT) {
 		}
 		args[n] = callback(val)
 
-		switch vv := v.(type) {
-		case int:
-			vargs[n] = NewVariant(VT_INT, int64(v.(int)))
-		case *int:
-			vargs[n] = NewVariant(VT_INT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int)))))
-		case uint:
-			vargs[n] = NewVariant(VT_UINT, int64(v.(uint)))
-		case *uint:
-			vargs[n] = NewVariant(VT_UINT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint)))))
-		case float32:
-			vargs[n] = NewVariant(VT_R4, *(*int64)(unsafe.Pointer(&vv)))
-		case *float32:
-			vargs[n] = NewVariant(VT_R4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float32)))))
-		case float64:
-			vargs[n] = NewVariant(VT_R8, *(*int64)(unsafe.Pointer(&vv)))
-		case *float64:
-			vargs[n] = NewVariant(VT_R8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float64)))))
-		case *big.Int:
-			vargs[n] = NewVariant(VT_DECIMAL, v.(*big.Int).Int64())
-		case string:
-			vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(v.(string))))))
-		case *string:
-			vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*string)))))
-		case *ole.IDispatch:
-			vargs[n] = NewVariant(VT_DISPATCH, int64(uintptr(unsafe.Pointer(v.(*ole.IDispatch)))))
-		case **ole.IDispatch:
-			vargs[n] = NewVariant(VT_DISPATCH|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(**ole.IDispatch)))))
-		case nil:
-			vargs[n] = NewVariant(VT_NULL, 0)
-		case *VARIANT:
-			vargs[n] = NewVariant(VT_VARIANT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*VARIANT)))))
-		case []byte:
-			safeByteArray := safeArrayFromByteSlice(v.([]byte))
-			vargs[n] = NewVariant(VT_ARRAY|VT_UI1, int64(uintptr(unsafe.Pointer(safeByteArray))))
-			defer VariantClear(&vargs[n])
-		case []string:
-			safeByteArray := safeArrayFromStringSlice(v.([]string))
-			vargs[n] = NewVariant(VT_ARRAY|VT_BSTR, int64(uintptr(unsafe.Pointer(safeByteArray))))
-			defer VariantClear(&vargs[n])
-		default:
-			panic("unknown type")
-		}
+		//switch vv := v.(type) {
+		//case int:
+		//	vargs[n] = NewVariant(VT_INT, int64(v.(int)))
+		//case *int:
+		//	vargs[n] = NewVariant(VT_INT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*int)))))
+		//case uint:
+		//	vargs[n] = NewVariant(VT_UINT, int64(v.(uint)))
+		//case *uint:
+		//	vargs[n] = NewVariant(VT_UINT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint)))))
+		//case float32:
+		//	vargs[n] = NewVariant(VT_R4, *(*int64)(unsafe.Pointer(&vv)))
+		//case *float32:
+		//	vargs[n] = NewVariant(VT_R4|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float32)))))
+		//case float64:
+		//	vargs[n] = NewVariant(VT_R8, *(*int64)(unsafe.Pointer(&vv)))
+		//case *float64:
+		//	vargs[n] = NewVariant(VT_R8|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*float64)))))
+		//case *big.Int:
+		//	vargs[n] = NewVariant(VT_DECIMAL, v.(*big.Int).Int64())
+		//case string:
+		//	vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(v.(string))))))
+		//case *string:
+		//	vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*string)))))
+		//case *ole.IDispatch:
+		//	vargs[n] = NewVariant(VT_DISPATCH, int64(uintptr(unsafe.Pointer(v.(*ole.IDispatch)))))
+		//case **ole.IDispatch:
+		//	vargs[n] = NewVariant(VT_DISPATCH|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(**ole.IDispatch)))))
+		//case *VARIANT:
+		//	vargs[n] = NewVariant(VT_VARIANT|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*VARIANT)))))
+		//case []byte:
+		//	safeByteArray := safeArrayFromByteSlice(v.([]byte))
+		//	vargs[n] = NewVariant(VT_ARRAY|VT_UI1, int64(uintptr(unsafe.Pointer(safeByteArray))))
+		//	defer VariantClear(&vargs[n])
+		//case []string:
+		//	safeByteArray := safeArrayFromStringSlice(v.([]string))
+		//	vargs[n] = NewVariant(VT_ARRAY|VT_BSTR, int64(uintptr(unsafe.Pointer(safeByteArray))))
+		//	defer VariantClear(&vargs[n])
+		//default:
+		//	panic("unknown type")
+		//}
 	}
 
 	return
