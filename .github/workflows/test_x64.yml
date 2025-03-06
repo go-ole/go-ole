@@ -3,23 +3,6 @@ name: Test 64-bit Architectures
 on: [pull_request, push, pull_request_target]
 
 jobs:
-  download:
-    runs-on: windows-latest
-    permissions:
-      contents: read
-    steps:
-      - name: 'Download COM Test Release'
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: 'go-ole/test-com-server'
-          latest: true
-          fileName: 'test-com-server-x64.zip'
-          out-file-path: 'test-com-server'
-          zipBall: true
-          extract: true
-      - name: 'Register Assembly'
-        run: 'c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\x64\Release\TestCOMServer.dll'
-
   build:
     runs-on: windows-latest
     needs: download
@@ -33,6 +16,15 @@ jobs:
     env:
       GOARCH: ${{ matrix.arch }}
     steps:
+      - name: 'Download COM Test Release'
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'go-ole/test-com-server'
+          latest: true
+          fileName: 'test-com-server-x64.zip'
+          out-file-path: 'test-com-server'
+          zipBall: true
+          extract: true
       - name: 'Register Assembly'
         run: 'c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\x64\Release\TestCOMServer.dll'
       - name: 'Checkout Project'

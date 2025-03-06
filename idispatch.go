@@ -239,7 +239,7 @@ func (obj *IDispatch) CallMethod(name string, params ...*VARIANT) (*VARIANT, err
 }
 
 // MustCallMethod calls method on IDispatch with parameters or panics.
-func (obj *IDispatch) MustCallMethod(name string, params ...interface{}) (result *VARIANT) {
+func (obj *IDispatch) MustCallMethod(name string, params ...*VARIANT) (result *VARIANT) {
 	result, err := obj.CallMethod(name, params...)
 	if err != nil {
 		panic(err.Error())
@@ -281,7 +281,7 @@ func (obj *IDispatch) MustPutProperty(name string, params ...*VARIANT) (result *
 
 // PutPropertyRef mutates property reference.
 func (obj *IDispatch) PutPropertyRef(name string, params ...*VARIANT) (result *VARIANT, err error) {
-	return obj.Invoke(name, DISPATCH_PROPERTYPUTREF, params)
+	return obj.Invoke(name, DISPATCH_PROPERTYPUTREF, params...)
 }
 
 // MustPutPropertyRef mutates property reference or panics.
@@ -293,7 +293,7 @@ func (obj *IDispatch) MustPutPropertyRef(name string, params ...*VARIANT) (resul
 	return
 }
 
-func QueryIDispatchFromIUnknown(unknown *IsIUnknown) (dispatch *IDispatch, err error) {
+func QueryIDispatchFromIUnknown(unknown IsIUnknown) (dispatch *IDispatch, err error) {
 	if unknown == nil {
 		return nil, ComInterfaceIsNilPointer
 	}
@@ -305,7 +305,7 @@ func QueryIDispatchFromIUnknown(unknown *IsIUnknown) (dispatch *IDispatch, err e
 	return
 }
 
-func InvokeOnIDispatch(obj *IDispatchAddresses, displayId int32, dispatch int16, params ...*VARIANT) (result *VARIANT, err error) {
+func InvokeOnIDispatch(obj IDispatchAddresses, displayId int32, dispatch int16, params ...*VARIANT) (result *VARIANT, err error) {
 	dispParams := MakeDisplayParams(dispatch, params...)
 	result = new(VARIANT)
 	var excepInfo EXCEPINFO
