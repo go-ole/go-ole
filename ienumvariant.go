@@ -118,12 +118,12 @@ func (obj *IEnumVariant) Next(numRetrieve uint) (ret []*VARIANT) {
 	return
 }
 
-func (obj *IEnumVariant) ForEach(callback func(v *VARIANT) error) error {
+func (obj *IEnumVariant) ForEach(callback func(v *VARIANT) error) (err error) {
 	obj.Reset()
 	items := obj.Next(100)
 	for len(items) > 0 {
 		for _, item := range items {
-			err = callback(&item)
+			err = callback(item)
 			if err != nil {
 				return err
 			}
