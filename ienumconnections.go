@@ -113,7 +113,7 @@ func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) 
 		0)
 
 	// New unsafe array conversion since Go 1.17.
-	connectData = (*[length]ConnectData)(unsafe.Pointer(ptr))[:]
+	connectData = (*[length]ConnectData)(unsafe.Pointer(array))[:]
 
 	return
 }
