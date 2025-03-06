@@ -35,19 +35,19 @@ func (obj *IProvideClassInfo) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
-func (v *IProvideClassInfo) GetClassInfo() (info *ITypeInfo, err error) {
+func (obj *IProvideClassInfo) GetClassInfo() (info *ITypeInfo, err error) {
 	hr, _, _ := syscall.Syscall(
 		v.getClassInfo,
 		2,
-		uintptr(unsafe.Pointer(v)),
+		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&info)),
 		0)
 
-	if hr == windows.S_OK {
+	if windows.Handle(hr) == windows.S_OK {
 		return
 	}
 
-	err = hr
+	err = windows.Errno(hr)
 
 	return
 }

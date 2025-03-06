@@ -88,7 +88,7 @@ func GetInterfaceIdsOnIInspectable(obj IsIInspectable) (interfaceIds []windows.G
 	)
 
 	if windows.Handle(hr) != windows.S_OK {
-		err = hr
+		err = windows.Errno(hr)
 		return
 	}
 	defer TaskMemoryFreePointer(unsafe.Pointer(&array))
@@ -108,7 +108,7 @@ func GetRuntimeClassNameOnIInspectable(obj IsIInspectable) (s string, err error)
 		0)
 
 	if windows.Handle(hr) != windows.S_OK {
-		err = hr
+		err = windows.Errno(hr)
 		return
 	}
 	defer DeleteHString(hString)
