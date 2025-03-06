@@ -3,6 +3,7 @@
 package ole
 
 import (
+	"errors"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -17,6 +18,14 @@ var (
 	procCreateDispTypeInfo   = modoleaut32.NewProc("CreateDispTypeInfo")
 	procCreateStdDispatch    = modoleaut32.NewProc("CreateStdDispatch")
 	procCopyMemory           = modkernel32.NewProc("RtlMoveMemory")
+)
+
+var (
+	ComInterfaceNotImplementedError = errors.New("IUnknown: COM Interface is not castable to attempted COM interface")
+	ComInterfaceIsNullPointer       = errors.New("IUnknown: COM Interface is null pointer (this is a bug, please report this error)")
+	ComInterfaceIsNilPointer        = errors.New("IUnknown: COM Interface is nil")
+	InvalidArgumentComError         = errors.New("IUnknown: Invalid argument")
+	OutOfMemoryComError             = errors.New("out of Memory")
 )
 
 const (
@@ -171,7 +180,7 @@ func CoInitializeSecurity(cAuthSvc int32,
 }
 
 // CreateInstance of single uninitialized object with GUID.
-func CreateInstance[T IsIUnknown](clsid windows.GUID, iid windows.GUID) (unk *T, err error) {
+func CreateInstance[T ~IsIUnknown](clsid windows.GUID, iid windows.GUID) (unk *T, err error) {
 	hr, _, _ := procCoCreateInstance.Call(
 		uintptr(unsafe.Pointer(&clsid)),
 		0,
@@ -256,4 +265,38 @@ func CreateDispTypeInfo(idata *INTERFACEDATA) (pptinfo *IUnknown, err error) {
 // RtlMoveMemory moves location of a block of memory.
 func RtlMoveMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
 	procCopyMemory.Call(uintptr(dest), uintptr(src), uintptr(length))
+}
+
+// CreateObject creates object from programID based on interface type.
+//
+// Program ID can be either program ID or application string.
+func CreateInstanceFromString[T ~IsIUnknown](programID string, interfaceId windows.GUID) (obj *T, err error) {
+	classID, err := LookupClassId(programID)
+	if err != nil {
+		return
+	}
+
+	obj, err = CreateInstance[T](classID, interfaceId)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// GetObject retrieves active object for program ID and interface ID based on interface type.
+//
+// Program ID can be either program ID or application string.
+func GetActiveObjectFromString[T ~IsIUnknown](programID string, interfaceId windows.GUID) (obj *T, err error) {
+	classID, err := LookupClassId(programID)
+	if err != nil {
+		return
+	}
+
+	obj, err = GetActiveObject[T](classID, interfaceId)
+	if err != nil {
+		return
+	}
+
+	return
 }

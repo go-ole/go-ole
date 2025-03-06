@@ -10,12 +10,6 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-var (
-	ComInterfaceNotImplementedError = errors.New("IUnknown: COM Interface is not castable to attempted COM interface")
-	ComInterfaceIsNullPointer       = errors.New("IUnknown: COM Interface is null pointer (this is a bug, please report this error)")
-	ComInterfaceIsNilPointer        = errors.New("InvalidArgument: COM Interface is nil")
-)
-
 type IsIUnknown interface {
 	QueryInterfaceAddress() uintptr
 	AddRefAddress() uintptr

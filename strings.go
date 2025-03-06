@@ -99,7 +99,7 @@ func SysAllocStringLen(v string) (ss *uint16) {
 func SysFreeString(v *uint16) (err error) {
 	hr, _, _ := procSysFreeString.Call(uintptr(unsafe.Pointer(v)))
 	if hr != 0 {
-		err = NewError(hr)
+		err = windows.Errno(hr)
 	}
 	return
 }

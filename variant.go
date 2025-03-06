@@ -339,7 +339,8 @@ func RegisterVariantConverters() {
 	conversions.to[reflect.TypeFor[*float64]().Name()] = Float64PtrToVariant
 
 	conversions.from[VT_BSTR] = VariantBStrToString
-	conversions.from[VT_BSTR|VT_BYREF] = VariantBStrPtrToString
+	conversions.from[VT_BSTR|VT_BYREF] = VariantBStrToString
+	conversions.to[reflect.TypeFor[string]().Name()] = StringToBStrVariant
 
 	conversions.lock.Unlock()
 }
@@ -735,5 +736,11 @@ func Float64ToVariant(i any) *VARIANT {
 }
 
 func VariantBStrToString(variant *VARIANT) any {
+	return windows.UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(variant.Val))))
+}
 
+func StringToBStrVariant(i any) *VARIANT {
+	str := i.(string)
+	ptr := windows.UTF16PtrFromString(str)
+	return &VARIANT{VT: VT_BSTR, Val: int64(uintptr(unsafe.Pointer(&ptr)))}
 }

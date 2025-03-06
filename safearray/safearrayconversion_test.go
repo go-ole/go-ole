@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// This tests more than one function. It tests all of the functions needed in order to retrieve an
+// This tests more than one function. It tests all functions needed in order to retrieve an
 // SafeArray populated with Strings.
 func TestSafeArrayConversionString(t *testing.T) {
 	CoInitialize(0)
