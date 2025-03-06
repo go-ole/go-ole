@@ -107,7 +107,7 @@ func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) 
 		4,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numRetrieve),
-		uintptr(unsafe.Pointer(&array)),
+		uintptr(unsafe.Pointer(&array[0])),
 		uintptr(unsafe.Pointer(&length)),
 		0,
 		0)
@@ -118,7 +118,7 @@ func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) 
 	return
 }
 
-func (v *IEnumConnections) ForEach(callback func(v *VARIANT) error) (err error) {
+func (v *IEnumConnections) ForEach(callback func(v *ConnectData) error) (err error) {
 	v.Reset()
 	items := v.Next(100)
 	for len(items) > 0 {
