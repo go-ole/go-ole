@@ -100,7 +100,7 @@ func (obj *IEnumConnections) Skip(numSkip uint) bool {
 }
 
 func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) {
-	var length int
+	var length int64
 	var array []ConnectData
 	syscall.Syscall6(
 		obj.next,
