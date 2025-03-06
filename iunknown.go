@@ -57,7 +57,7 @@ func QueryInterfaceOnIUnknown[T any](unknown IsIUnknown, interfaceID windows.GUI
 		uintptr(unsafe.Pointer(&interfaceID)),
 		uintptr(unsafe.Pointer(&ret)))
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return out, nil
 	case windows.E_NOINTERFACE:

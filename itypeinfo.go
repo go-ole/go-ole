@@ -53,7 +53,7 @@ func (obj *ITypeInfo) GetTypeAttr() (tattr *TYPEATTR, err error) {
 	hr, _, _ := syscall.Syscall(
 		uintptr(obj.getTypeAttr),
 		2,
-		uintptr(unsafe.Pointer(v)),
+		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&tattr)),
 		0)
 	if hr != 0 {
