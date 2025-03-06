@@ -190,7 +190,7 @@ func WrapParametersWithVariant(params ...any) (args []*VARIANT) {
 	}
 
 	args = make([]*VARIANT, len(params))
-	errs = make([]error, len(params))
+	errs := make([]error, len(params))
 
 	for i, v := range params {
 		n := len(params) - i - 1
