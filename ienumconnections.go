@@ -5,6 +5,7 @@ package ole
 import (
 	"golang.org/x/sys/windows"
 	"syscall"
+	"unsafe"
 )
 
 type ConnectData struct {
@@ -52,7 +53,7 @@ func (obj *IEnumConnections) Clone() (cloned *IEnumConnections, err error) {
 		uintptr(unsafe.Pointer(&cloned)),
 		0)
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return
 	case windows.E_OUTOFMEMORY:
@@ -70,7 +71,7 @@ func (obj *IEnumConnections) Reset() bool {
 		0,
 		0)
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return true
 	case windows.S_FALSE:
@@ -88,7 +89,7 @@ func (obj *IEnumConnections) Skip(numSkip uint) bool {
 		uintptr(numSkip),
 		0)
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return true
 	case windows.S_FALSE:
