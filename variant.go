@@ -206,7 +206,7 @@ func WrapParametersWithVariant(params ...any) (args []*VARIANT) {
 		if !ok {
 			panic(errors.New(typeName + " is not registered for conversion to the *VARIANT type"))
 		}
-		args[n] = callback(val)
+		args[n] = callback(v)
 
 		//switch vv := v.(type) {
 		//case int:
