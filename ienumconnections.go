@@ -46,7 +46,7 @@ func (obj *IEnumConnections) Release() uint32 {
 
 func (obj *IEnumConnections) Clone() (cloned *IEnumConnections, err error) {
 	hr, _, _ := syscall.Syscall(
-		v.clone,
+		obj.clone,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(&cloned)),
@@ -82,7 +82,7 @@ func (obj *IEnumConnections) Reset() bool {
 
 func (obj *IEnumConnections) Skip(numSkip uint) bool {
 	hr, _, _ := syscall.Syscall(
-		enum.skip,
+		obj.skip,
 		2,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numSkip),
@@ -102,7 +102,7 @@ func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) 
 	var length uint
 	var array []ConnectData
 	hr, _, _ := syscall.Syscall6(
-		v.next,
+		obj.next,
 		4,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(numRetrieve),
