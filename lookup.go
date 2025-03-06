@@ -39,7 +39,10 @@ var (
 //
 // COM function: CLSIDFromProgID
 func LookupClassIdByProgramId(programId string) (classId windows.GUID, err error) {
-	lookup := windows.UTF16PtrFromString(programId)
+	lookup, err := windows.UTF16PtrFromString(programId)
+	if err != nil {
+		return
+	}
 
 	hr, _, _ := procCLSIDFromProgID.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
 	switch windows.Handle(hr) {
@@ -61,10 +64,13 @@ func LookupClassIdByProgramId(programId string) (classId windows.GUID, err error
 //
 // COM function: CLSIDFromString
 func LookupClassIdByGUIDString(guid string) (classId windows.GUID, err error) {
-	lookup := windows.UTF16PtrFromString(guid)
+	lookup, err := windows.UTF16PtrFromString(guid)
+	if err != nil {
+		return
+	}
 	hr, _, _ := procCLSIDFromString.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
 	switch windows.Handle(hr) {
-	case windows.NOERROR:
+	case windows.Handle(windows.NOERROR):
 		return
 	case windows.CO_E_CLASSSTRING:
 		err = ImproperlyFormattedGUID
@@ -101,7 +107,10 @@ func ClassIDFrom(lookup string) (classID windows.GUID, err error) {
 //
 // COM function: IIDFromString
 func InterfaceIdFromString(interfaceId string) (classId windows.GUID, err error) {
-	lookup := windows.UTF16PtrFromString(interfaceId)
+	lookup, err := windows.UTF16PtrFromString(interfaceId)
+	if err != nil {
+		return
+	}
 	hr, _, _ := procIIDFromString.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
 	if hr != 0 {
 		err = windows.Errno(hr)
@@ -119,7 +128,7 @@ func StringFromClassId(classId windows.GUID) (str string, err error) {
 		err = windows.Errno(hr)
 		return
 	}
-	str = windows.UTF16PtrToString(p)
+	str, err = windows.UTF16PtrToString(p)
 	return
 }
 
@@ -131,7 +140,8 @@ func StringFromInterfaceId(iid windows.GUID) (str string, err error) {
 	hr, _, _ := procStringFromIID.Call(uintptr(unsafe.Pointer(&iid)), uintptr(unsafe.Pointer(&p)))
 	if hr != 0 {
 		err = windows.Errno(hr)
+		return
 	}
-	str = windows.UTF16PtrToString(p)
+	str, err = windows.UTF16PtrToString(p)
 	return
 }
