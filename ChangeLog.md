@@ -24,26 +24,19 @@
 
 * `CoInitializeEx` is now `Initialize`.
 * `CoUninitialize` is now `Uninitialize`.
-* `CLSIDFromProgID` is now `LookupClassIdByProgramId`.
-* `CLSIDFromString` is now `LookupClassIdByGUIDString`.
+* `CLSIDFromProgID` is now `ClassIdFromProgramId`.
+* `CLSIDFromString` is now `ClassIdFromGuidString`.
 * `IIDFromString` is now `InterfaceIdFromString`.
-* `StringFromCLSID` is now `StringFromClassId`.
-* `StringFromIID` is now `StringFromInterfaceId`.
+* `StringFromCLSID` is now `ClassIdToString`.
+* `StringFromIID` is now `InterfaceIdToString`.
 
 ### Removed
 
 * `GUID`. Uses `golang.org/x/sys/windows` `GUID` instead.
 * `CoInitialize`. Use `Initialize()` instead.
-* Removed WinRT (**TODO** add repo it has been moved to)
-  * `RoInitialize`. Use ``
-  * `RoActivateInstance`. Use ``
-  * `RoGetActivationFactory`. Use ``
-  * `NewHString`. Use ``
-  * `DeleteHString`. Use ``
-  * `HString`. Use ``
-  * `OleError` is gone. Uses `golang.org/x/sys/windows` package and its types which also implement `error`.
+* `OleError` is gone. Uses `golang.org/x/sys/windows` package and its types which also implement `error`.
   
-    You may also use `GetErrorDescription` to get the error message if the `sys/windows` does not provide this.
+  You may also use `GetErrorDescription` to get the error message if the `sys/windows` does not provide this.
 
 # Version 1.x.x
 

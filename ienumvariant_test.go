@@ -19,7 +19,7 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	}
 	defer Uninitialize()
 
-	classID, err = ClassIDFrom("WbemScripting.SWbemLocator")
+	classID, err = ClassIdFromString("WbemScripting.SWbemLocator")
 	if err != nil {
 		t.Errorf("CreateObject WbemScripting.SWbemLocator returned with %v", err)
 	}

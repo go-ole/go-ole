@@ -25,7 +25,7 @@ var (
 	UnableToWriteClassIdToRegistry = errors.New("ole: unable to write class id from program id")
 )
 
-// LookupClassIdByProgramId retrieves Class Identifier with the given Program Identifier.
+// ClassIdFromProgramId retrieves Class Identifier with the given Program Identifier.
 //
 // The Programmatic Identifier must be registered, because it will be looked up
 // in the Windows Registry. The registry entry has the following keys: CLSID,
@@ -38,13 +38,14 @@ var (
 // "Program.Component.Version" with version being optional.
 //
 // COM function: CLSIDFromProgID
-func LookupClassIdByProgramId(programId string) (classId windows.GUID, err error) {
+func ClassIdFromProgramId(programId string) (classId windows.GUID, err error) {
 	lookup, err := windows.UTF16PtrFromString(programId)
 	if err != nil {
 		return
 	}
 
 	hr, _, _ := procCLSIDFromProgID.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
+
 	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return
@@ -58,17 +59,19 @@ func LookupClassIdByProgramId(programId string) (classId windows.GUID, err error
 	return
 }
 
-// LookupClassIdByGUIDString retrieves Class ID from string representation.
+// ClassIdFromGuidString retrieves Class ID from string representation.
 //
 // This is technically the string version of the GUID and will convert the string to object.
 //
 // COM function: CLSIDFromString
-func LookupClassIdByGUIDString(guid string) (classId windows.GUID, err error) {
+func ClassIdFromGuidString(guid string) (classId windows.GUID, err error) {
 	lookup, err := windows.UTF16PtrFromString(guid)
 	if err != nil {
 		return
 	}
+
 	hr, _, _ := procCLSIDFromString.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
+
 	switch windows.Handle(hr) {
 	case windows.Handle(windows.NOERROR):
 		return
@@ -82,15 +85,15 @@ func LookupClassIdByGUIDString(guid string) (classId windows.GUID, err error) {
 	return
 }
 
-// LookupClassId retrieves class ID whether given is program ID or application string.
+// ClassIDFromString retrieves class ID whether given is program ID or application string.
 //
 // Helper that provides check against both Class ID from Program ID and Class ID from string. It is
 // faster, if you know which you are using, to use the individual functions, but this will check
 // against available functions for you.
-func LookupClassId(lookup string) (classId windows.GUID, err error) {
-	classId, err = LookupClassIdByProgramId(lookup)
+func ClassIdFromString(lookup string) (classID windows.GUID, err error) {
+	classId, err = ClassIdFromProgramId(lookup)
 	if err != nil {
-		classId, err = LookupClassIdByGUIDString(lookup)
+		classId, err = ClassIdFromGuidString(lookup)
 		if err != nil {
 			return
 		}
@@ -98,12 +101,7 @@ func LookupClassId(lookup string) (classId windows.GUID, err error) {
 	return
 }
 
-// ClassIDFrom retrieves class ID whether given is program ID or application string.
-func ClassIDFrom(lookup string) (classID windows.GUID, err error) {
-	return LookupClassId(lookup)
-}
-
-// InterfaceIdFromString returns GUID from value returned by StringFromInterfaceId.
+// InterfaceIdFromString returns GUID from value returned by InterfaceIdToString.
 //
 // COM function: IIDFromString
 func InterfaceIdFromString(interfaceId string) (classId windows.GUID, err error) {
@@ -118,30 +116,30 @@ func InterfaceIdFromString(interfaceId string) (classId windows.GUID, err error)
 	return
 }
 
-// StringFromClassId returns GUID formated string from GUID object.
+// ClassIdToString returns GUID formated string from GUID object.
 //
 // COM function: StringFromCLSID
-func StringFromClassId(classId windows.GUID) (str string, err error) {
+func ClassIdToString(classId windows.GUID) (str string, err error) {
 	var p *uint16
-	hr, _, _ := procStringFromCLSID.Call(uintptr(unsafe.Pointer(classId)), uintptr(unsafe.Pointer(&p)))
+	hr, _, _ := procStringFromCLSID.Call(uintptr(unsafe.Pointer(&classId)), uintptr(unsafe.Pointer(&p)))
 	if hr != 0 {
 		err = windows.Errno(hr)
 		return
 	}
-	str, err = windows.UTF16PtrToString(p)
+	str = windows.UTF16PtrToString(p)
 	return
 }
 
-// StringFromInterfaceId returns GUID formatted string from GUID object.
+// InterfaceIdToString returns GUID formatted string from GUID object.
 //
 // COM function: StringFromIID
-func StringFromInterfaceId(iid windows.GUID) (str string, err error) {
+func InterfaceIdToString(iid windows.GUID) (str string, err error) {
 	var p *uint16
 	hr, _, _ := procStringFromIID.Call(uintptr(unsafe.Pointer(&iid)), uintptr(unsafe.Pointer(&p)))
 	if hr != 0 {
 		err = windows.Errno(hr)
 		return
 	}
-	str, err = windows.UTF16PtrToString(p)
+	str = windows.UTF16PtrToString(p)
 	return
 }
