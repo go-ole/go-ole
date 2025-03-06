@@ -28,8 +28,8 @@ func (v *VARIANT) Clear() error {
 // VariantInit initializes variant.
 func VariantInit(v *VARIANT) (err error) {
 	hr, _, _ := procVariantInit.Call(uintptr(unsafe.Pointer(v)))
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 	}
 	return
 }
@@ -37,8 +37,8 @@ func VariantInit(v *VARIANT) (err error) {
 // VariantClear clears value in Variant settings to VT_EMPTY.
 func VariantClear(v *VARIANT) (err error) {
 	hr, _, _ := procVariantClear.Call(uintptr(unsafe.Pointer(v)))
-	if hr != windows.S_OK {
-		err = hr
+	if hr != 0 {
+		err = windows.Errno(hr)
 	}
 	return
 }
@@ -341,6 +341,7 @@ func DeregisterToVariantConverter[T any]() error {
 // You must call this function before calling out to IDispatch.
 func RegisterVariantConverters() {
 	conversions.lock.Lock()
+	defer conversions.lock.Unlock()
 	conversions.from[VT_NULL] = VariantToNull
 	conversions.from[VT_EMPTY] = VariantToEmpty
 
@@ -440,8 +441,6 @@ func RegisterVariantConverters() {
 	conversions.from[VT_BSTR] = VariantBStrToString
 	conversions.from[VT_BSTR|VT_BYREF] = VariantBStrToString
 	conversions.to[reflect.TypeFor[string]().Name()] = StringToBStrVariant
-
-	conversions.lock.Unlock()
 }
 
 // MakeNullVariant is for creating an empty VARIANT with a null value.
