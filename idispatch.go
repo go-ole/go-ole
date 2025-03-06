@@ -165,7 +165,6 @@ func (obj *IDispatch) HasTypeInfo() bool {
 }
 
 func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
-	var ret uint
 	hr, _, _ := syscall.Syscall6(
 		obj.getTypeInfo,
 		4,
@@ -188,12 +187,12 @@ func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err e
 	for i := 0; i < len(names); i++ {
 		wNames[i], _ = windows.UTF16PtrFromString(names[i])
 	}
-	dispid = make([]int32, len(names))
+	dispid := make([]int32, len(names))
 	namelen := uint32(len(names))
 	hr, _, _ := syscall.Syscall6(
 		obj.getIDsOfNames,
 		6,
-		uintptr(unsafe.Pointer(dispatch)),
+		uintptr(unsafe.Pointer(obj)),
 		uintptr(unsafe.Pointer(IID_NULL)),
 		uintptr(unsafe.Pointer(&wNames[0])),
 		uintptr(namelen),

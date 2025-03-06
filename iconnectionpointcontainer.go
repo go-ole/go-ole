@@ -60,7 +60,7 @@ func QueryIConnectionPointContainerFromIUnknown(unknown IsIUnknown) (obj *IConne
 		return nil, ComInterfaceIsNilPointer
 	}
 
-	obj, err = QueryInterfaceOnIUnknown[*IConnectionPointContainer](unknown, IID_IConnectionPointContainer)
+	obj, err = QueryInterfaceOnIUnknown[IConnectionPointContainer](unknown, IID_IConnectionPointContainer)
 	if err != nil {
 		return nil, err
 	}
