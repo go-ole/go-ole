@@ -271,7 +271,7 @@ func RtlMoveMemory(dest unsafe.Pointer, src unsafe.Pointer, length uint32) {
 //
 // Program ID can be either program ID or application string.
 func CreateInstanceFromString[T IsIUnknown](programID string, interfaceId windows.GUID) (obj *T, err error) {
-	classID, err := LookupClassId(programID)
+	classID, err := ClassIdFromString(programID)
 	if err != nil {
 		return
 	}
@@ -288,7 +288,7 @@ func CreateInstanceFromString[T IsIUnknown](programID string, interfaceId window
 //
 // Program ID can be either program ID or application string.
 func GetActiveObjectFromString[T IsIUnknown](programID string, interfaceId windows.GUID) (obj *T, err error) {
-	classID, err := LookupClassId(programID)
+	classID, err := ClassIdFromString(programID)
 	if err != nil {
 		return
 	}
