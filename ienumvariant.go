@@ -53,7 +53,7 @@ func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 		uintptr(unsafe.Pointer(&cloned)),
 		0)
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return
 	case windows.E_OUTOFMEMORY:
@@ -71,7 +71,7 @@ func (obj *IEnumVariant) Reset() bool {
 		0,
 		0)
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return true
 	case windows.S_FALSE:
@@ -89,7 +89,7 @@ func (obj *IEnumVariant) Skip(numSkip uint) bool {
 		uintptr(numSkip),
 		0)
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return true
 	case windows.S_FALSE:
@@ -99,7 +99,9 @@ func (obj *IEnumVariant) Skip(numSkip uint) bool {
 	}
 }
 
-func (obj *IEnumVariant) Next(numRetrieve uint) (array VARIANT, length uint, hasLess bool) {
+func (obj *IEnumVariant) Next(numRetrieve uint) (ret []*VARIANT) {
+	var length int
+	var array []*VARIANT
 	hr, _, _ := syscall.Syscall6(
 		v.next,
 		4,
@@ -110,27 +112,23 @@ func (obj *IEnumVariant) Next(numRetrieve uint) (array VARIANT, length uint, has
 		0,
 		0)
 
-	switch hr {
-	case windows.S_OK:
-		hasLess = false
-	case windows.S_FALSE:
-		hasLess = true
-	default:
-		hasLess = false
-	}
+	// New unsafe array conversion since Go 1.17.
+	ret = (*[length]*VARIANT)(unsafe.Pointer(array))[:]
+
 	return
 }
 
 func (v *IEnumVariant) ForEach(callback func(v *VARIANT) error) error {
 	v.Reset()
-	for item, length, hasLess := v.Next(1); length > 0; item, length, err = v.Next(1) {
-		if hasLess {
-			return nil
+	items := v.Next(100)
+	for len(items) > 0 {
+		for _, item := range items {
+			err = callback(&item)
+			if err != nil {
+				return err
+			}
 		}
-		err = callback(&item)
-		if err != nil {
-			return err
-		}
+		items = v.Next(100)
 	}
 	return nil
 }

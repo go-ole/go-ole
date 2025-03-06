@@ -120,11 +120,15 @@ func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) 
 
 func (v *IEnumConnections) ForEach(callback func(v *VARIANT) error) (err error) {
 	v.Reset()
-	for item := range v.Next(1) {
-		err = callback(&item)
-		if err != nil {
-			return err
+	items := v.Next(100)
+	for len(items) > 0 {
+		for _, item := range items {
+			err = callback(&item)
+			if err != nil {
+				return err
+			}
 		}
+		items = v.Next(100)
 	}
 	return nil
 }
