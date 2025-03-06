@@ -39,22 +39,20 @@ var (
 //
 // COM function: CLSIDFromProgID
 func LookupClassIdByProgramId(programId string) (classId windows.GUID, err error) {
-	var guid windows.GUID
-	guidPtr := unsafe.Pointer(&guid)
 	lookup := windows.UTF16PtrFromString(programId)
-	lookupPtr := unsafe.Pointer(lookup)
 
-	hr, _, _ := procCLSIDFromProgID.Call(uintptr(lookupPtr), uintptr(guidPtr))
+	hr, _, _ := procCLSIDFromProgID.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
 	switch windows.Handle(hr) {
 	case windows.S_OK:
-		return guid, nil
+		return
 	case windows.CO_E_CLASSSTRING:
-		return nil, InvalidClassIdForProgramId
+		err = InvalidClassIdForProgramId
 	case windows.REGDB_E_WRITEREGDB:
-		return nil, UnableToWriteClassIdToRegistry
+		err = UnableToWriteClassIdToRegistry
 	default:
-		return guid, UnknownLookupArgument
+		err = UnknownLookupArgument
 	}
+	return
 }
 
 // LookupClassIdByGUIDString retrieves Class ID from string representation.
@@ -63,21 +61,19 @@ func LookupClassIdByProgramId(programId string) (classId windows.GUID, err error
 //
 // COM function: CLSIDFromString
 func LookupClassIdByGUIDString(guid string) (classId windows.GUID, err error) {
-	var tempGUID windows.GUID
-	guidPtr := unsafe.Pointer(&tempGUID)
 	lookup := windows.UTF16PtrFromString(guid)
-	lookupPtr := unsafe.Pointer(lookup)
-	hr, _, _ := procCLSIDFromString.Call(uintptr(lookupPtr), uintptr(guidPtr))
+	hr, _, _ := procCLSIDFromString.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
 	switch windows.Handle(hr) {
 	case windows.NOERROR:
-		return tempGUID, nil
+		return
 	case windows.CO_E_CLASSSTRING:
-		return nil, ImproperlyFormattedGUID
+		err = ImproperlyFormattedGUID
 	case windows.E_INVALIDARG:
-		return nil, InvalidLookupArgument
+		err = InvalidLookupArgument
 	default:
-		return tempGUID, UnknownLookupArgument
+		err = UnknownLookupArgument
 	}
+	return
 }
 
 // LookupClassId retrieves class ID whether given is program ID or application string.
@@ -105,14 +101,11 @@ func ClassIDFrom(lookup string) (classID windows.GUID, err error) {
 //
 // COM function: IIDFromString
 func InterfaceIdFromString(interfaceId string) (classId windows.GUID, err error) {
-	var guid windows.GUID
-
-	lpsz := uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(progId)))
-	hr, _, _ := procIIDFromString.Call(lpsz, uintptr(unsafe.Pointer(&guid)))
+	lookup := windows.UTF16PtrFromString(interfaceId)
+	hr, _, _ := procIIDFromString.Call(uintptr(unsafe.Pointer(lookup)), uintptr(unsafe.Pointer(&classId)))
 	if hr != 0 {
 		err = windows.Errno(hr)
 	}
-	clsid = &guid
 	return
 }
 
@@ -121,13 +114,12 @@ func InterfaceIdFromString(interfaceId string) (classId windows.GUID, err error)
 // COM function: StringFromCLSID
 func StringFromClassId(classId windows.GUID) (str string, err error) {
 	var p *uint16
-	ptr := unsafe.Pointer(&p)
-	classIdPtr := unsafe.Pointer(classId)
-	hr, _, _ := procStringFromCLSID.Call(uintptr(classIdPtr), uintptr(ptr))
+	hr, _, _ := procStringFromCLSID.Call(uintptr(unsafe.Pointer(classId)), uintptr(unsafe.Pointer(&p)))
 	if hr != 0 {
 		err = windows.Errno(hr)
+		return
 	}
-	str = LpOleStrToString(p)
+	str = windows.UTF16PtrToString(p)
 	return
 }
 
@@ -136,10 +128,10 @@ func StringFromClassId(classId windows.GUID) (str string, err error) {
 // COM function: StringFromIID
 func StringFromInterfaceId(iid windows.GUID) (str string, err error) {
 	var p *uint16
-	hr, _, _ := procStringFromIID.Call(uintptr(unsafe.Pointer(iid)), uintptr(unsafe.Pointer(&p)))
+	hr, _, _ := procStringFromIID.Call(uintptr(unsafe.Pointer(&iid)), uintptr(unsafe.Pointer(&p)))
 	if hr != 0 {
 		err = windows.Errno(hr)
 	}
-	str = LpOleStrToString(p)
+	str = windows.UTF16PtrToString(p)
 	return
 }
