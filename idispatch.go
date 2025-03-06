@@ -336,15 +336,15 @@ func MakeDisplayParams(dispatch int16, params ...*VARIANT) DISPPARAMS {
 
 	if dispatch&DISPATCH_PROPERTYPUT != 0 {
 		dispnames := [1]int32{DISPID_PROPERTYPUT}
-		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(unsafe.SliceData(dispnames)))
+		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(&dispnames[0]))
 		dispparams.cNamedArgs = 1
 	} else if dispatch&DISPATCH_PROPERTYPUTREF != 0 {
 		dispnames := [1]int32{DISPID_PROPERTYPUT}
-		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(unsafe.SliceData(dispnames)))
+		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(&dispnames[0]))
 		dispparams.cNamedArgs = 1
 	}
 	if len(params) > 0 {
-		dispparams.rgvarg = uintptr(unsafe.Pointer(unsafe.SliceData(params)))
+		dispparams.rgvarg = uintptr(unsafe.Pointer(&params[0]))
 		dispparams.cArgs = uint32(len(params))
 	}
 
