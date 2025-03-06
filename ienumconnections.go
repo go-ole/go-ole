@@ -118,7 +118,7 @@ func (obj *IEnumConnections) Next(numRetrieve uint) (connectData []ConnectData) 
 	return
 }
 
-func (v *IEnumConnections) ForEach(callback func(v *VARIANT) error) error {
+func (v *IEnumConnections) ForEach(callback func(v *VARIANT) error) (err error) {
 	v.Reset()
 	for item, length, hasLess := v.Next(1); length > 0; item, length, err = v.Next(1) {
 		if hasLess {
