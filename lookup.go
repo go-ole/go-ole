@@ -90,7 +90,7 @@ func ClassIdFromGuidString(guid string) (classId windows.GUID, err error) {
 // Helper that provides check against both Class ID from Program ID and Class ID from string. It is
 // faster, if you know which you are using, to use the individual functions, but this will check
 // against available functions for you.
-func ClassIdFromString(lookup string) (classID windows.GUID, err error) {
+func ClassIdFromString(lookup string) (classId windows.GUID, err error) {
 	classId, err = ClassIdFromProgramId(lookup)
 	if err != nil {
 		classId, err = ClassIdFromGuidString(lookup)
