@@ -563,7 +563,7 @@ func VariantToClassId(variant *VARIANT) any {
 		return *(*windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
 	}
 	if variant.VT == VT_CLSID {
-		return (windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
+		return (windows.GUID)(unsafe.Pointer(variant.Val))
 	}
 	return nil
 }
@@ -662,12 +662,12 @@ func TimeToVariant(i any) *VARIANT {
 	duration := date.Sub(DateEpoch)
 	rawHours := duration.Hours()
 	days := int64(int64(rawHours) / 24)
-	hours := int64(int64(rawHours) - (days * 24))
-	minutes := duration.Minutes()
-	seconds := duration.Seconds()
-	milliseconds := duration.Milliseconds()
+	hours := float64(int64(int64(rawHours)-(days*24))) * float64(DateSingleHour)
+	minutes := float64(int64(duration.Minutes())) * float64(DateSingleMinute)
+	seconds := float64(int64(duration.Seconds())) * float64(DateSingleSecond)
+	milliseconds := float64(duration.Milliseconds()) * float64(DateSingleMilliSecond)
 
-	winDate := float64(days) + float64(hours*float64(DateSingleHour)) + float64(minutes*float64(DateSingleMinute)) + float64(seconds*float64(DateSingleSecond)) + float64(milliseconds*float64(DateSingleMilliSecond))
+	winDate := float64(days) + hours + minutes + seconds + milliseconds
 	number := math.Float64bits(winDate)
 
 	return &VARIANT{VT: VT_DATE, Val: int64(number)}
