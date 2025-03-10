@@ -348,12 +348,11 @@ func RegisterVariantConverters() {
 	conversions.to[reflect.TypeFor[windows.Handle]().Name()] = HResultToVariant
 
 	conversions.from[VT_UNKNOWN] = VariantToComObject[*IUnknown]
-	conversions.from[VT_UNKNOWN|VT_BYREF] = VariantToComObject[**IUnknown]
+	conversions.from[VT_UNKNOWN|VT_BYREF] = VariantToComObject[*IUnknown]
 	conversions.to[reflect.TypeFor[*IUnknown]().Name()] = IUnknownToVariant
-	conversions.to[reflect.TypeFor[**IUnknown]().Name()] = IUnknownToVariant
 
 	conversions.from[VT_DISPATCH] = VariantToComObject[*IDispatch]
-	conversions.from[VT_DISPATCH|VT_BYREF] = VariantToComObject[**IDispatch]
+	conversions.from[VT_DISPATCH|VT_BYREF] = VariantToComObject[*IDispatch]
 	conversions.to[reflect.TypeFor[*IDispatch]().Name()] = IDispatchToVariant
 	conversions.to[reflect.TypeFor[**IDispatch]().Name()] = IDispatchToVariant
 
@@ -369,7 +368,8 @@ func RegisterVariantConverters() {
 		return GoVariantToVariant(i.(*VARIANT))
 	}
 	conversions.to[reflect.TypeFor[**VARIANT]().Name()] = func(i any) *VARIANT {
-		return GoVariantToVariant(&i.(**VARIANT))
+		variant = i.(**VARIANT)
+		return GoVariantToVariant(*variant)
 	}
 
 	conversions.from[VT_CY] = VariantToInt64
@@ -510,6 +510,7 @@ func IUnknownToVariant(i any) *VARIANT {
 	case **IUnknown:
 		return &VARIANT{VT: VT_UNKNOWN | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(**IUnknown))))}
 	}
+	return nil
 }
 
 func IDispatchToVariant(i any) *VARIANT {
@@ -519,6 +520,7 @@ func IDispatchToVariant(i any) *VARIANT {
 	case **IDispatch:
 		return &VARIANT{VT: VT_DISPATCH | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(**IDispatch))))}
 	}
+	return nil
 }
 
 func VariantToComObject[T IsIUnknown](variant *VARIANT) any {
@@ -549,6 +551,7 @@ func ClassIdToVariant(i any) any {
 	case *windows.GUID:
 		return &VARIANT{VT: VT_CLSID | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*windows.GUID))))}
 	}
+	return nil
 }
 
 // VariantToClassId converts *VARIANT to windows.GUID
@@ -559,6 +562,7 @@ func VariantToClassId(variant *VARIANT) any {
 	if variant.VT == VT_CLSID {
 		return (windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
 	}
+	return nil
 }
 
 // VoidToVariant converts a C void pointer to *VARIANT.
