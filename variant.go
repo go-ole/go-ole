@@ -670,7 +670,7 @@ func TimeToVariant(i any) *VARIANT {
 	winDate := float64(days) + float64(hours*float64(DateSingleHour)) + float64(minutes*float64(DateSingleMinute)) + float64(seconds*float64(DateSingleSecond)) + float64(milliseconds*float64(DateSingleMilliSecond))
 	number := math.Float64bits(winDate)
 
-	return &VARIANT{VT: VT_DATE, Val: int64(uintptr(unsafe.Pointer(number)))}
+	return &VARIANT{VT: VT_DATE, Val: int64(number)}
 }
 
 func VariantToBool(variant *VARIANT) any {
