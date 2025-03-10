@@ -686,7 +686,7 @@ func BoolToVariant(i any) *VARIANT {
 }
 
 func VariantToBoolPtr(variant *VARIANT) any {
-	val := (*int16)(unsafe.Pointer(uintptr(variant.Val)))
+	val := *(*int16)(unsafe.Pointer(uintptr(variant.Val)))
 	return val != VariantTypeFalse
 }
 
