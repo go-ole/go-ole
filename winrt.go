@@ -77,7 +77,7 @@ func RoGetActivationFactory(classId string, interfaceId windows.GUID) (obj *IAct
 
 	hr, _, _ := procRoGetActivationFactory.Call(
 		uintptr(unsafe.Pointer(hClassId)),
-		uintptr(unsafe.Pointer(interfaceId)),
+		uintptr(unsafe.Pointer(&interfaceId)),
 		uintptr(unsafe.Pointer(&obj)))
 
 	switch windows.Handle(hr) {
