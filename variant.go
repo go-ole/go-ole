@@ -668,7 +668,7 @@ func TimeToVariant(i any) *VARIANT {
 	milliseconds := duration.Milliseconds()
 
 	winDate := float64(days) + float64(hours*DateSingleHour) + float64(minutes*DateSingleMinute) + float64(seconds*DateSingleSecond) + float64(milliseconds*DateSingleMilliSecond)
-	number := math.Float64bits(i.(float64))
+	number := math.Float64bits(winDate)
 
 	return &VARIANT{VT: VT_DATE, Val: int64(uintptr(unsafe.Pointer(number)))}
 }
