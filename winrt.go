@@ -33,9 +33,9 @@ func RoInitialize(threadType RoThreading) (ret InitializeResult, err error) {
 	case windows.RPC_E_CHANGED_MODE:
 		return IncompatibleConcurrencyModelAlreadyInitialized, nil
 	case windows.E_INVALIDARG, windows.E_OUTOFMEMORY, windows.E_UNEXPECTED:
-		return nil, hr
+		return UnknownInitializeResult, windows.Errno(hr)
 	default:
-		return nil, windows.Errno(hr)
+		return UnknownInitializeResult, windows.Errno(hr)
 	}
 }
 
