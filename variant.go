@@ -836,7 +836,7 @@ func UInt64PtrToVariant(i any) *VARIANT {
 }
 
 func VariantToUInt64Ptr(variant *VARIANT) any {
-	return (*uint64)(unsafe.Pointer(uintptr(variant.Val)))
+	return math.Float64frombits((uint64)(unsafe.Pointer(uintptr(variant.Val))))
 }
 
 func IntToVariant(i any) *VARIANT {
@@ -856,41 +856,39 @@ func VariantToUInt(variant *VARIANT) any {
 }
 
 func VariantToFloat32(variant *VARIANT) any {
-	return (float32)(unsafe.Pointer(uintptr(variant.Val)))
+	return math.Float32frombits(uint32(variant.Val))
 }
 
 func Float32ToVariant(i any) *VARIANT {
-	number := i.(float32)
-	address := &number
-	return &VARIANT{VT: VT_R4, Val: int64(uintptr(unsafe.Pointer(address)))}
+	number := math.Float32bits(i.(float32))
+	return &VARIANT{VT: VT_R4, Val: int64(number)}
 }
 
 func VariantToFloat32Ptr(variant *VARIANT) any {
-	return (*float32)(unsafe.Pointer(uintptr(variant.Val)))
+	return math.Float32frombits(*(*uint32)(unsafe.Pointer(uintptr(variant.Val))))
 }
 
 func Float64PtrToVariant(i any) *VARIANT {
-	number := i.(*float32)
-	return &VARIANT{VT: VT_R4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(number)))}
+	number := math.Float32bits(i.(float32))
+	return &VARIANT{VT: VT_R4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(&number)))}
 }
 
 func VariantToFloat64(variant *VARIANT) any {
-	return (float64)(unsafe.Pointer(uintptr(variant.Val)))
+	return math.Float64frombits(uint64(variant.Val))
 }
 
 func Float64ToVariant(i any) *VARIANT {
-	number := i.(float64)
-	address := &number
-	return &VARIANT{VT: VT_R8, Val: int64(uintptr(unsafe.Pointer(address)))}
+	number := math.Float64bits(i.(float64))
+	return &VARIANT{VT: VT_R8, Val: int64(number)}
 }
 
 func Float32PtrToVariant(i any) *VARIANT {
-	number := i.(*float64)
-	return &VARIANT{VT: VT_R8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(number)))}
+	number := math.Float64bits(i.(float64))
+	return &VARIANT{VT: VT_R8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(&number)))}
 }
 
 func VariantToFloat64Ptr(variant *VARIANT) any {
-	return (*float64)(unsafe.Pointer(uintptr(variant.Val)))
+	return math.Float64frombits(*(*uint64)(unsafe.Pointer(uintptr(variant.Val))))
 }
 
 func VariantBStrToString(variant *VARIANT) any {
