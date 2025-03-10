@@ -225,10 +225,10 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 		uintptr(unsafe.Pointer(&bindOpts),
 			uintptr(unsafe.Pointer(&interfaceId)),
 			uintptr(unsafe.Pointer(&unk))))
-	if hr == nil {
+	if hr == 0 {
 		return
 	}
-	err = hr
+	err = windows.Errno(hr)
 	return
 }
 
