@@ -836,7 +836,7 @@ func UInt64PtrToVariant(i any) *VARIANT {
 }
 
 func VariantToUInt64Ptr(variant *VARIANT) any {
-	return math.Float64frombits((uint64)(unsafe.Pointer(uintptr(variant.Val))))
+	return math.Float64frombits((uint64)(unsafe.Pointer(uintptr(&variant.Val))))
 }
 
 func IntToVariant(i any) *VARIANT {
@@ -896,7 +896,6 @@ func VariantBStrToString(variant *VARIANT) any {
 }
 
 func StringToBStrVariant(i any) *VARIANT {
-	str := i.(string)
-	ptr := windows.UTF16PtrFromString(str)
-	return &VARIANT{VT: VT_BSTR, Val: int64(uintptr(unsafe.Pointer(&ptr)))}
+	str, _ := windows.UTF16PtrFromString(i.(string))
+	return &VARIANT{VT: VT_BSTR, Val: int64(uintptr(unsafe.Pointer(&str)))}
 }
