@@ -563,7 +563,7 @@ func VariantToClassId(variant *VARIANT) any {
 		return *(*windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
 	}
 	if variant.VT == VT_CLSID {
-		return (*windows.GUID)(unsafe.Pointer(uintptr(unsafe.Pointer(variant.Val))))
+		return (windows.GUID)(unsafe.Pointer(uintptr(unsafe.Pointer(&variant.Val))))
 	}
 	return nil
 }
