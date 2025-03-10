@@ -220,11 +220,12 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 	if bindOpts != nil {
 		bindOpts.CbStruct = uint32(unsafe.Sizeof(windows.BIND_OPTS3{}))
 	}
+	programIdPtr := windows.StringToUTF16Ptr(programID)
 	hr, _, _ := procCoGetObject.Call(
-		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(programID))),
-		uintptr(unsafe.Pointer(&bindOpts),
-			uintptr(unsafe.Pointer(&interfaceId)),
-			uintptr(unsafe.Pointer(&unk))))
+		uintptr(unsafe.Pointer(&programIdPtr)),
+		uintptr(unsafe.Pointer(&bindOpts)),
+		uintptr(unsafe.Pointer(&interfaceId)),
+		uintptr(unsafe.Pointer(&unk)))
 	if hr == 0 {
 		return
 	}
