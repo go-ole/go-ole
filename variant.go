@@ -5,6 +5,7 @@ package ole
 import (
 	"errors"
 	"golang.org/x/sys/windows"
+	"math"
 	"reflect"
 	"sync"
 	"time"
@@ -368,7 +369,7 @@ func RegisterVariantConverters() {
 		return GoVariantToVariant(i.(*VARIANT))
 	}
 	conversions.to[reflect.TypeFor[**VARIANT]().Name()] = func(i any) *VARIANT {
-		variant = i.(**VARIANT)
+		variant := i.(**VARIANT)
 		return GoVariantToVariant(*variant)
 	}
 
@@ -547,9 +548,11 @@ func GoVariantToVariant(variant *VARIANT) *VARIANT {
 func ClassIdToVariant(i any) any {
 	switch i.(type) {
 	case windows.GUID:
-		return &VARIANT{VT: VT_CLSID, Val: int64(uintptr(unsafe.Pointer(i.(windows.GUID))))}
+		val := i.(windows.GUID)
+		return &VARIANT{VT: VT_CLSID, Val: int64(uintptr(unsafe.Pointer(val)))}
 	case *windows.GUID:
-		return &VARIANT{VT: VT_CLSID | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*windows.GUID))))}
+		val := i.(*windows.GUID)
+		return &VARIANT{VT: VT_CLSID | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(&val)))}
 	}
 	return nil
 }
@@ -557,7 +560,7 @@ func ClassIdToVariant(i any) any {
 // VariantToClassId converts *VARIANT to windows.GUID
 func VariantToClassId(variant *VARIANT) any {
 	if variant.VT == VT_CLSID|VT_BYREF {
-		return (*windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
+		return *(*windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
 	}
 	if variant.VT == VT_CLSID {
 		return (windows.GUID)(unsafe.Pointer(uintptr(variant.Val)))
@@ -569,7 +572,7 @@ func VariantToClassId(variant *VARIANT) any {
 //
 // There is no automatic conversion for this, you must call this manually.
 func VoidToVariant(i any) any {
-	return &VARIANT{VT: VT_VOID, Val: int64(uintptr(unsafe.Pointer(i)))}
+	return &VARIANT{VT: VT_VOID, Val: int64(uintptr(unsafe.Pointer(&i)))}
 }
 
 // VariantToVoid converts *VARIANT to C void pointer.
@@ -584,7 +587,7 @@ func VariantToIntPtr(variant *VARIANT) any {
 }
 
 func IntPtrToVariant(i any) *VARIANT {
-	return &VARIANT{VT: VT_INT_PTR, Val: int64(uintptr(unsafe.Pointer(i)))}
+	return &VARIANT{VT: VT_INT_PTR, Val: int64(uintptr(unsafe.Pointer(uintptr(&i))))}
 }
 
 func VariantToUIntPtr(variant *VARIANT) any {
@@ -592,7 +595,7 @@ func VariantToUIntPtr(variant *VARIANT) any {
 }
 
 func UIntPtrToVariant(i any) *VARIANT {
-	return &VARIANT{VT: VT_UINT_PTR, Val: int64(uintptr(unsafe.Pointer(i)))}
+	return &VARIANT{VT: VT_UINT_PTR, Val: int64(uintptr(unsafe.Pointer(&i)))}
 }
 
 // MakeCurrencyVariant will create a currency VARIANT type.
@@ -612,7 +615,7 @@ func CurrencyToVariant(i any) *VARIANT {
 // VariantToFileTime converts *VARIANT to time.Time.
 func VariantToFileTime(variant *VARIANT) any {
 	nanoseconds := variant.Val
-	return FileTimeEpoch.Add(time.Microsecond * int64(nanoseconds/10))
+	return FileTimeEpoch.Add(time.Microsecond * time.Duration(nanoseconds/10))
 }
 
 // FileTimeToVariant returns the VT_FILETIME *VARIANT of int64.
@@ -628,7 +631,7 @@ func FileTimeToVariant(i any) *VARIANT {
 
 // VariantToTime converts *VARIANT to time.Time.
 func VariantToTime(variant *VARIANT) any {
-	timestamp := (float64)(unsafe.Pointer(uintptr(variant.Val)))
+	timestamp := math.Float64frombits(uint64(variant.Val))
 	days := int64(timestamp)
 	remainder := timestamp - float64(days)
 	hours := remainder / float64(DateSingleHour)
