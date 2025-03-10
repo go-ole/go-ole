@@ -549,7 +549,7 @@ func ClassIdToVariant(i any) any {
 	switch i.(type) {
 	case windows.GUID:
 		val := i.(windows.GUID)
-		return &VARIANT{VT: VT_CLSID, Val: int64(uintptr(unsafe.Pointer(val)))}
+		return &VARIANT{VT: VT_CLSID, Val: int64(uintptr(unsafe.Pointer(&val)))}
 	case *windows.GUID:
 		val := i.(*windows.GUID)
 		return &VARIANT{VT: VT_CLSID | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(&val)))}
@@ -587,7 +587,7 @@ func VariantToIntPtr(variant *VARIANT) any {
 }
 
 func IntPtrToVariant(i any) *VARIANT {
-	return &VARIANT{VT: VT_INT_PTR, Val: int64(uintptr(unsafe.Pointer(uintptr(&i))))}
+	return &VARIANT{VT: VT_INT_PTR, Val: int64(uintptr(unsafe.Pointer(&i)))}
 }
 
 func VariantToUIntPtr(variant *VARIANT) any {
@@ -642,11 +642,11 @@ func VariantToTime(variant *VARIANT) any {
 	remainder = remainder - seconds
 	milliseconds := remainder / float64(DateSingleMilliSecond)
 
-	date := DateEpoch.Add(days * 24 * time.Hour)
-	date = date.Add(hours * time.Hour)
-	date = date.Add(minutes * time.Minute)
-	date = date.Add(seconds * time.Second)
-	date = date.Add(milliseconds * time.Millisecond)
+	date := DateEpoch.Add(time.Duration(days*24) * time.Hour)
+	date = date.Add(time.Duration(hours) * time.Hour)
+	date = date.Add(time.Duration(minutes) * time.Minute)
+	date = date.Add(time.Duration(seconds) * time.Second)
+	date = date.Add(time.Duration(milliseconds) * time.Millisecond)
 	return date
 }
 
