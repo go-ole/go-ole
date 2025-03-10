@@ -220,12 +220,14 @@ func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, int
 	if bindOpts != nil {
 		bindOpts.CbStruct = uint32(unsafe.Sizeof(windows.BIND_OPTS3{}))
 	}
+	var virtualTable **interface{}
 	hr := windows.CoGetObject(
 		windows.StringToUTF16Ptr(programID),
 		bindOpts,
 		&interfaceId,
-		*uintptr(unsafe.Pointer(&unk)))
+		uintptr(unsafe.Pointer(uintptr(unsafe.Pointer(&virtualTable)))))
 	if hr == nil {
+		unk = *(*T)(unsafe.Pointer(uintptr(unsafe.Pointer(virtualTable))))
 		return
 	}
 	err = hr

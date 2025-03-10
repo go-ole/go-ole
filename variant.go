@@ -349,21 +349,28 @@ func RegisterVariantConverters() {
 
 	conversions.from[VT_UNKNOWN] = VariantToComObject[*IUnknown]
 	conversions.from[VT_UNKNOWN|VT_BYREF] = VariantToComObject[**IUnknown]
-	conversions.to[reflect.TypeFor[*IsIUnknown]().Name()] = IUnknownToVariant
 	conversions.to[reflect.TypeFor[*IUnknown]().Name()] = IUnknownToVariant
+	conversions.to[reflect.TypeFor[**IUnknown]().Name()] = IUnknownToVariant
 
 	conversions.from[VT_DISPATCH] = VariantToComObject[*IDispatch]
 	conversions.from[VT_DISPATCH|VT_BYREF] = VariantToComObject[**IDispatch]
-	conversions.to[reflect.TypeFor[*IsIDispatch]().Name()] = IDispatchToVariant
 	conversions.to[reflect.TypeFor[*IDispatch]().Name()] = IDispatchToVariant
+	conversions.to[reflect.TypeFor[**IDispatch]().Name()] = IDispatchToVariant
 
 	conversions.from[VT_BOOL] = VariantToBool
 	conversions.from[VT_BOOL|VT_BYREF] = VariantToBoolPtr
 	conversions.to[reflect.TypeFor[bool]().Name()] = BoolToVariant
 	conversions.to[reflect.TypeFor[*bool]().Name()] = BoolPtrToVariant
 
-	conversions.from[VT_VARIANT] = VariantToGoVariant
-	conversions.to[reflect.TypeFor[*VARIANT]().Name()] = GoVariantToVariant
+	conversions.from[VT_VARIANT] = func(variant *VARIANT) any {
+		return VariantToGoVariant(variant)
+	}
+	conversions.to[reflect.TypeFor[*VARIANT]().Name()] = func(i any) *VARIANT {
+		return GoVariantToVariant(i.(*VARIANT))
+	}
+	conversions.to[reflect.TypeFor[**VARIANT]().Name()] = func(i any) *VARIANT {
+		return GoVariantToVariant(&i.(**VARIANT))
+	}
 
 	conversions.from[VT_CY] = VariantToInt64
 	conversions.to[reflect.TypeFor[Currency]().Name()] = CurrencyToVariant
@@ -444,6 +451,8 @@ func RegisterVariantConverters() {
 // MakeNullVariant is for creating an empty VARIANT with a null value.
 //
 // Nil does not allow for automatic conversion through the map.
+//
+// TODO: We should handle nil in other variant creation functions.
 func MakeNullVariant() *VARIANT {
 	return &VARIANT{VT: VT_NULL}
 }
@@ -456,6 +465,8 @@ func VariantToNull(variant *VARIANT) any {
 // MakeEmptyVariant is for creating an empty VARIANT.
 //
 // Empty does not allow for automatic conversion through the map.
+//
+// TODO: Empty means different things based on the Variant Type. We should handle empty in other creation functions.
 func MakeEmptyVariant() *VARIANT {
 	return &VARIANT{VT: VT_EMPTY}
 }
@@ -493,11 +504,21 @@ func HandleToVariant(i any) *VARIANT {
 }
 
 func IUnknownToVariant(i any) *VARIANT {
-	return &VARIANT{VT: VT_UNKNOWN, Val: int64(uintptr(unsafe.Pointer(i.(*IUnknown))))}
+	switch i.(type) {
+	case *IUnknown:
+		return &VARIANT{VT: VT_UNKNOWN, Val: int64(uintptr(unsafe.Pointer(i.(*IUnknown))))}
+	case **IUnknown:
+		return &VARIANT{VT: VT_UNKNOWN | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(**IUnknown))))}
+	}
 }
 
 func IDispatchToVariant(i any) *VARIANT {
-	return &VARIANT{VT: VT_DISPATCH, Val: int64(uintptr(unsafe.Pointer(i.(*IDispatch))))}
+	switch i.(type) {
+	case *IDispatch:
+		return &VARIANT{VT: VT_DISPATCH, Val: int64(uintptr(unsafe.Pointer(i.(*IDispatch))))}
+	case **IDispatch:
+		return &VARIANT{VT: VT_DISPATCH | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(**IDispatch))))}
+	}
 }
 
 func VariantToComObject[T IsIUnknown](variant *VARIANT) any {
@@ -552,6 +573,22 @@ func VoidToVariant(i any) any {
 // There is no automatic conversion for this, you must call this manually.
 func VariantToVoid[T any](variant *VARIANT) any {
 	return (*T)(unsafe.Pointer(uintptr(variant.Val)))
+}
+
+func VariantToIntPtr(variant *VARIANT) any {
+	return (uintptr)(unsafe.Pointer(uintptr(variant.Val)))
+}
+
+func IntPtrToVariant(i any) *VARIANT {
+	return &VARIANT{VT: VT_INT_PTR, Val: int64(uintptr(unsafe.Pointer(i)))}
+}
+
+func VariantToUIntPtr(variant *VARIANT) any {
+	return (uintptr)(unsafe.Pointer(uintptr(variant.Val)))
+}
+
+func UIntPtrToVariant(i any) *VARIANT {
+	return &VARIANT{VT: VT_UINT_PTR, Val: int64(uintptr(unsafe.Pointer(i)))}
 }
 
 // MakeCurrencyVariant will create a currency VARIANT type.
@@ -821,6 +858,15 @@ func Float32ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_R4, Val: int64(uintptr(unsafe.Pointer(address)))}
 }
 
+func VariantToFloat32Ptr(variant *VARIANT) any {
+	return (*float32)(unsafe.Pointer(uintptr(variant.Val)))
+}
+
+func Float64PtrToVariant(i any) *VARIANT {
+	number := i.(*float32)
+	return &VARIANT{VT: VT_R4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(number)))}
+}
+
 func VariantToFloat64(variant *VARIANT) any {
 	return (float64)(unsafe.Pointer(uintptr(variant.Val)))
 }
@@ -828,7 +874,16 @@ func VariantToFloat64(variant *VARIANT) any {
 func Float64ToVariant(i any) *VARIANT {
 	number := i.(float64)
 	address := &number
-	return &VARIANT{VT: VT_R4, Val: int64(uintptr(unsafe.Pointer(address)))}
+	return &VARIANT{VT: VT_R8, Val: int64(uintptr(unsafe.Pointer(address)))}
+}
+
+func Float32PtrToVariant(i any) *VARIANT {
+	number := i.(*float64)
+	return &VARIANT{VT: VT_R8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(number)))}
+}
+
+func VariantToFloat64Ptr(variant *VARIANT) any {
+	return (*float64)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
 func VariantBStrToString(variant *VARIANT) any {
