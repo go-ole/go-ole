@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	VariantTypeTrue  int32 = 0xffff
+	VariantTypeTrue  int16 = -1
 	VariantTypeFalse       = 0
 )
 
@@ -692,14 +692,14 @@ func VariantToBoolPtr(variant *VARIANT) any {
 
 // BoolToVariant converts go type to Variant VT_BOOL type
 func BoolPtrToVariant(i any) *VARIANT {
-	val := i.(*bool)
+	val := *(i.(*bool))
 	var ptr int16
 	if val {
 		ptr = int16(VariantTypeTrue)
 	} else {
 		ptr = int16(VariantTypeFalse)
 	}
-	return &VARIANT{VT: VT_BOOL, Val: int64(uintptr(unsafe.Pointer(ptr)))}
+	return &VARIANT{VT: VT_BOOL, Val: int64(uintptr(unsafe.Pointer(&ptr)))}
 }
 
 // Int8ToVariant converts go type to Variant VT_I1 type
