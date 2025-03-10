@@ -25,7 +25,7 @@ const (
 func RoInitialize(threadType RoThreading) (ret InitializeResult, err error) {
 	hr, _, _ := procRoInitialize.Call(uintptr(threadType))
 
-	switch hr {
+	switch windows.Handle(hr) {
 	case windows.S_OK:
 		return SuccessfullyInitialized, nil
 	case windows.S_FALSE:
