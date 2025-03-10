@@ -661,15 +661,16 @@ func TimeToVariant(i any) *VARIANT {
 	date := i.(time.Time)
 	duration := date.Sub(DateEpoch)
 	rawHours := duration.Hours()
-	days := int64(rawHours / 24)
-	hours := int64(rawHours - (days * 24))
+	days := int64(int64(rawHours) / 24)
+	hours := int64(int64(rawHours) - (days * 24))
 	minutes := duration.Minutes()
 	seconds := duration.Seconds()
 	milliseconds := duration.Milliseconds()
 
-	winDate := float64(days) + float64(hours*DateSingleHour) + float64(minutes*DateSingleMinute) + float64(seconds*DateSingleSecond) + float64(milliseconds*time.Millisecond)
+	winDate := float64(days) + float64(hours*DateSingleHour) + float64(minutes*DateSingleMinute) + float64(seconds*DateSingleSecond) + float64(milliseconds*DateSingleMilliSecond)
+	number := math.Float64bits(i.(float64))
 
-	return &VARIANT{VT: VT_DATE, Val: int64(uintptr(unsafe.Pointer(winDate)))}
+	return &VARIANT{VT: VT_DATE, Val: int64(uintptr(unsafe.Pointer(number)))}
 }
 
 func VariantToBool(variant *VARIANT) any {
@@ -836,7 +837,7 @@ func UInt64PtrToVariant(i any) *VARIANT {
 }
 
 func VariantToUInt64Ptr(variant *VARIANT) any {
-	return math.Float64frombits((uint64)(unsafe.Pointer(uintptr(&variant.Val))))
+	return *(*uint64)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
 func IntToVariant(i any) *VARIANT {
