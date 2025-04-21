@@ -200,8 +200,81 @@ You have two solutions for handling gothreads and multithreading.
     defer runtime.UnlockOSThread()
     ```
 2. Use [scjalliance/comshim](https://github.com/scjalliance/comshim)
+3. Use `sync.Pool`
 
 The key to any solution is that you must call `CoUninitialize()` or `Uninitialize()` for every `CoInitialize()` or `Initialize()`.
+
+It is recommended to call `Initialize()` and `Uninitialize()` in the same thread. The workflow for Gothreads is to call `Initialize()`, defer `Uninitialize()` and do everything you want to do in COM/OLE in the same function/gothread. This will allocate and release the resources for each call or gothread.
+
+```go
+package main
+
+import (
+	"runtime"
+	"github.com/go-ole/go-ole"
+)
+
+func main() {
+	go func() {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+		ole.Initialize()
+		defer ole.Uninitialize()
+		
+		// Do OLE/COM work
+    }()
+}
+
+```
+
+This is slower than calling `Initialize()` once per thread. It should be pointed out that you have no control over which thread the scheduler will run the gothread. You do have the option to limit the application to a single thread for the scheduler.
+
+It is safe to call `Initialize()` multiple times. Unfortunately `Uninitialize()` may free resources before the other gothread is finished. Fortunately, `runtime.LockOSThread()` will prevent other gothreads from running on the same thread, so you should be guaranteed to complete the gothread and free the resources and memory associated with the OLE/COM.
+
+The other option is to use `runtime.SetFinalizer()`.
+
+```go
+package main
+
+import (
+	"math"
+	"runtime"
+	"github.com/go-ole/go-ole"
+)
+
+type OleKeepAlive struct {
+	// Empty structs share the same memory address so we can't keep them alive.
+	keepalive int
+}
+
+func main() {
+	var wg sync.WaitGroup
+	// Numbers below a certain threshold are cached so we also can't use them.
+	keepAlive := &OleKeepAlive{keepalive: math.MaxInt}
+	runtime.SetFinalizer(keepAlive, func (a *OleKeepAlive) {
+		ole.Uninitialize()
+    })
+	
+	go func() {
+		// Add to wait group
+		wg.Add(1)
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+		ole.Initialize()
+
+		// Do OLE/COM work
+		
+		// Tell wait group we are done
+		wg.Done()
+	}()
+	
+	wg.Wait()
+	
+	runtime.KeepAlive(keepAlive)
+}
+```
+
+At this point, it is likely better to use `comshim` since any further development would duplicate the work in that package.
 
 ## Continuous Integration
 
