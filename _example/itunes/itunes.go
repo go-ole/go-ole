@@ -4,17 +4,21 @@
 package main
 
 import (
-	"github.com/go-ole/go-ole"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/go-ole/go-ole"
 
 	"github.com/gonuts/commander"
 )
 
 func iTunes() *ole.IDispatch {
-	ole.Initialize(ole.Multithreaded)
-	clsid, err := ole.LookupClassId("iTunes.Application")
+	ole.InitializeMultithreaded()
+	defer ole.Uninitialize()
+	ole.RegisterVariantConverters()
+
+	clsid, err := ole.ClassIdFromString("iTunes.Application")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,6 +26,8 @@ func iTunes() *ole.IDispatch {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer unknown.Release()
+
 	itunes, err := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
 	if err != nil {
 		log.Fatal(err)

@@ -11,6 +11,7 @@ import (
 func main() {
 	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
+	ole.RegisterVariantConverters()
 
 	clsid, _ := ole.ClassIdFromString("Outlook.Application")
 
@@ -18,7 +19,7 @@ func main() {
 	defer unknown.Release()
 
 	outlook, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
-	defer unknown.Release()
+	defer outlook.Release()
 
 	ns := ole.VariantToComObject[ole.IDispatch](outlook.MustCallMethod("GetNamespace", ole.StringToBStrVariant("MAPI")))
 	defer ns.Release()
@@ -37,11 +38,9 @@ func main() {
 			if value == nil {
 				continue
 			}
-			
-			fullName := ole.UnwrapVariant[string](value.GetProperty("FullName"))
-			if fullName != nil {
-				fmt.Println(fullName)
-			}
+
+			fullName := ole.UnwrapVariant[string](value.MustGetProperty("FullName"))
+			fmt.Println(fullName)
 		}
 	}
 

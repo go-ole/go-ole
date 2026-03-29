@@ -10,9 +10,11 @@ import (
 )
 
 func main() {
-	ole.Initialize(ole.Multithreaded)
+	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
-	clsid, err := ole.LookupClassId("WMPlayer.OCX")
+	ole.RegisterVariantConverters()
+
+	clsid, err := ole.ClassIdFromString("WMPlayer.OCX")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,14 +22,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer unknown.Release()
+
 	wmp, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
-	collection := wmp.MustGetProperty("MediaCollection").ToIDispatch()
-	list := collection.MustCallMethod("getAll").ToIDispatch()
-	count := int(list.MustGetProperty("count").Val)
+	defer wmp.Release()
+
+	collection := ole.VariantToComObject[ole.IDispatch](wmp.MustGetProperty("MediaCollection"))
+	defer collection.Release()
+
+	list := ole.VariantToComObject[ole.IDispatch](collection.MustCallMethod("getAll"))
+	defer list.Release()
+
+	count := int(ole.UnwrapVariant[int32](list.MustGetProperty("count")))
 	for i := 0; i < count; i++ {
-		item := list.MustGetProperty("item", i).ToIDispatch()
-		name := item.MustGetProperty("name").ToString()
-		sourceURL := item.MustGetProperty("sourceURL").ToString()
+		item := ole.VariantToComObject[ole.IDispatch](list.MustGetProperty("item", ole.Int32ToVariant(i)))
+		name := ole.UnwrapVariant[string](item.MustGetProperty("name"))
+		sourceURL := ole.UnwrapVariant[string](item.MustGetProperty("sourceURL"))
 		fmt.Println(name, sourceURL)
+		item.Release()
 	}
 }

@@ -11,42 +11,48 @@ import (
 )
 
 func main() {
-	ole.Initialize(ole.Multithreaded)
+	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
-	clsid, _ := ole.LookupClassId("Microsoft.XMLHTTP")
+	ole.RegisterVariantConverters()
+
+	clsid, _ := ole.ClassIdFromString("Microsoft.XMLHTTP")
 	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	defer unknown.Release()
+
 	xmlhttp, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
-	_, err := xmlhttp.CallMethod("open", "GET", "http://rss.slashdot.org/Slashdot/slashdot", false)
+	defer xmlhttp.Release()
+
+	_, err := xmlhttp.CallMethod("open", ole.StringToBStrVariant("GET"), ole.StringToBStrVariant("http://rss.slashdot.org/Slashdot/slashdot"), ole.BoolToVariant(false))
 	if err != nil {
 		panic(err.Error())
 	}
-	_, err = xmlhttp.CallMethod("send", nil)
+	_, err = xmlhttp.CallMethod("send")
 	if err != nil {
 		panic(err.Error())
 	}
 	state := -1
 	for state != 4 {
-		state = int(xmlhttp.MustGetProperty("readyState").Val)
+		state = int(ole.UnwrapVariant[int32](xmlhttp.MustGetProperty("readyState")))
 		time.Sleep(10000000)
 	}
-	responseXml := xmlhttp.MustGetProperty("responseXml").ToIDispatch()
-	items := responseXml.MustCallMethod("selectNodes", "/rdf:RDF/item").ToIDispatch()
-	length := int(items.MustGetProperty("length").Val)
+	responseXml := ole.VariantToComObject[ole.IDispatch](xmlhttp.MustGetProperty("responseXml"))
+	items := ole.VariantToComObject[ole.IDispatch](responseXml.MustCallMethod("selectNodes", ole.StringToBStrVariant("/rdf:RDF/item")))
+	length := int(ole.UnwrapVariant[int32](items.MustGetProperty("length")))
 
 	println(length)
 	for n := 0; n < length; n++ {
-		item := items.MustGetProperty("item", n).ToIDispatch()
+		item := ole.VariantToComObject[ole.IDispatch](items.MustGetProperty("item", ole.Int32ToVariant(n)))
 
-		title := item.MustCallMethod("selectSingleNode", "title").ToIDispatch()
-		fmt.Println(title.MustGetProperty("text").ToString())
+		title := ole.VariantToComObject[ole.IDispatch](item.MustCallMethod("selectSingleNode", ole.StringToBStrVariant("title")))
+		fmt.Println(ole.UnwrapVariant[string](title.MustGetProperty("text")))
 
-		link := item.MustCallMethod("selectSingleNode", "link").ToIDispatch()
-		fmt.Println("  " + link.MustGetProperty("text").ToString())
+		link := ole.VariantToComObject[ole.IDispatch](item.MustCallMethod("selectSingleNode", ole.StringToBStrVariant("link")))
+		fmt.Println("  " + ole.UnwrapVariant[string](link.MustGetProperty("text")))
 
 		title.Release()
 		link.Release()
 		item.Release()
 	}
 	items.Release()
-	xmlhttp.Release()
+	responseXml.Release()
 }

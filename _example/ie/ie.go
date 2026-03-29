@@ -12,11 +12,17 @@ import (
 func main() {
 	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
+	ole.RegisterVariantConverters()
+
 	clsid, _ := ole.ClassIdFromString("InternetExplorer.Application")
 	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	defer unknown.Release()
+
 	ie, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
-	ie.PutProperty("Visible", true)
-	ie.CallMethod("Navigate", "http://www.google.com")
+	defer ie.Release()
+
+	ie.PutProperty("Visible", ole.BoolToVariant(true))
+	ie.CallMethod("Navigate", ole.StringToBStrVariant("http://www.google.com"))
 	for {
 		busy := ole.UnwrapVariant[int](ie.MustGetProperty("Busy"))
 		if busy == 0 {
@@ -35,6 +41,6 @@ func main() {
 
 	// click btnK.
 	elems = ole.VariantToComObject[ole.IDispatch](document.MustCallMethod("getElementsByName", ole.StringToBStrVariant("btnK")))
-	btnG := ole.VariantToComObject[ole.IDispatch](elems.MustCallMethod("item", 0))
+	btnG := ole.VariantToComObject[ole.IDispatch](elems.MustCallMethod("item", ole.Int32ToVariant(0)))
 	btnG.MustCallMethod("click")
 }

@@ -50,24 +50,24 @@ func checkError(err error, msg string) {
 // LOGetCell returns an handle to a cell within a worksheet
 // LibreOffice Basic: GetCell = oSheet.getCellByPosition (nColumn , nRow)
 func LOGetCell(worksheet *ole.IDispatch, nColumn int, nRow int) (cell *ole.IDispatch) {
-	return worksheet.MustCallMethod("getCellByPosition", nColumn, nRow).ToIDispatch()
+	return ole.VariantToComObject[ole.IDispatch](worksheet.MustCallMethod("getCellByPosition", ole.Int32ToVariant(nColumn), ole.Int32ToVariant(nRow)))
 }
 
 // LOGetCellRangeByName returns a named range (e.g. "A1:B4")
 func LOGetCellRangeByName(worksheet *ole.IDispatch, rangeName string) (cells *ole.IDispatch) {
-	return worksheet.MustCallMethod("getCellRangeByName", rangeName).ToIDispatch()
+	return ole.VariantToComObject[ole.IDispatch](worksheet.MustCallMethod("getCellRangeByName", ole.StringToBStrVariant(rangeName)))
 }
 
 // LOGetCellString returns the displayed value
 func LOGetCellString(cell *ole.IDispatch) (value string) {
-	return cell.MustGetProperty("string").ToString()
+	return ole.UnwrapVariant[string](cell.MustGetProperty("string"))
 }
 
 // LOGetCellValue returns the cell's internal value (not formatted, dummy code, FIXME)
 func LOGetCellValue(cell *ole.IDispatch) (value string) {
 	val := cell.MustGetProperty("value")
 	fmt.Printf("Cell: %+v\n", val)
-	return val.ToString()
+	return ole.UnwrapVariant[string](val)
 }
 
 // LOGetCellError returns the error value of a cell (dummy code, FIXME)
@@ -77,40 +77,38 @@ func LOGetCellError(cell *ole.IDispatch) (result *ole.VARIANT) {
 
 // LOSetCellString sets the text value of a cell
 func LOSetCellString(cell *ole.IDispatch, text string) {
-	cell.MustPutProperty("string", text)
+	cell.MustPutProperty("string", ole.StringToBStrVariant(text))
 }
 
 // LOSetCellValue sets the numeric value of a cell
 func LOSetCellValue(cell *ole.IDispatch, value float64) {
-	cell.MustPutProperty("value", value)
+	cell.MustPutProperty("value", ole.Float64ToVariant(value))
 }
 
 // LOSetCellFormula sets the formula (in englisch language)
 func LOSetCellFormula(cell *ole.IDispatch, formula string) {
-	cell.MustPutProperty("formula", formula)
+	cell.MustPutProperty("formula", ole.StringToBStrVariant(formula))
 }
 
 // LOSetCellFormulaLocal sets the formula in the user's language (e.g. German =SUMME instead of =SUM)
 func LOSetCellFormulaLocal(cell *ole.IDispatch, formula string) {
-	cell.MustPutProperty("FormulaLocal", formula)
+	cell.MustPutProperty("FormulaLocal", ole.StringToBStrVariant(formula))
 }
 
 // LONewSpreadsheet creates a new spreadsheet in a new window and returns a document handle.
 func LONewSpreadsheet(desktop *ole.IDispatch) (document *ole.IDispatch) {
-	var args = []string{}
-	document = desktop.MustCallMethod(
-		"loadComponentFromURL", "private:factory/scalc", // alternative: private:factory/swriter
-		"_blank", 0, args).ToIDispatch()
+	document = ole.VariantToComObject[ole.IDispatch](desktop.MustCallMethod(
+		"loadComponentFromURL", ole.StringToBStrVariant("private:factory/scalc"),
+		ole.StringToBStrVariant("_blank"), ole.Int32ToVariant(0)))
 	return
 }
 
 // LOOpenFile opens a file (text, spreadsheet, ...) in a new window and returns a document
 // handle. Example: /home/testuser/spreadsheet.ods
 func LOOpenFile(desktop *ole.IDispatch, fullpath string) (document *ole.IDispatch) {
-	var args = []string{}
-	document = desktop.MustCallMethod(
-		"loadComponentFromURL", "file://"+fullpath,
-		"_blank", 0, args).ToIDispatch()
+	document = ole.VariantToComObject[ole.IDispatch](desktop.MustCallMethod(
+		"loadComponentFromURL", ole.StringToBStrVariant("file://"+fullpath),
+		ole.StringToBStrVariant("_blank"), ole.Int32ToVariant(0)))
 	return
 }
 
@@ -118,29 +116,34 @@ func LOOpenFile(desktop *ole.IDispatch, fullpath string) (document *ole.IDispatc
 // Only works if a file already exists,
 // see https://wiki.openoffice.org/wiki/Saving_a_document
 func LOSaveFile(document *ole.IDispatch) {
-	// use storeAsURL if neccessary with third URL parameter
 	document.MustCallMethod("store")
 }
 
 // LOGetWorksheet returns a worksheet (index starts at 0)
 func LOGetWorksheet(document *ole.IDispatch, index int) (worksheet *ole.IDispatch) {
-	sheets := document.MustGetProperty("Sheets").ToIDispatch()
-	worksheet = sheets.MustCallMethod("getByIndex", index).ToIDispatch()
+	sheets := ole.VariantToComObject[ole.IDispatch](document.MustGetProperty("Sheets"))
+	worksheet = ole.VariantToComObject[ole.IDispatch](sheets.MustCallMethod("getByIndex", ole.Int32ToVariant(index)))
 	return
 }
 
 // This example creates a new spreadsheet, reads and modifies cell values and style.
 func main() {
-	ole.Initialize(ole.Multithreaded)
+	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
-	clsid, err := ole.LookupClassId("com.sun.star.ServiceManager")
+	ole.RegisterVariantConverters()
+
+	clsid, err := ole.ClassIdFromString("com.sun.star.ServiceManager")
 	checkError(err, "Couldn't create a OLE connection to LibreOffice")
 	unknown, errCreate := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
 	checkError(errCreate, "Couldn't create a OLE connection to LibreOffice")
+	defer unknown.Release()
+
 	ServiceManager, errSM := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
 	checkError(errSM, "Couldn't start a LibreOffice instance")
-	desktop := ServiceManager.MustCallMethod(
-		"createInstance", "com.sun.star.frame.Desktop").ToIDispatch()
+	defer ServiceManager.Release()
+
+	desktop := ole.VariantToComObject[ole.IDispatch](ServiceManager.MustCallMethod(
+		"createInstance", ole.StringToBStrVariant("com.sun.star.frame.Desktop")))
 
 	document := LONewSpreadsheet(desktop)
 	sheet0 := LOGetWorksheet(document, 0)
@@ -155,9 +158,8 @@ func main() {
 	b4Value := LOGetCellString(cell1_3)
 	LOSetCellString(cell1_4, b4Value)
 	// set background color yellow:
-	cell1_1.MustPutProperty("cellbackcolor", 0xFFFF00)
+	cell1_1.MustPutProperty("cellbackcolor", ole.Int32ToVariant(0xFFFF00))
 
 	fmt.Printf("Press [ENTER] to exit")
 	fmt.Scanf("%s")
-	ServiceManager.Release()
 }

@@ -28,14 +28,13 @@ type EventReceiverVtbl struct {
 }
 
 func QueryInterface(this *ole.IUnknown, iid *windows.GUID, punk **ole.IUnknown) uint32 {
-	s := iid.String()
 	*punk = nil
-	if *iid == *ole.IID_IUnknown || *iid == *ole.IID_IDispatch {
+	if *iid == ole.IID_IUnknown || *iid == ole.IID_IDispatch {
 		AddRef(this)
 		*punk = this
 		return uint32(windows.S_OK)
 	}
-	if s == "{248DD893-BB45-11CF-9ABC-0080C7E7B78D}" {
+	if iid.String() == "{248DD893-BB45-11CF-9ABC-0080C7E7B78D}" {
 		AddRef(this)
 		*punk = this
 		return uint32(windows.S_OK)
@@ -79,7 +78,7 @@ func Invoke(this *ole.IDispatch, dispid int, riid *windows.GUID, lcid int, flags
 		log.Println("DataArrival")
 		winsock := (*EventReceiver)(unsafe.Pointer(this)).host
 		var data ole.VARIANT
-		data.Init()
+		ole.VariantInit(&data)
 		winsock.CallMethod("GetData", &data)
 		bytes, _ := ole.ToSlice[[]byte]((*ole.SafeArray)(unsafe.Pointer(uintptr(data.Val))))
 		s := string(bytes)
@@ -89,7 +88,7 @@ func Invoke(this *ole.IDispatch, dispid int, riid *windows.GUID, lcid int, flags
 	case 1:
 		log.Println("Connected")
 		winsock := (*EventReceiver)(unsafe.Pointer(this)).host
-		winsock.CallMethod("SendData", "GET / HTTP/1.0\r\n\r\n")
+		winsock.CallMethod("SendData", ole.StringToBStrVariant("GET / HTTP/1.0\r\n\r\n"))
 	case 3:
 		log.Println("SendProgress")
 	case 4:
@@ -111,12 +110,28 @@ func main() {
 	ole.RegisterVariantConverters()
 
 	clsid, _ := windows.GUIDFromString("{248DD896-BB45-11CF-9ABC-0080C7E7B78D}")
-	unknown, err := ole.CreateInstance[ole.IUnknown](clsid, *ole.IID_IUnknown)
+	unknown, err := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
 	if err != nil {
 		panic(err.Error())
 	}
-	winsock, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, *ole.IID_IDispatch)
+	defer unknown.Release()
+
+	winsock, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
+	defer winsock.Release()
+
 	iid, _ := windows.GUIDFromString("{248DD893-BB45-11CF-9ABC-0080C7E7B78D}")
+
+	container, err := ole.QueryIConnectionPointContainerFromIUnknown(unknown)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer container.Release()
+
+	point, err := container.FindConnectionPoint(iid)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer point.Release()
 
 	dest := &EventReceiver{}
 	dest.lpVtbl = &EventReceiverVtbl{}
@@ -129,8 +144,14 @@ func main() {
 	dest.lpVtbl.pInvoke = syscall.NewCallback(Invoke)
 	dest.host = winsock
 
-	ole.ConnectObject(winsock, iid, (*ole.IUnknown)(unsafe.Pointer(dest)))
-	_, err = winsock.CallMethod("Connect", "127.0.0.1", 80)
+	sinkUnknown := (*ole.IUnknown)(unsafe.Pointer(dest))
+	var sink ole.IsIUnknown = sinkUnknown
+	_, err = point.Advise(&sink)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	_, err = winsock.CallMethod("Connect", ole.StringToBStrVariant("127.0.0.1"), ole.Int32ToVariant(80))
 	if err != nil {
 		log.Fatal(err)
 	}

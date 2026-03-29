@@ -14,78 +14,62 @@ func writeExample(excel, workbooks *ole.IDispatch, filepath string) {
 	// ref: https://msdn.microsoft.com/zh-tw/library/office/ff198017.aspx
 	// http://stackoverflow.com/questions/12159513/what-is-the-correct-xlfileformat-enumeration-for-excel-97-2003
 	const xlExcel8 = 56
-	workbook := workbooks.MustCallMethod("Add", nil).ToIDispatch()
+	workbook := ole.VariantToComObject[ole.IDispatch](workbooks.MustCallMethod("Add"))
 	defer workbook.Release()
-	worksheet := workbook.MustGetProperty("Worksheets", 1).ToIDispatch()
+	worksheet := ole.VariantToComObject[ole.IDispatch](workbook.MustGetProperty("Worksheets", ole.Int32ToVariant(1)))
 	defer worksheet.Release()
-	cell := worksheet.MustGetProperty("Cells", 1, 1).ToIDispatch()
-	cell.PutProperty("Value", 12345)
+	cell := ole.VariantToComObject[ole.IDispatch](worksheet.MustGetProperty("Cells", ole.Int32ToVariant(1), ole.Int32ToVariant(1)))
+	cell.PutProperty("Value", ole.Int32ToVariant(12345))
 	cell.Release()
-	activeWorkBook := excel.MustGetProperty("ActiveWorkBook").ToIDispatch()
+	activeWorkBook := ole.VariantToComObject[ole.IDispatch](excel.MustGetProperty("ActiveWorkBook"))
 	defer activeWorkBook.Release()
 
 	os.Remove(filepath)
 	// ref: https://msdn.microsoft.com/zh-tw/library/microsoft.office.tools.excel.workbook.saveas.aspx
-	activeWorkBook.MustCallMethod("SaveAs", filepath, xlExcel8, nil, nil).ToIDispatch()
-
-	//time.Sleep(2 * time.Second)
-
-	// let excel could close without asking
-	// workbook.PutProperty("Saved", true)
-	// workbook.CallMethod("Close", false)
+	activeWorkBook.MustCallMethod("SaveAs", ole.StringToBStrVariant(filepath), ole.Int32ToVariant(xlExcel8))
 }
 
 func readExample(fileName string, excel, workbooks *ole.IDispatch) {
-	workbook, err := workbooks.CallMethod("Open", fileName)
+	workbook, err := workbooks.CallMethod("Open", ole.StringToBStrVariant(fileName))
 
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer workbook.ToIDispatch().Release()
+	workbookDispatch := ole.VariantToComObject[ole.IDispatch](workbook)
+	defer workbookDispatch.Release()
 
-	sheets := excel.MustGetProperty("Sheets").ToIDispatch()
-	sheetCount := (int)(sheets.MustGetProperty("Count").Val)
+	sheets := ole.VariantToComObject[ole.IDispatch](excel.MustGetProperty("Sheets"))
+	sheetCount := int(ole.UnwrapVariant[int32](sheets.MustGetProperty("Count")))
 	fmt.Println("sheet count=", sheetCount)
 	sheets.Release()
 
-	worksheet := workbook.ToIDispatch().MustGetProperty("Worksheets", 1).ToIDispatch()
+	worksheet := ole.VariantToComObject[ole.IDispatch](workbookDispatch.MustGetProperty("Worksheets", ole.Int32ToVariant(1)))
 	defer worksheet.Release()
 	for row := 1; row <= 2; row++ {
 		for col := 1; col <= 5; col++ {
-			cell := worksheet.MustGetProperty("Cells", row, col).ToIDispatch()
+			cell := ole.VariantToComObject[ole.IDispatch](worksheet.MustGetProperty("Cells", ole.Int32ToVariant(row), ole.Int32ToVariant(col)))
 			val, err := cell.GetProperty("Value")
 			if err != nil {
+				cell.Release()
 				break
 			}
-			fmt.Printf("(%d,%d)=%+v toString=%s\n", col, row, val.Value(), val.ToString())
+			fmt.Printf("(%d,%d)=%+v\n", col, row, val)
 			cell.Release()
 		}
 	}
 }
 
 func showMethodsAndProperties(i *ole.IDispatch) {
-	if i.HasTypeInfo() == false {
+	if !i.HasTypeInfo() {
 		return
 	}
 
 	typeInfo := i.GetTypeInfo()
-
 	if typeInfo == nil {
 		return
 	}
 
-	i.VirtualTable().
-
-	n, err := i.GetTypeInfoCount()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	tinfo, err := i.GetTypeInfo()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	fmt.Println("n=", n, "tinfo=", tinfo)
+	fmt.Println("typeInfo=", typeInfo)
 }
 
 func main() {
@@ -102,7 +86,7 @@ func main() {
 	excel, _ := ole.GetActiveObject[ole.IDispatch](clsid, ole.IID_IDispatch)
 	defer excel.Release()
 
-	excel.PutProperty("Visible", old.BoolToVariant(true))
+	excel.PutProperty("Visible", ole.BoolToVariant(true))
 
 	workbooks := ole.VariantToComObject[ole.IDispatch](excel.MustGetProperty("Workbooks"))
 	defer workbooks.Release()
@@ -111,5 +95,4 @@ func main() {
 	writeExample(excel, workbooks, cwd+"\\write.xls")
 	readExample(cwd+"\\excel97-2003.xls", excel, workbooks)
 	showMethodsAndProperties(workbooks)
-	// excel.CallMethod("Quit")
 }
