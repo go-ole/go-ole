@@ -5,6 +5,7 @@ package ole
 import (
 	"strings"
 	"testing"
+	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -20,7 +21,7 @@ func TestSysAllocStringRoundTrip(t *testing.T) {
 		t.Fatalf("UTF16PtrToString() = %q, want %q", got, "Hello, 世界")
 	}
 
-	if got := SysStringLen((*int16)(bstr)); got != uint32(len([]rune("Hello, 世界"))) {
+	if got := SysStringLen((*int16)(unsafe.Pointer(bstr))); got != uint32(len([]rune("Hello, 世界"))) {
 		t.Fatalf("SysStringLen() = %d, want %d", got, len([]rune("Hello, 世界")))
 	}
 }
@@ -36,7 +37,7 @@ func TestSysAllocStringEmpty(t *testing.T) {
 		t.Fatalf("UTF16PtrToString() = %q, want empty string", got)
 	}
 
-	if got := SysStringLen((*int16)(bstr)); got != 0 {
+	if got := SysStringLen((*int16)(unsafe.Pointer(bstr))); got != 0 {
 		t.Fatalf("SysStringLen() = %d, want 0", got)
 	}
 }
@@ -49,7 +50,7 @@ func TestSysAllocStringLenCountsEmbeddedNull(t *testing.T) {
 	}
 	defer SysFreeString(bstr)
 
-	if got := SysStringLen((*int16)(bstr)); got != 3 {
+	if got := SysStringLen((*int16)(unsafe.Pointer(bstr))); got != 3 {
 		t.Fatalf("SysStringLen() = %d, want 3", got)
 	}
 

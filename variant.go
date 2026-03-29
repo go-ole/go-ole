@@ -950,3 +950,8 @@ func VariantBStrToString(variant *VARIANT) any {
 func StringToBStrVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_BSTR, Val: int64(uintptr(unsafe.Pointer(SysAllocString(i.(string)))))}
 }
+
+// HStringToVariant wraps an HString handle in a VT_LPWSTR VARIANT.
+func HStringToVariant(h HString) *VARIANT {
+	return &VARIANT{VT: VT_LPWSTR, Val: int64(uintptr(h))}
+}

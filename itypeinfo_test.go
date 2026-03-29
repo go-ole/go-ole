@@ -12,7 +12,7 @@ import (
 
 func TestITypeInfo(t *testing.T) {
 	t.Run("GetTypeAttr", func(t *testing.T) {
-		want := &TYPEATTR{cbSizeInstance: 42}
+		want := &TYPEATTR{CbSizeInstance: 42}
 		virtualTable := &ITypeInfoVirtualTable{
 			GetTypeAttr: syscall.NewCallback(func(this uintptr, tattr uintptr) uintptr {
 				*(**TYPEATTR)(unsafe.Pointer(tattr)) = want
@@ -28,7 +28,7 @@ func TestITypeInfo(t *testing.T) {
 		if err != nil {
 			t.Fatalf("GetTypeAttr failed: %v", err)
 		}
-		if got.cbSizeInstance != want.cbSizeInstance {
+		if got.CbSizeInstance != want.CbSizeInstance {
 			t.Fatalf("GetTypeAttr() = %v, want %v", got, want)
 		}
 	})

@@ -3,7 +3,11 @@
 package ole
 
 import (
+	"syscall"
 	"testing"
+	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 func TestIUnknown(t *testing.T) {
@@ -13,9 +17,7 @@ func TestIUnknown(t *testing.T) {
 		}
 	}()
 
-	var err error
-
-	err = Initialize(0)
+	_, err := InitializeMultithreaded()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,8 +26,9 @@ func TestIUnknown(t *testing.T) {
 
 	var unknown *IUnknown
 
-	unknown, err = CreateInstance(CLSID_COMEchoTestObject, IID_IUnknown)
+	unknownPtr, err := CreateInstance[*IUnknown](CLSID_COMEchoTestObject, IID_IUnknown)
 	if err == nil {
+		unknown = *unknownPtr
 		defer unknown.Release()
 	}
 }

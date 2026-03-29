@@ -84,12 +84,9 @@ func TestIActivationFactoryGetTrustLevel(t *testing.T) {
 
 func TestIActivationFactoryGetInterfaceIds(t *testing.T) {
 	want := []windows.GUID{IID_IInspectable, iidIActivationFactoryTest}
-	raw := windows.CoTaskMemAlloc(uintptr(len(want)) * unsafe.Sizeof(want[0]))
-	if raw == nil {
-		t.Fatal("CoTaskMemAlloc returned nil")
-	}
-	buffer := unsafe.Slice((*windows.GUID)(raw), len(want))
+	buffer := make([]windows.GUID, len(want))
 	copy(buffer, want)
+	raw := unsafe.Pointer(&buffer[0])
 
 	virtualTable := &IActivationFactoryVirtualTable{
 		getIIds: syscall.NewCallback(func(this uintptr, count uintptr, ids uintptr) uintptr {

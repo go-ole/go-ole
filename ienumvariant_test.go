@@ -11,94 +11,77 @@ func TestIEnumVariant_wmi(t *testing.T) {
 	var err error
 	var classID windows.GUID
 
-	IID_ISWbemLocator := windows.GUID{0x76a6415b, 0xcb41, 0x11d1, [8]byte{0x8b, 0x02, 0x00, 0x60, 0x08, 0x06, 0xd9, 0xb6}}
+	IID_ISWbemLocator := windows.GUID{Data1: 0x76a6415b, Data2: 0xcb41, Data3: 0x11d1, Data4: [8]byte{0x8b, 0x02, 0x00, 0x60, 0x08, 0x06, 0xd9, 0xb6}}
 
-	err = Initialize(0)
+	_, err = InitializeMultithreaded()
 	if err != nil {
-		t.Errorf("Initialize error: %v", err)
+		t.Fatalf("Initialize error: %v", err)
 	}
 	defer Uninitialize()
+	RegisterVariantConverters()
 
 	classID, err = ClassIdFromString("WbemScripting.SWbemLocator")
 	if err != nil {
-		t.Errorf("CreateObject WbemScripting.SWbemLocator returned with %v", err)
+		t.Fatalf("ClassIdFromString WbemScripting.SWbemLocator returned with %v", err)
 	}
 
-	comserver, err := CreateInstance(classID, IID_IUnknown)
+	unknownPtr, err := CreateInstance[*IUnknown](classID, IID_IUnknown)
 	if err != nil {
-		t.Errorf("CreateInstance WbemScripting.SWbemLocator returned with %v", err)
+		t.Fatalf("CreateInstance WbemScripting.SWbemLocator returned with %v", err)
 	}
-	if comserver == nil {
-		t.Error("CreateObject WbemScripting.SWbemLocator not an object")
+	unknown := *unknownPtr
+	if unknown == nil {
+		t.Fatal("CreateInstance WbemScripting.SWbemLocator returned nil")
 	}
-	defer comserver.Release()
+	defer unknown.Release()
 
-	dispatch, err := comserver.QueryInterface(IID_ISWbemLocator)
+	dispatch, err := QueryInterfaceOnIUnknown[IDispatch](unknown, IID_ISWbemLocator)
 	if err != nil {
-		t.Errorf("context.iunknown.QueryInterface returned with %v", err)
+		t.Fatalf("QueryInterfaceOnIUnknown returned with %v", err)
 	}
 	defer dispatch.Release()
 
 	wbemServices, err := dispatch.CallMethod("ConnectServer")
 	if err != nil {
-		t.Errorf("ConnectServer failed with %v", err)
+		t.Fatalf("ConnectServer failed with %v", err)
 	}
 	defer wbemServices.Clear()
 
-	objectset, err := wbemServices.ToIDispatch().CallMethod("ExecQuery", "SELECT * FROM WIN32_Process")
+	wbemServicesDispatch := VariantToComObject[*IDispatch](wbemServices)
+	objectset, err := (*wbemServicesDispatch).CallMethod("ExecQuery", StringToBStrVariant("SELECT * FROM WIN32_Process"))
 	if err != nil {
-		t.Errorf("ExecQuery failed with %v", err)
+		t.Fatalf("ExecQuery failed with %v", err)
 	}
 	defer objectset.Clear()
 
-	enum_property, err := objectset.ToIDispatch().GetProperty("_NewEnum")
+	objectsetDispatch := VariantToComObject[*IDispatch](objectset)
+	enumProperty, err := (*objectsetDispatch).GetProperty("_NewEnum")
 	if err != nil {
-		t.Errorf("Get _NewEnum property failed with %v", err)
+		t.Fatalf("Get _NewEnum property failed with %v", err)
 	}
-	defer enum_property.Clear()
+	defer enumProperty.Clear()
 
-	enum, err := enum_property.ToIUnknown().IEnumVARIANT(IID_IEnumVariant)
+	enumUnknown := VariantToComObject[*IUnknown](enumProperty)
+	enum, err := QueryIEnumVariantFromIUnknown(*enumUnknown)
 	if err != nil {
-		t.Errorf("IEnumVARIANT() returned with %v", err)
+		t.Fatalf("QueryIEnumVariantFromIUnknown returned with %v", err)
 	}
 	if enum == nil {
-		t.Error("Enum is nil")
-		t.FailNow()
+		t.Fatal("Enum is nil")
 	}
 	defer enum.Release()
 
-	for tmp, length, err := enum.Next(1); length > 0; tmp, length, err = enum.Next(1) {
-		if err != nil {
-			t.Errorf("Next() returned with %v", err)
-		}
-		tmp_dispatch := tmp.ToIDispatch()
-		defer tmp_dispatch.Release()
+	for items := enum.Next(1); len(items) > 0; items = enum.Next(1) {
+		itemDispatch := VariantToComObject[*IDispatch](items[0])
+		defer (*itemDispatch).Release()
 
-		props, err := tmp_dispatch.GetProperty("Properties_")
+		nameVariant, err := (*itemDispatch).GetProperty("Name")
 		if err != nil {
-			t.Errorf("Get Properties_ property failed with %v", err)
+			t.Fatalf("Get Name property failed with %v", err)
 		}
-		defer props.Clear()
+		defer nameVariant.Clear()
 
-		props_enum_property, err := props.ToIDispatch().GetProperty("_NewEnum")
-		if err != nil {
-			t.Errorf("Get _NewEnum property failed with %v", err)
-		}
-		defer props_enum_property.Clear()
-
-		props_enum, err := props_enum_property.ToIUnknown().IEnumVARIANT(IID_IEnumVariant)
-		if err != nil {
-			t.Errorf("IEnumVARIANT failed with %v", err)
-		}
-		defer props_enum.Release()
-
-		class_variant, err := tmp_dispatch.GetProperty("Name")
-		if err != nil {
-			t.Errorf("Get Name property failed with %v", err)
-		}
-		defer class_variant.Clear()
-
-		class_name := class_variant.ToString()
-		t.Logf("Got %v", class_name)
+		name := UnwrapVariant[string](nameVariant)
+		t.Logf("Got %v", name)
 	}
 }

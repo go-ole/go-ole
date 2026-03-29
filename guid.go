@@ -30,6 +30,9 @@ var (
 
 	// IID_IProvideClassInfo is for IProvideClassInfo interfaces.
 	IID_IProvideClassInfo, _ = windows.GUIDFromString("{B196B283-BAB4-101A-B69C-00AA00341D07}")
+
+	// IID_IActivationFactory is for IActivationFactory interfaces.
+	IID_IActivationFactory, _ = windows.GUIDFromString("{00000035-0000-0000-C000-000000000046}")
 )
 
 // These are for testing and not part of any library.
