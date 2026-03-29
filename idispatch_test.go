@@ -161,7 +161,7 @@ func TestIDispatchInvokeHelpers(t *testing.T) {
 		}),
 	}
 	dispatch := &IDispatch{VirtualTable: virtualTable}
-	param := NewVariant(VT_I4, 7)
+	param := Int32ToVariant(int32(7))
 	defer param.Clear()
 
 	t.Run("CallMethod", func(t *testing.T) {
@@ -226,7 +226,7 @@ func TestInvokeOnIDispatchReturnsJoinedError(t *testing.T) {
 }
 
 func TestMakeDisplayParams(t *testing.T) {
-	param := NewVariant(VT_I4, 1)
+	param := Int32ToVariant(int32(1))
 	defer param.Clear()
 
 	methodParams := MakeDisplayParams(DISPATCH_METHOD, param)

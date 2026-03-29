@@ -203,12 +203,8 @@ func TestIEnumConnectionsForEach(t *testing.T) {
 		})
 
 		var got []ConnectData
-		err := enum.ForEach(func(item *ConnectData) error {
+		for item := range enum.ForEach {
 			got = append(got, *item)
-			return nil
-		})
-		if err != nil {
-			t.Fatalf("ForEach failed: %v", err)
 		}
 		if len(got) != 2 {
 			t.Fatalf("ForEach count = %d, want 2", len(got))
@@ -218,23 +214,19 @@ func TestIEnumConnectionsForEach(t *testing.T) {
 		}
 	})
 
-	t.Run("propagates callback error", func(t *testing.T) {
+	t.Run("stops when range breaks", func(t *testing.T) {
 		enum, _ := makeEnum([]ConnectData{
 			{unknown: 11, Cookie: 101},
 			{unknown: 22, Cookie: 202},
+			{unknown: 33, Cookie: 303},
 		})
-		wantErr := errors.New("stop iteration")
 		var calls int
 
-		err := enum.ForEach(func(item *ConnectData) error {
+		for item := range enum.ForEach {
 			calls++
 			if item.Cookie == 202 {
-				return wantErr
+				break
 			}
-			return nil
-		})
-		if !errors.Is(err, wantErr) {
-			t.Fatalf("ForEach error = %v, want %v", err, wantErr)
 		}
 		if calls != 2 {
 			t.Fatalf("ForEach callback calls = %d, want 2", calls)

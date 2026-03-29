@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+const testProgramID = "Shell.Application"
+
 func TestInitialize(t *testing.T) {
 	result, err := Initialize(Multithreaded)
 	if err != nil {
@@ -39,14 +41,13 @@ func TestLookupClassId(t *testing.T) {
 	}
 	defer Uninitialize()
 
-	// Use a common CLSID that should be present on Windows
-	clsid, err := LookupClassId("InternetExplorer.Application")
+	clsid, err := ClassIdFromString(testProgramID)
 	if err != nil {
-		t.Skip("InternetExplorer.Application not found, skipping lookup test")
+		t.Skipf("%s not found, skipping lookup test: %v", testProgramID, err)
 	}
 
 	if clsid == (windows.GUID{}) {
-		t.Error("Expected non-empty CLSID for InternetExplorer.Application")
+		t.Errorf("Expected non-empty CLSID for %s", testProgramID)
 	}
 }
 
@@ -57,19 +58,19 @@ func TestCreateInstance(t *testing.T) {
 	}
 	defer Uninitialize()
 
-	clsid, err := LookupClassId("InternetExplorer.Application")
+	clsid, err := ClassIdFromString(testProgramID)
 	if err != nil {
-		t.Skip("InternetExplorer.Application not found, skipping instance creation test")
+		t.Skipf("%s not found, skipping instance creation test: %v", testProgramID, err)
 	}
 
-	unknown, err := CreateInstance[IUnknown](clsid, IID_IUnknown)
+	unknown, err := CreateInstance[*IUnknown](clsid, IID_IUnknown)
 	if err != nil {
 		t.Fatalf("CreateInstance failed: %v", err)
 	}
 	if unknown == nil {
 		t.Fatal("Expected unknown to be non-nil")
 	}
-	unknown.Release()
+	(*unknown).Release()
 }
 
 func TestGetActiveObject(t *testing.T) {
@@ -79,18 +80,17 @@ func TestGetActiveObject(t *testing.T) {
 	}
 	defer Uninitialize()
 
-	clsid, err := LookupClassId("InternetExplorer.Application")
+	clsid, err := ClassIdFromString(testProgramID)
 	if err != nil {
-		t.Skip("InternetExplorer.Application not found, skipping active object test")
+		t.Skipf("%s not found, skipping active object test: %v", testProgramID, err)
 	}
 
-	// This might fail if IE is not running, which is fine
-	obj, err := GetActiveObject[IDispatch](clsid, IID_IDispatch)
+	obj, err := GetActiveObject[*IDispatch](clsid, IID_IDispatch)
 	if err != nil {
 		t.Logf("GetActiveObject failed (expected if not running): %v", err)
 		return
 	}
 	if obj != nil {
-		obj.Release()
+		(*obj).Release()
 	}
 }

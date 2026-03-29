@@ -81,7 +81,8 @@ func Invoke(this *ole.IDispatch, dispid int, riid *windows.GUID, lcid int, flags
 		var data ole.VARIANT
 		data.Init()
 		winsock.CallMethod("GetData", &data)
-		s := string(data.ToArray().ToByteArray())
+		bytes, _ := ole.ToSlice[[]byte]((*ole.SafeArray)(unsafe.Pointer(uintptr(data.Val))))
+		s := string(bytes)
 		println()
 		println(s)
 		println()

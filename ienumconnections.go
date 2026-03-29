@@ -149,17 +149,15 @@ func (obj *IEnumConnections) Next(numRetrieve uint32) (ret []ConnectData) {
 	return
 }
 
-func (v *IEnumConnections) ForEach(callback func(v *ConnectData) error) (err error) {
+func (v *IEnumConnections) ForEach(yield func(v *ConnectData) bool) {
 	v.Reset()
 	items := v.Next(100)
 	for len(items) > 0 {
 		for index := range items {
-			err = callback(&items[index])
-			if err != nil {
-				return err
+			if !yield(&items[index]) {
+				return
 			}
 		}
 		items = v.Next(100)
 	}
-	return nil
 }

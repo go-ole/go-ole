@@ -2,8 +2,34 @@
 
 package ole
 
-import "testing"
-import "golang.org/x/sys/windows"
+import (
+	"errors"
+	"testing"
+
+	"golang.org/x/sys/windows"
+)
+
+func requirePanicError(t *testing.T, want error) func() {
+	t.Helper()
+
+	return func() {
+		t.Helper()
+
+		recovered := recover()
+		if recovered == nil {
+			t.Fatalf("expected panic %v", want)
+		}
+
+		err, ok := recovered.(error)
+		if !ok {
+			t.Fatalf("panic = %T, want error %v", recovered, want)
+		}
+
+		if !errors.Is(err, want) {
+			t.Fatalf("panic = %v, want %v", err, want)
+		}
+	}
+}
 
 func TestMakeNullVariant(t *testing.T) {
 	variant := MakeNullVariant()
@@ -165,5 +191,104 @@ func TestRegisterVariantConverter(t *testing.T) {
 	unwrapped := UnwrapVariant[CustomType](variant)
 	if unwrapped.Value != 42 {
 		t.Fatalf("UnwrapVariant result mismatch: %v", unwrapped)
+	}
+}
+
+func TestWrapVariantUnsupportedType(t *testing.T) {
+	type UnsupportedType struct{}
+
+	_, err := WrapVariant(UnsupportedType{})
+	if !errors.Is(err, UnsupportedNativeType) {
+		t.Fatalf("WrapVariant error = %v, want %v", err, UnsupportedNativeType)
+	}
+}
+
+func TestRegisterToVariantConverter(t *testing.T) {
+	type ToOnlyType struct {
+		Value int
+	}
+
+	RegisterToVariantConverter[ToOnlyType](func(i any) *VARIANT {
+		return &VARIANT{VT: VT_I4, Val: int64(i.(ToOnlyType).Value)}
+	})
+	defer DeregisterToVariantConverter[ToOnlyType]()
+
+	variant, err := WrapVariant(ToOnlyType{Value: 77})
+	if err != nil {
+		t.Fatalf("WrapVariant failed: %v", err)
+	}
+
+	if variant.VT != VT_I4 || variant.Val != 77 {
+		t.Fatalf("WrapVariant result mismatch: %v", variant)
+	}
+}
+
+func TestDeregisterToVariantConverter(t *testing.T) {
+	type ToOnlyType struct {
+		Value int
+	}
+
+	RegisterToVariantConverter[ToOnlyType](func(i any) *VARIANT {
+		return &VARIANT{VT: VT_I4, Val: int64(i.(ToOnlyType).Value)}
+	})
+	DeregisterToVariantConverter[ToOnlyType]()
+
+	_, err := WrapVariant(ToOnlyType{Value: 88})
+	if !errors.Is(err, UnsupportedNativeType) {
+		t.Fatalf("WrapVariant error = %v, want %v", err, UnsupportedNativeType)
+	}
+}
+
+func TestRegisterFromVariantConverter(t *testing.T) {
+	vt := VT(0x9998)
+
+	RegisterFromVariantConverter(vt, func(v *VARIANT) any {
+		return int(v.Val)
+	})
+	defer DeregisterFromVariantConverter(vt)
+
+	value := UnwrapVariant[int](&VARIANT{VT: vt, Val: 64})
+	if value != 64 {
+		t.Fatalf("UnwrapVariant result mismatch: %v", value)
+	}
+}
+
+func TestDeregisterFromVariantConverter(t *testing.T) {
+	vt := VT(0x9997)
+
+	RegisterFromVariantConverter(vt, func(v *VARIANT) any {
+		return int(v.Val)
+	})
+	DeregisterFromVariantConverter(vt)
+
+	defer requirePanicError(t, UnsupportedNativeType)()
+
+	_ = UnwrapVariant[int](&VARIANT{VT: vt, Val: 64})
+}
+
+func TestUnwrapVariantUnsupportedType(t *testing.T) {
+	defer requirePanicError(t, UnsupportedNativeType)()
+
+	_ = UnwrapVariant[int](&VARIANT{VT: VT(0x9996)})
+}
+
+func TestWrapParametersWithVariant(t *testing.T) {
+	RegisterVariantConverters()
+
+	args := WrapParametersWithVariant(int32(12), nil, true)
+	if len(args) != 3 {
+		t.Fatalf("WrapParametersWithVariant length = %d, want 3", len(args))
+	}
+
+	if args[0].VT != VT_BOOL || VariantToBool(args[0]).(bool) != true {
+		t.Fatalf("args[0] = %v, want VT_BOOL true", args[0])
+	}
+
+	if args[1].VT != VT_NULL || args[1].Val != 0 {
+		t.Fatalf("args[1] = %v, want VT_NULL", args[1])
+	}
+
+	if args[2].VT != VT_I4 || VariantToInt32(args[2]).(int32) != 12 {
+		t.Fatalf("args[2] = %v, want VT_I4 12", args[2])
 	}
 }

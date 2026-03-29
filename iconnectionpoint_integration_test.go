@@ -15,7 +15,7 @@ var iidDWebBrowserEvents2Test, _ = windows.GUIDFromString("{34A715A0-6587-11D0-9
 func acquireWebBrowserConnectionPoint(t *testing.T) (*IUnknown, *IConnectionPointContainer, *IConnectionPoint, func()) {
 	t.Helper()
 
-	if err := Initialize(); err != nil {
+	if _, err := Initialize(Multithreaded); err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
 
@@ -37,11 +37,12 @@ func acquireWebBrowserConnectionPoint(t *testing.T) (*IUnknown, *IConnectionPoin
 			continue
 		}
 
-		unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
+		unknownPtr, err := CreateInstance[*IUnknown](classID, IID_IUnknown)
 		if err != nil {
 			failures = append(failures, fmt.Sprintf("%s: create failed: %v", programID, err))
 			continue
 		}
+		unknown := *unknownPtr
 
 		dispatch, dispatchErr := QueryIDispatchFromIUnknown(unknown)
 		if dispatchErr != nil {

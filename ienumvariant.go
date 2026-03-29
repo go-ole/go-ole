@@ -128,8 +128,12 @@ func (obj *IEnumVariant) Skip(numSkip uint) bool {
 }
 
 func (obj *IEnumVariant) Next(numRetrieve uint32) (ret []*VARIANT) {
+	if numRetrieve == 0 {
+		return nil
+	}
+
 	var length uint32
-	var array []*VARIANT
+	array := make([]*VARIANT, numRetrieve)
 	syscall.Syscall6(
 		obj.VirtualTable.Next,
 		4,
@@ -140,24 +144,22 @@ func (obj *IEnumVariant) Next(numRetrieve uint32) (ret []*VARIANT) {
 		0,
 		0)
 
-	ret = unsafe.Slice(&array[0], length)
+	ret = array[:length]
 
 	return
 }
 
-func (obj *IEnumVariant) ForEach(callback func(v *VARIANT) error) (err error) {
+func (obj *IEnumVariant) ForEach(yield func(v *VARIANT) bool) {
 	obj.Reset()
 	items := obj.Next(100)
 	for len(items) > 0 {
 		for _, item := range items {
-			err = callback(item)
-			if err != nil {
-				return err
+			if !yield(item) {
+				return
 			}
 		}
 		items = obj.Next(100)
 	}
-	return nil
 }
 
 func QueryIEnumVariantFromIUnknown(unknown IsIUnknown) (enum *IEnumVariant, err error) {
