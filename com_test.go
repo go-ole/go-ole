@@ -37,7 +37,7 @@ func TestComPublicSetupAndShutDown(t *testing.T) {
 }
 
 func TestComPublicSetupAndShutDown_WithValue(t *testing.T) {
-	result, err := Initialize(ConcurrencyModel(5))
+	result, err := Initialize(ApartmentThreaded | DisableOle1DDE)
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestComPublicExSetupAndShutDown(t *testing.T) {
 }
 
 func TestComPublicExSetupAndShutDown_WithValue(t *testing.T) {
-	result, err := Initialize(ConcurrencyModel(5))
+	result, err := Initialize(Multithreaded | DisableOle1DDE)
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
