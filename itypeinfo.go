@@ -520,13 +520,15 @@ func (obj *ITypeInfo) GetRefTypeInfo(reftype HREFTYPE) (typeInfo *ITypeInfo, err
 
 // AddressOfMember retrieves the addresses of static functions or variables, such as those defined in a DLL.
 func (obj *ITypeInfo) AddressOfMember(memid MEMBERID, invkind int32) (address uintptr, err error) {
-	hr, _, _ := syscall.Syscall(
+	hr, _, _ := syscall.Syscall6(
 		obj.VirtualTable.AddressOfMember,
 		4,
 		uintptr(unsafe.Pointer(obj)),
 		uintptr(memid),
 		uintptr(invkind),
-		uintptr(unsafe.Pointer(&address)))
+		uintptr(unsafe.Pointer(&address)),
+		0,
+		0)
 	if hr != 0 {
 		err = windows.Errno(hr)
 	}

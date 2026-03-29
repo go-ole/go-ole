@@ -985,7 +985,13 @@ func valueAtIndices(sa *SafeArray, indices []int32) (any, error) {
 			return nil, err
 		}
 		defer value.Clear()
-		return value.Value(), nil
+		conversions.lock.RLock()
+		callback, ok := conversions.from[value.VT]
+		conversions.lock.RUnlock()
+		if !ok {
+			return nil, fmt.Errorf("%w: inner vartype %d", UnsupportedElementType, value.VT)
+		}
+		return callback(&value), nil
 	default:
 		return nil, fmt.Errorf("%w: vartype %d", UnsupportedElementType, vt)
 	}

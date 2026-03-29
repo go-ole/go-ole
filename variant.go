@@ -352,12 +352,12 @@ func RegisterVariantConverters() {
 	conversions.from[VT_ERROR] = VariantToError
 	conversions.to[reflect.TypeFor[windows.Handle]().Name()] = HResultToVariant
 
-	conversions.from[VT_UNKNOWN] = VariantToComObject[*IUnknown]
-	conversions.from[VT_UNKNOWN|VT_BYREF] = VariantToComObject[*IUnknown]
+	conversions.from[VT_UNKNOWN] = func(v *VARIANT) any { return VariantToComObject[*IUnknown](v) }
+	conversions.from[VT_UNKNOWN|VT_BYREF] = func(v *VARIANT) any { return VariantToComObject[*IUnknown](v) }
 	conversions.to[reflect.TypeFor[*IUnknown]().Name()] = IUnknownToVariant
 
-	conversions.from[VT_DISPATCH] = VariantToComObject[*IDispatch]
-	conversions.from[VT_DISPATCH|VT_BYREF] = VariantToComObject[*IDispatch]
+	conversions.from[VT_DISPATCH] = func(v *VARIANT) any { return VariantToComObject[*IDispatch](v) }
+	conversions.from[VT_DISPATCH|VT_BYREF] = func(v *VARIANT) any { return VariantToComObject[*IDispatch](v) }
 	conversions.to[reflect.TypeFor[*IDispatch]().Name()] = IDispatchToVariant
 	conversions.to[reflect.TypeFor[**IDispatch]().Name()] = IDispatchToVariant
 
