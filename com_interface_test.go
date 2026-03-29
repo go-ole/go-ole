@@ -63,14 +63,14 @@ func TestCreateInstance(t *testing.T) {
 		t.Skipf("%s not found, skipping instance creation test: %v", testProgramID, err)
 	}
 
-	unknown, err := CreateInstance[*IUnknown](clsid, IID_IUnknown)
+	unknown, err := CreateInstance[IUnknown](clsid, IID_IUnknown)
 	if err != nil {
 		t.Fatalf("CreateInstance failed: %v", err)
 	}
 	if unknown == nil {
 		t.Fatal("Expected unknown to be non-nil")
 	}
-	(*unknown).Release()
+	unknown.Release()
 }
 
 func TestGetActiveObject(t *testing.T) {
@@ -85,12 +85,12 @@ func TestGetActiveObject(t *testing.T) {
 		t.Skipf("%s not found, skipping active object test: %v", testProgramID, err)
 	}
 
-	obj, err := GetActiveObject[*IDispatch](clsid, IID_IDispatch)
+	obj, err := GetActiveObject[IDispatch](clsid, IID_IDispatch)
 	if err != nil {
 		t.Logf("GetActiveObject failed (expected if not running): %v", err)
 		return
 	}
 	if obj != nil {
-		(*obj).Release()
+		obj.Release()
 	}
 }

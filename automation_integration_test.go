@@ -36,12 +36,11 @@ func acquireAutomationDispatch(t *testing.T) (*IUnknown, *IDispatch, automationI
 			continue
 		}
 
-		unknownPtr, err := CreateInstance[*IUnknown](classID, IID_IUnknown)
+		unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
 		if err != nil {
 			failures = append(failures, fmt.Sprintf("%s: create failed: %v", candidate.programID, err))
 			continue
 		}
-		unknown := *unknownPtr
 
 		dispatch, err := QueryIDispatchFromIUnknown(unknown)
 		if err != nil {
@@ -87,12 +86,11 @@ func acquireProvideClassInfo(t *testing.T) (*IUnknown, *IDispatch, *IProvideClas
 			continue
 		}
 
-		unknownPtr, err := CreateInstance[*IUnknown](classID, IID_IUnknown)
+		unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
 		if err != nil {
 			failures = append(failures, fmt.Sprintf("%s: create failed: %v", candidate.programID, err))
 			continue
 		}
-		unknown := *unknownPtr
 
 		dispatch, err := QueryIDispatchFromIUnknown(unknown)
 		if err != nil {

@@ -25,11 +25,10 @@ func TestIEnumVariant_wmi(t *testing.T) {
 		t.Fatalf("ClassIdFromString WbemScripting.SWbemLocator returned with %v", err)
 	}
 
-	unknownPtr, err := CreateInstance[*IUnknown](classID, IID_IUnknown)
+	unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
 	if err != nil {
 		t.Fatalf("CreateInstance WbemScripting.SWbemLocator returned with %v", err)
 	}
-	unknown := *unknownPtr
 	if unknown == nil {
 		t.Fatal("CreateInstance WbemScripting.SWbemLocator returned nil")
 	}

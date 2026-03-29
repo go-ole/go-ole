@@ -7,7 +7,6 @@ package ole
 // deterministic output, so they serve as documentation only.
 
 // CreateInstance creates a COM object given a class ID and interface ID.
-// The result is a pointer to the interface pointer and must be dereferenced.
 func ExampleCreateInstance() {
 	InitializeMultithreaded()
 	defer Uninitialize()
@@ -16,11 +15,10 @@ func ExampleCreateInstance() {
 	if err != nil {
 		return
 	}
-	unknownPtr, err := CreateInstance[*IUnknown](clsid, IID_IUnknown)
+	unknown, err := CreateInstance[IUnknown](clsid, IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 }
 
@@ -33,11 +31,10 @@ func ExampleCreateInstance_dispatch() {
 	if err != nil {
 		return
 	}
-	dispatchPtr, err := CreateInstance[*IDispatch](clsid, IID_IDispatch)
+	dispatch, err := CreateInstance[IDispatch](clsid, IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 }
 
@@ -52,11 +49,10 @@ func ExampleCreateInstance_withQueryInterface() {
 	if err != nil {
 		return
 	}
-	unknownPtr, err := CreateInstance[*IUnknown](clsid, IID_IUnknown)
+	unknown, err := CreateInstance[IUnknown](clsid, IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 
 	dispatch, err := QueryInterfaceOnIUnknown[IDispatch](unknown, IID_IDispatch)
@@ -75,11 +71,10 @@ func ExampleCreateInstanceFromString() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("Excel.Application", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("Excel.Application", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 }
 
@@ -88,11 +83,10 @@ func ExampleCreateInstanceFromString_dictionary() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 }
 
@@ -101,11 +95,10 @@ func ExampleCreateInstanceFromString_guid() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("{00024500-0000-0000-C000-000000000046}", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("{00024500-0000-0000-C000-000000000046}", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 }
 
@@ -118,12 +111,11 @@ func ExampleGetActiveObject() {
 	if err != nil {
 		return
 	}
-	dispatchPtr, err := GetActiveObject[*IDispatch](clsid, IID_IDispatch)
+	dispatch, err := GetActiveObject[IDispatch](clsid, IID_IDispatch)
 	if err != nil {
 		// No running Excel instance found.
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 }
 
@@ -132,11 +124,10 @@ func ExampleGetActiveObjectFromString() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	dispatchPtr, err := GetActiveObjectFromString[*IDispatch]("Excel.Application", IID_IDispatch)
+	dispatch, err := GetActiveObjectFromString[IDispatch]("Excel.Application", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 }
 
@@ -145,11 +136,10 @@ func ExampleQueryInterfaceOnIUnknown() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("Excel.Application", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("Excel.Application", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 
 	dispatch, err := QueryInterfaceOnIUnknown[IDispatch](unknown, IID_IDispatch)
@@ -164,11 +154,10 @@ func ExampleMustQueryInterfaceOnIUnknown() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("Scripting.Dictionary", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("Scripting.Dictionary", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 
 	dispatch := MustQueryInterfaceOnIUnknown[IDispatch](unknown, IID_IDispatch)
@@ -180,11 +169,10 @@ func ExampleQueryIDispatchFromIUnknown() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("Scripting.Dictionary", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("Scripting.Dictionary", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 
 	dispatch, err := QueryIDispatchFromIUnknown(unknown)
@@ -201,11 +189,10 @@ func ExampleIDispatch_CallMethod() {
 	defer Uninitialize()
 	RegisterVariantConverters()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 
 	dispatch.CallMethod("Add", StringToBStrVariant("key"), StringToBStrVariant("value"))
@@ -217,11 +204,10 @@ func ExampleIDispatch_MustCallMethod() {
 	defer Uninitialize()
 	RegisterVariantConverters()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 
 	dispatch.MustCallMethod("Add", StringToBStrVariant("key"), Int32ToVariant(int32(42)))
@@ -233,11 +219,10 @@ func ExampleIDispatch_GetProperty() {
 	defer Uninitialize()
 	RegisterVariantConverters()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 
 	count, err := dispatch.GetProperty("Count")
@@ -253,11 +238,10 @@ func ExampleIDispatch_PutProperty() {
 	defer Uninitialize()
 	RegisterVariantConverters()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("Excel.Application", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("Excel.Application", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 
 	dispatch, err := QueryInterfaceOnIUnknown[IDispatch](unknown, IID_IDispatch)
@@ -275,11 +259,10 @@ func ExampleIDispatch_Invoke() {
 	defer Uninitialize()
 	RegisterVariantConverters()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 
 	result, err := dispatch.Invoke("Count", DISPATCH_PROPERTYGET)
@@ -294,11 +277,10 @@ func ExampleIDispatch_HasTypeInfo() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 
 	if dispatch.HasTypeInfo() {
@@ -312,11 +294,10 @@ func ExampleIDispatch_GetIDsOfNames() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 
 	ids, err := dispatch.GetIDsOfNames([]string{"Count", "Add"})
@@ -331,11 +312,10 @@ func ExampleIDispatch_GetSingleIDOfName() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	dispatchPtr, err := CreateInstanceFromString[*IDispatch]("Scripting.Dictionary", IID_IDispatch)
+	dispatch, err := CreateInstanceFromString[IDispatch]("Scripting.Dictionary", IID_IDispatch)
 	if err != nil {
 		return
 	}
-	dispatch := *dispatchPtr
 	defer dispatch.Release()
 
 	id, err := dispatch.GetSingleIDOfName("Count")
@@ -351,11 +331,10 @@ func ExampleQueryIConnectionPointContainerFromIUnknown() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("InternetExplorer.Application", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("InternetExplorer.Application", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 
 	container, err := QueryIConnectionPointContainerFromIUnknown(unknown)
@@ -371,11 +350,10 @@ func ExampleIConnectionPointContainer_FindConnectionPoint() {
 	InitializeMultithreaded()
 	defer Uninitialize()
 
-	unknownPtr, err := CreateInstanceFromString[*IUnknown]("InternetExplorer.Application", IID_IUnknown)
+	unknown, err := CreateInstanceFromString[IUnknown]("InternetExplorer.Application", IID_IUnknown)
 	if err != nil {
 		return
 	}
-	unknown := *unknownPtr
 	defer unknown.Release()
 
 	container, err := QueryIConnectionPointContainerFromIUnknown(unknown)

@@ -37,12 +37,11 @@ func acquireWebBrowserConnectionPoint(t *testing.T) (*IUnknown, *IConnectionPoin
 			continue
 		}
 
-		unknownPtr, err := CreateInstance[*IUnknown](classID, IID_IUnknown)
+		unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
 		if err != nil {
 			failures = append(failures, fmt.Sprintf("%s: create failed: %v", programID, err))
 			continue
 		}
-		unknown := *unknownPtr
 
 		dispatch, dispatchErr := QueryIDispatchFromIUnknown(unknown)
 		if dispatchErr != nil {

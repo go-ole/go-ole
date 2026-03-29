@@ -180,7 +180,10 @@ func CoInitializeSecurity(cAuthSvc int32,
 }
 
 // CreateInstance of single uninitialized object with GUID.
-func CreateInstance[T IsIUnknown](classId windows.GUID, interfaceId windows.GUID) (unk *T, err error) {
+//
+// T must be a COM interface struct (e.g. IUnknown, IDispatch), not a pointer type.
+// The returned *T is a pointer to the COM object and must be released when done.
+func CreateInstance[T any](classId windows.GUID, interfaceId windows.GUID) (unk *T, err error) {
 	hr, _, _ := procCoCreateInstance.Call(
 		uintptr(unsafe.Pointer(&classId)),
 		0,
@@ -195,9 +198,8 @@ func CreateInstance[T IsIUnknown](classId windows.GUID, interfaceId windows.GUID
 
 // GetActiveObject retrieves virtual table to active object.
 //
-// [T] must be a virtual table structure. This function is unsafe(!!!) and will attempt to populate whatever type you
-// pass.
-func GetActiveObject[T IsIUnknown](classId windows.GUID, interfaceId windows.GUID) (obj *T, err error) {
+// T must be a COM interface struct (e.g. IUnknown, IDispatch), not a pointer type.
+func GetActiveObject[T any](classId windows.GUID, interfaceId windows.GUID) (obj *T, err error) {
 	hr, _, _ := procGetActiveObject.Call(
 		uintptr(unsafe.Pointer(&classId)),
 		uintptr(unsafe.Pointer(&interfaceId)),
@@ -216,7 +218,7 @@ func GetUserDefaultLCID() (lcid uint32) {
 }
 
 // GetObject retrieves pointer to active object.
-func GetObject[T IsIUnknown](programID string, bindOpts *windows.BIND_OPTS3, interfaceId windows.GUID) (unk T, err error) {
+func GetObject[T any](programID string, bindOpts *windows.BIND_OPTS3, interfaceId windows.GUID) (unk T, err error) {
 	if bindOpts != nil {
 		bindOpts.CbStruct = uint32(unsafe.Sizeof(windows.BIND_OPTS3{}))
 	}
@@ -271,7 +273,7 @@ func RtlMoveMemory(dest interface{}, src interface{}, length uint32) {
 // CreateObject creates object from programID based on interface type.
 //
 // Program ID can be either program ID or application string.
-func CreateInstanceFromString[T IsIUnknown](programID string, interfaceId windows.GUID) (obj *T, err error) {
+func CreateInstanceFromString[T any](programID string, interfaceId windows.GUID) (obj *T, err error) {
 	classID, err := ClassIdFromString(programID)
 	if err != nil {
 		return
@@ -288,7 +290,7 @@ func CreateInstanceFromString[T IsIUnknown](programID string, interfaceId window
 // GetObject retrieves active object for program ID and interface ID based on interface type.
 //
 // Program ID can be either program ID or application string.
-func GetActiveObjectFromString[T IsIUnknown](programID string, interfaceId windows.GUID) (obj *T, err error) {
+func GetActiveObjectFromString[T any](programID string, interfaceId windows.GUID) (obj *T, err error) {
 	classID, err := ClassIdFromString(programID)
 	if err != nil {
 		return

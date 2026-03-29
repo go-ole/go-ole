@@ -127,7 +127,7 @@ func TestCreateInstance_FromProgramID(t *testing.T) {
 		t.Skipf("%s not available: %v", testCOMProgramID, err)
 	}
 
-	unknown, err := CreateInstance[*IUnknown](classID, IID_IUnknown)
+	unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
 	if err != nil {
 		t.Fatalf("CreateInstance failed: %v", err)
 	}
@@ -135,7 +135,7 @@ func TestCreateInstance_FromProgramID(t *testing.T) {
 		t.Fatal("CreateInstance returned nil")
 	}
 
-	(*unknown).Release()
+	unknown.Release()
 }
 
 func TestError(t *testing.T) {
