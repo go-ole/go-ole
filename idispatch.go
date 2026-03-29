@@ -357,7 +357,7 @@ func InvokeOnIDispatch(obj IDispatchAddresses, displayId int32, dispatch int16, 
 	hr, _, _ := syscall.Syscall9(
 		obj.InvokeAddress(),
 		9,
-		uintptr(unsafe.Pointer(&obj)),
+		comPointer(obj),
 		uintptr(displayId),
 		uintptr(unsafe.Pointer(&IID_NULL)),
 		uintptr(GetUserDefaultLCID()),

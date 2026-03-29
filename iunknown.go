@@ -3,6 +3,7 @@
 package ole
 
 import (
+	"reflect"
 	"syscall"
 	"unsafe"
 
@@ -19,6 +20,13 @@ type IsIUnknown interface {
 	QueryInterfaceAddress() uintptr
 	AddRefAddress() uintptr
 	ReleaseAddress() uintptr
+}
+
+// comPointer extracts the raw COM this pointer from a COM interface value.
+// All COM interface implementations are pointer types to structs whose first
+// field is the vtable pointer, matching the COM binary layout.
+func comPointer(iface any) uintptr {
+	return reflect.ValueOf(iface).Pointer()
 }
 
 // IUnknown is the base COM interface shared by every COM object.
@@ -70,7 +78,7 @@ func QueryInterfaceOnIUnknown[T any](unknown IsIUnknown, interfaceID windows.GUI
 	hr, _, _ := syscall.Syscall(
 		unknown.QueryInterfaceAddress(),
 		3,
-		uintptr(unsafe.Pointer(&unknown)),
+		comPointer(unknown),
 		uintptr(unsafe.Pointer(&interfaceID)),
 		uintptr(unsafe.Pointer(&ret)))
 
@@ -105,7 +113,7 @@ func AddRefOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}
-	ret, _, _ := syscall.Syscall(unknown.AddRefAddress(), 1, uintptr(unsafe.Pointer(&unknown)), 0, 0)
+	ret, _, _ := syscall.Syscall(unknown.AddRefAddress(), 1, comPointer(unknown), 0, 0)
 	return uint32(ret)
 }
 
@@ -114,6 +122,6 @@ func ReleaseOnIUnknown(unknown IsIUnknown) uint32 {
 	if unknown == nil {
 		return 0
 	}
-	ret, _, _ := syscall.Syscall(unknown.ReleaseAddress(), 1, uintptr(unsafe.Pointer(&unknown)), 0, 0)
+	ret, _, _ := syscall.Syscall(unknown.ReleaseAddress(), 1, comPointer(unknown), 0, 0)
 	return uint32(ret)
 }
