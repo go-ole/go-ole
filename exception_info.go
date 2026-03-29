@@ -52,7 +52,13 @@ func (e *EXCEPINFO) renderStrings() {
 }
 
 // Clear frees BSTR strings inside an EXCEPINFO and set it to NULL.
+// It renders the strings to Go values first so they remain accessible
+// via String() and Error() after the BSTRs are freed.
 func (e *EXCEPINFO) Clear() {
+	if !e.rendered {
+		e.renderStrings()
+	}
+
 	freeBSTR := func(s *uint16) {
 		// SysFreeString don't return errors and is safe for call's on NULL.
 		// https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-sysfreestring
@@ -74,17 +80,17 @@ func (e *EXCEPINFO) Clear() {
 }
 
 // WCode return wCode in EXCEPINFO.
-func (e EXCEPINFO) WCode() uint16 {
+func (e *EXCEPINFO) WCode() uint16 {
 	return e.wCode
 }
 
 // SCode return sCode in EXCEPINFO.
-func (e EXCEPINFO) SCode() uint32 {
+func (e *EXCEPINFO) SCode() uint32 {
 	return e.sCode
 }
 
 // String convert EXCEPINFO to string.
-func (e EXCEPINFO) String() string {
+func (e *EXCEPINFO) String() string {
 	if !e.rendered {
 		e.renderStrings()
 	}
@@ -95,7 +101,7 @@ func (e EXCEPINFO) String() string {
 }
 
 // Error implements error interface and returns error string.
-func (e EXCEPINFO) Error() string {
+func (e *EXCEPINFO) Error() string {
 	if !e.rendered {
 		e.renderStrings()
 	}
