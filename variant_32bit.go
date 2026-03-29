@@ -3,6 +3,7 @@
 
 package ole
 
+// VARIANT is the 32-bit Windows layout for the COM VARIANT union.
 type VARIANT struct {
 	VT         VT     //  2
 	wReserved1 uint16 //  4

@@ -49,6 +49,7 @@ func SysStringLen(v *int16) uint32 {
 	return uint32(l)
 }
 
+// GetErrorDescription returns the Windows message string for errno.
 func GetErrorDescription(errno int) string {
 	var flags uint32 = windows.FORMAT_MESSAGE_FROM_SYSTEM | windows.FORMAT_MESSAGE_ARGUMENT_ARRAY | windows.FORMAT_MESSAGE_IGNORE_INSERTS
 	b := make([]uint16, 300)

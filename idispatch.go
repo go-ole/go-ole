@@ -93,6 +93,12 @@ type TYPEATTR struct {
 	IdldescType      IDLDESC
 }
 
+// IDispatchAddresses describes the IDispatch vtable entries used for late binding.
+//
+// Example:
+//
+//	var dispatch ole.IDispatchAddresses = excel
+//	_ = dispatch.InvokeAddress()
 type IDispatchAddresses interface {
 	IsIUnknown
 	GetTypeInfoCountAddress() uintptr
@@ -101,10 +107,12 @@ type IDispatchAddresses interface {
 	InvokeAddress() uintptr
 }
 
+// IDispatch represents the COM automation interface for late-bound calls.
 type IDispatch struct {
 	VirtualTable *IDispatchVirtualTable
 }
 
+// IDispatchVirtualTable contains the native function pointers for IDispatch.
 type IDispatchVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
@@ -117,42 +125,52 @@ type IDispatchVirtualTable struct {
 	Invoke           uintptr
 }
 
+// QueryInterfaceAddress returns the QueryInterface entry point for obj.
 func (obj *IDispatch) QueryInterfaceAddress() uintptr {
 	return obj.VirtualTable.QueryInterface
 }
 
+// AddRefAddress returns the AddRef entry point for obj.
 func (obj *IDispatch) AddRefAddress() uintptr {
 	return obj.VirtualTable.AddRef
 }
 
+// ReleaseAddress returns the Release entry point for obj.
 func (obj *IDispatch) ReleaseAddress() uintptr {
 	return obj.VirtualTable.Release
 }
 
+// GetTypeInfoCountAddress returns the GetTypeInfoCount entry point for obj.
 func (obj *IDispatch) GetTypeInfoCountAddress() uintptr {
 	return obj.VirtualTable.GetTypeInfoCount
 }
 
+// GetTypeInfoAddress returns the GetTypeInfo entry point for obj.
 func (obj *IDispatch) GetTypeInfoAddress() uintptr {
 	return obj.VirtualTable.GetTypeInfo
 }
 
+// GetIDsOfNamesAddress returns the GetIDsOfNames entry point for obj.
 func (obj *IDispatch) GetIDsOfNamesAddress() uintptr {
 	return obj.VirtualTable.GetIDsOfNames
 }
 
+// InvokeAddress returns the Invoke entry point for obj.
 func (obj *IDispatch) InvokeAddress() uintptr {
 	return obj.VirtualTable.Invoke
 }
 
+// AddRef increments the COM reference count for obj.
 func (obj *IDispatch) AddRef() uint32 {
 	return AddRefOnIUnknown(obj)
 }
 
+// Release decrements the COM reference count for obj.
 func (obj *IDispatch) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
+// HasTypeInfo reports whether obj exposes type information.
 func (obj *IDispatch) HasTypeInfo() bool {
 	var ret uint
 	hr, _, _ := syscall.Syscall(
@@ -169,6 +187,7 @@ func (obj *IDispatch) HasTypeInfo() bool {
 	return ret == 1
 }
 
+// GetTypeInfo returns the default type information for obj, if available.
 func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
 	hr, _, _ := syscall.Syscall6(
 		obj.VirtualTable.GetTypeInfo,
@@ -187,6 +206,7 @@ func (obj *IDispatch) GetTypeInfo() (ret *ITypeInfo) {
 	return
 }
 
+// GetIDsOfNames resolves one or more automation names to DISPIDs.
 func (obj *IDispatch) GetIDsOfNames(names []string) (ret map[string]int32, err error) {
 	wNames := make([]*uint16, len(names))
 	for i := 0; i < len(names); i++ {
@@ -230,6 +250,15 @@ func (obj *IDispatch) GetSingleIDOfName(name string) (displayID int32, err error
 	return
 }
 
+// Invoke resolves name to a DISPID and invokes it with the requested dispatch flags.
+//
+// Example:
+//
+//	result, err := dispatch.Invoke("Visible", ole.DISPATCH_PROPERTYPUT, ole.BoolToVariant(true))
+//	if err != nil {
+//		return err
+//	}
+//	defer result.Clear()
 func (obj *IDispatch) Invoke(name string, dispatch int16, params ...*VARIANT) (result *VARIANT, err error) {
 	displayID, err := obj.GetSingleIDOfName(name)
 	if err != nil {
@@ -298,6 +327,7 @@ func (obj *IDispatch) MustPutPropertyRef(name string, params ...*VARIANT) (resul
 	return
 }
 
+// QueryIDispatchFromIUnknown casts unknown to IDispatch.
 func QueryIDispatchFromIUnknown(unknown IsIUnknown) (dispatch *IDispatch, err error) {
 	if unknown == nil {
 		return nil, ComInterfaceIsNilPointer
@@ -310,6 +340,15 @@ func QueryIDispatchFromIUnknown(unknown IsIUnknown) (dispatch *IDispatch, err er
 	return
 }
 
+// InvokeOnIDispatch calls a member by DISPID on obj.
+//
+// Example:
+//
+//	result, err := ole.InvokeOnIDispatch(dispatch, dispid, ole.DISPATCH_METHOD)
+//	if err != nil {
+//		return err
+//	}
+//	defer result.Clear()
 func InvokeOnIDispatch(obj IDispatchAddresses, displayId int32, dispatch int16, params ...*VARIANT) (result *VARIANT, err error) {
 	dispParams := MakeDisplayParams(dispatch, params...)
 	result = new(VARIANT)
@@ -335,6 +374,7 @@ func InvokeOnIDispatch(obj IDispatchAddresses, displayId int32, dispatch int16, 
 	return
 }
 
+// MakeDisplayParams builds the DISPPARAMS structure expected by IDispatch.Invoke.
 func MakeDisplayParams(dispatch int16, params ...*VARIANT) DISPPARAMS {
 	var dispparams DISPPARAMS
 

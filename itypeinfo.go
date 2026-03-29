@@ -9,95 +9,115 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// MEMBERID identifies a member in a COM type description.
 type MEMBERID int32
+
+// HREFTYPE identifies a referenced type in a COM type library.
 type HREFTYPE uint32
 
+// ITypeComp represents the COM ITypeComp interface.
 type ITypeComp struct {
 	VirtualTable *ITypeCompVirtualTable
 }
 
+// ITypeCompVirtualTable contains the native function pointers for ITypeComp.
 type ITypeCompVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
 	AddRef         uintptr
 	Release        uintptr
 	// ITypeComp
-	Bind            uintptr
-	BindType        uintptr
+	Bind     uintptr
+	BindType uintptr
 }
 
+// QueryInterfaceAddress returns the QueryInterface entry point for obj.
 func (obj *ITypeComp) QueryInterfaceAddress() uintptr {
 	return obj.VirtualTable.QueryInterface
 }
 
+// AddRefAddress returns the AddRef entry point for obj.
 func (obj *ITypeComp) AddRefAddress() uintptr {
 	return obj.VirtualTable.AddRef
 }
 
+// ReleaseAddress returns the Release entry point for obj.
 func (obj *ITypeComp) ReleaseAddress() uintptr {
 	return obj.VirtualTable.Release
 }
 
+// AddRef increments the COM reference count for obj.
 func (obj *ITypeComp) AddRef() uint32 {
 	return AddRefOnIUnknown(obj)
 }
 
+// Release decrements the COM reference count for obj.
 func (obj *ITypeComp) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
+// ITypeLib represents the COM ITypeLib interface.
 type ITypeLib struct {
 	VirtualTable *ITypeLibVirtualTable
 }
 
+// ITypeLibVirtualTable contains the native function pointers for ITypeLib.
 type ITypeLibVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
 	AddRef         uintptr
 	Release        uintptr
 	// ITypeLib
-	GetTypeInfoCount    uintptr
-	GetTypeInfo         uintptr
-	GetTypeInfoType     uintptr
-	GetTypeInfoOfGuid   uintptr
-	GetLibAttr          uintptr
-	GetTypeComp         uintptr
-	GetDocumentation    uintptr
-	IsName              uintptr
-	FindName            uintptr
-	ReleaseTLibAttr     uintptr
+	GetTypeInfoCount  uintptr
+	GetTypeInfo       uintptr
+	GetTypeInfoType   uintptr
+	GetTypeInfoOfGuid uintptr
+	GetLibAttr        uintptr
+	GetTypeComp       uintptr
+	GetDocumentation  uintptr
+	IsName            uintptr
+	FindName          uintptr
+	ReleaseTLibAttr   uintptr
 }
 
+// QueryInterfaceAddress returns the QueryInterface entry point for obj.
 func (obj *ITypeLib) QueryInterfaceAddress() uintptr {
 	return obj.VirtualTable.QueryInterface
 }
 
+// AddRefAddress returns the AddRef entry point for obj.
 func (obj *ITypeLib) AddRefAddress() uintptr {
 	return obj.VirtualTable.AddRef
 }
 
+// ReleaseAddress returns the Release entry point for obj.
 func (obj *ITypeLib) ReleaseAddress() uintptr {
 	return obj.VirtualTable.Release
 }
 
+// AddRef increments the COM reference count for obj.
 func (obj *ITypeLib) AddRef() uint32 {
 	return AddRefOnIUnknown(obj)
 }
 
+// Release decrements the COM reference count for obj.
 func (obj *ITypeLib) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
+// PARAMDESC describes a parameter in COM type information.
 type PARAMDESC struct {
-	Pptrparam uintptr
+	Pptrparam   uintptr
 	WParamFlags uint16
 }
 
+// ELEMDESC describes an element in COM type information.
 type ELEMDESC struct {
-	Tdesc TYPEDESC
+	Tdesc     TYPEDESC
 	Paramdesc PARAMDESC
 }
 
+// FUNCDESC describes a function in COM type information.
 type FUNCDESC struct {
 	Memid             MEMBERID
 	Lprgscode         *int32
@@ -113,6 +133,7 @@ type FUNCDESC struct {
 	WFuncFlags        uint16
 }
 
+// VARDESC describes a variable in COM type information.
 type VARDESC struct {
 	Memid       MEMBERID
 	LpstrSchema *uint16
@@ -122,6 +143,7 @@ type VARDESC struct {
 	Varkind     int32
 }
 
+// ITypeInfoAddresses describes the ITypeInfo vtable entries.
 type ITypeInfoAddresses interface {
 	IsIUnknown
 	GetTypeAttrAddress() uintptr
@@ -145,10 +167,12 @@ type ITypeInfoAddresses interface {
 	ReleaseVarDescAddress() uintptr
 }
 
+// ITypeInfo represents the COM ITypeInfo interface.
 type ITypeInfo struct {
 	VirtualTable *ITypeInfoVirtualTable
 }
 
+// ITypeInfoVirtualTable contains the native function pointers for ITypeInfo.
 type ITypeInfoVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
@@ -176,98 +200,122 @@ type ITypeInfoVirtualTable struct {
 	ReleaseVarDesc       uintptr
 }
 
+// QueryInterfaceAddress returns the QueryInterface entry point for obj.
 func (obj *ITypeInfo) QueryInterfaceAddress() uintptr {
 	return obj.VirtualTable.QueryInterface
 }
 
+// AddRefAddress returns the AddRef entry point for obj.
 func (obj *ITypeInfo) AddRefAddress() uintptr {
 	return obj.VirtualTable.AddRef
 }
 
+// ReleaseAddress returns the Release entry point for obj.
 func (obj *ITypeInfo) ReleaseAddress() uintptr {
 	return obj.VirtualTable.Release
 }
 
+// AddRef increments the COM reference count for obj.
 func (obj *ITypeInfo) AddRef() uint32 {
 	return AddRefOnIUnknown(obj)
 }
 
+// Release decrements the COM reference count for obj.
 func (obj *ITypeInfo) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
+// GetTypeAttrAddress returns the GetTypeAttr entry point for obj.
 func (obj *ITypeInfo) GetTypeAttrAddress() uintptr {
 	return obj.VirtualTable.GetTypeAttr
 }
 
+// GetTypeCompAddress returns the GetTypeComp entry point for obj.
 func (obj *ITypeInfo) GetTypeCompAddress() uintptr {
 	return obj.VirtualTable.GetTypeComp
 }
 
+// GetFuncDescAddress returns the GetFuncDesc entry point for obj.
 func (obj *ITypeInfo) GetFuncDescAddress() uintptr {
 	return obj.VirtualTable.GetFuncDesc
 }
 
+// GetVarDescAddress returns the GetVarDesc entry point for obj.
 func (obj *ITypeInfo) GetVarDescAddress() uintptr {
 	return obj.VirtualTable.GetVarDesc
 }
 
+// GetNamesAddress returns the GetNames entry point for obj.
 func (obj *ITypeInfo) GetNamesAddress() uintptr {
 	return obj.VirtualTable.GetNames
 }
 
+// GetRefTypeOfImplTypeAddress returns the GetRefTypeOfImplType entry point for obj.
 func (obj *ITypeInfo) GetRefTypeOfImplTypeAddress() uintptr {
 	return obj.VirtualTable.GetRefTypeOfImplType
 }
 
+// GetImplTypeFlagsAddress returns the GetImplTypeFlags entry point for obj.
 func (obj *ITypeInfo) GetImplTypeFlagsAddress() uintptr {
 	return obj.VirtualTable.GetImplTypeFlags
 }
 
+// GetIDsOfNamesAddress returns the GetIDsOfNames entry point for obj.
 func (obj *ITypeInfo) GetIDsOfNamesAddress() uintptr {
 	return obj.VirtualTable.GetIDsOfNames
 }
 
+// InvokeAddress returns the Invoke entry point for obj.
 func (obj *ITypeInfo) InvokeAddress() uintptr {
 	return obj.VirtualTable.Invoke
 }
 
+// GetDocumentationAddress returns the GetDocumentation entry point for obj.
 func (obj *ITypeInfo) GetDocumentationAddress() uintptr {
 	return obj.VirtualTable.GetDocumentation
 }
 
+// GetDllEntryAddress returns the GetDllEntry entry point for obj.
 func (obj *ITypeInfo) GetDllEntryAddress() uintptr {
 	return obj.VirtualTable.GetDllEntry
 }
 
+// GetRefTypeInfoAddress returns the GetRefTypeInfo entry point for obj.
 func (obj *ITypeInfo) GetRefTypeInfoAddress() uintptr {
 	return obj.VirtualTable.GetRefTypeInfo
 }
 
+// AddressOfMemberAddress returns the AddressOfMember entry point for obj.
 func (obj *ITypeInfo) AddressOfMemberAddress() uintptr {
 	return obj.VirtualTable.AddressOfMember
 }
 
+// CreateInstanceAddress returns the CreateInstance entry point for obj.
 func (obj *ITypeInfo) CreateInstanceAddress() uintptr {
 	return obj.VirtualTable.CreateInstance
 }
 
+// GetMopsAddress returns the GetMops entry point for obj.
 func (obj *ITypeInfo) GetMopsAddress() uintptr {
 	return obj.VirtualTable.GetMops
 }
 
+// GetContainingTypeLibAddress returns the GetContainingTypeLib entry point for obj.
 func (obj *ITypeInfo) GetContainingTypeLibAddress() uintptr {
 	return obj.VirtualTable.GetContainingTypeLib
 }
 
+// ReleaseTypeAttrAddress returns the ReleaseTypeAttr entry point for obj.
 func (obj *ITypeInfo) ReleaseTypeAttrAddress() uintptr {
 	return obj.VirtualTable.ReleaseTypeAttr
 }
 
+// ReleaseFuncDescAddress returns the ReleaseFuncDesc entry point for obj.
 func (obj *ITypeInfo) ReleaseFuncDescAddress() uintptr {
 	return obj.VirtualTable.ReleaseFuncDesc
 }
 
+// ReleaseVarDescAddress returns the ReleaseVarDesc entry point for obj.
 func (obj *ITypeInfo) ReleaseVarDescAddress() uintptr {
 	return obj.VirtualTable.ReleaseVarDesc
 }

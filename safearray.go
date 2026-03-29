@@ -26,6 +26,7 @@ const (
 	FADF_RESERVED    = 0xF008
 )
 
+// SafeArrayBound describes one SAFEARRAY dimension in Go slice order.
 type SafeArrayBound struct {
 	Elements   uint32
 	LowerBound int32

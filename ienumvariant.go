@@ -9,6 +9,15 @@ import (
 	"unsafe"
 )
 
+// IEnumVariantAddresses describes the IEnumVARIANT vtable entries.
+//
+// Example:
+//
+//	enum, err := ole.QueryIEnumVariantFromIUnknown(collection)
+//	if err != nil {
+//		return err
+//	}
+//	defer enum.Release()
 type IEnumVariantAddresses interface {
 	IsIUnknown
 	NextAddress() uintptr
@@ -17,10 +26,12 @@ type IEnumVariantAddresses interface {
 	CloneAddress() uintptr
 }
 
+// IEnumVariant represents the COM IEnumVARIANT enumerator interface.
 type IEnumVariant struct {
 	VirtualTable *IEnumVariantVirtualTable
 }
 
+// IEnumVariantVirtualTable contains the native function pointers for IEnumVARIANT.
 type IEnumVariantVirtualTable struct {
 	// IUnknown
 	QueryInterface uintptr
@@ -37,42 +48,52 @@ var (
 	EnumOutOfMemoryError = errors.New("IEnumVariant: OutOfMemoryError")
 )
 
+// QueryInterfaceAddress returns the QueryInterface entry point for v.
 func (v *IEnumVariant) QueryInterfaceAddress() uintptr {
 	return v.VirtualTable.QueryInterface
 }
 
+// AddRefAddress returns the AddRef entry point for v.
 func (v *IEnumVariant) AddRefAddress() uintptr {
 	return v.VirtualTable.AddRef
 }
 
+// ReleaseAddress returns the Release entry point for v.
 func (v *IEnumVariant) ReleaseAddress() uintptr {
 	return v.VirtualTable.Release
 }
 
+// NextAddress returns the Next entry point for obj.
 func (obj *IEnumVariant) NextAddress() uintptr {
 	return obj.VirtualTable.Next
 }
 
+// SkipAddress returns the Skip entry point for obj.
 func (obj *IEnumVariant) SkipAddress() uintptr {
 	return obj.VirtualTable.Skip
 }
 
+// ResetAddress returns the Reset entry point for obj.
 func (obj *IEnumVariant) ResetAddress() uintptr {
 	return obj.VirtualTable.Reset
 }
 
+// CloneAddress returns the Clone entry point for obj.
 func (obj *IEnumVariant) CloneAddress() uintptr {
 	return obj.VirtualTable.Clone
 }
 
+// AddRef increments the COM reference count for obj.
 func (obj *IEnumVariant) AddRef() uint32 {
 	return AddRefOnIUnknown(obj)
 }
 
+// Release decrements the COM reference count for obj.
 func (obj *IEnumVariant) Release() uint32 {
 	return ReleaseOnIUnknown(obj)
 }
 
+// Clone duplicates the enumeration state of obj.
 func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 	hr, _, _ := syscall.Syscall(
 		obj.VirtualTable.Clone,
@@ -91,6 +112,7 @@ func (obj *IEnumVariant) Clone() (cloned *IEnumVariant, err error) {
 	}
 }
 
+// Reset moves obj back to the start of the enumeration.
 func (obj *IEnumVariant) Reset() bool {
 	hr, _, _ := syscall.Syscall(
 		obj.VirtualTable.Reset,
@@ -109,6 +131,7 @@ func (obj *IEnumVariant) Reset() bool {
 	}
 }
 
+// Skip advances obj by numSkip elements.
 func (obj *IEnumVariant) Skip(numSkip uint) bool {
 	hr, _, _ := syscall.Syscall(
 		obj.VirtualTable.Skip,
@@ -127,6 +150,7 @@ func (obj *IEnumVariant) Skip(numSkip uint) bool {
 	}
 }
 
+// Next retrieves up to numRetrieve elements from obj.
 func (obj *IEnumVariant) Next(numRetrieve uint32) (ret []*VARIANT) {
 	if numRetrieve == 0 {
 		return nil
@@ -149,6 +173,7 @@ func (obj *IEnumVariant) Next(numRetrieve uint32) (ret []*VARIANT) {
 	return
 }
 
+// ForEach calls yield for each item until the enumeration ends or yield returns false.
 func (obj *IEnumVariant) ForEach(yield func(v *VARIANT) bool) {
 	obj.Reset()
 	items := obj.Next(100)
@@ -162,6 +187,7 @@ func (obj *IEnumVariant) ForEach(yield func(v *VARIANT) bool) {
 	}
 }
 
+// QueryIEnumVariantFromIUnknown casts unknown to IEnumVARIANT.
 func QueryIEnumVariantFromIUnknown(unknown IsIUnknown) (enum *IEnumVariant, err error) {
 	if unknown == nil {
 		return nil, ComInterfaceIsNilPointer

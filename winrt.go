@@ -15,6 +15,7 @@ var (
 	procRoGetActivationFactory = modcombase.NewProc("RoGetActivationFactory")
 )
 
+// RoThreading selects the apartment model used by RoInitialize.
 type RoThreading uint32
 
 const (
@@ -22,6 +23,16 @@ const (
 	RoMultithreaded              = 1
 )
 
+// RoInitialize initializes the calling thread for WinRT activation APIs.
+//
+// Example:
+//
+//	result, err := ole.RoInitialize(ole.RoSingleThreaded)
+//	if err != nil {
+//		return err
+//	}
+//	defer ole.RoUninitialize()
+//	_ = result
 func RoInitialize(threadType RoThreading) (ret InitializeResult, err error) {
 	hr, _, _ := procRoInitialize.Call(uintptr(threadType))
 
@@ -39,6 +50,7 @@ func RoInitialize(threadType RoThreading) (ret InitializeResult, err error) {
 	}
 }
 
+// RoUninitialize balances a successful RoInitialize call.
 func RoUninitialize() {
 	procRoUninitialize.Call()
 }
@@ -68,6 +80,15 @@ func RoActivateInstance(classId string) (obj *IInspectable, err error) {
 	return
 }
 
+// RoGetActivationFactory resolves the activation factory for a WinRT runtime class.
+//
+// Example:
+//
+//	factory, err := ole.RoGetActivationFactory("Windows.Foundation.Uri", ole.IID_IActivationFactory)
+//	if err != nil {
+//		return err
+//	}
+//	defer factory.Release()
 func RoGetActivationFactory(classId string, interfaceId windows.GUID) (obj *IActivationFactory, err error) {
 	hClassId, err := NewHString(classId)
 	if err != nil {

@@ -22,6 +22,7 @@ var (
 	procVariantClear = modoleaut32.NewProc("VariantClear")
 )
 
+// Clear releases any resources owned by v and resets it to VT_EMPTY.
 func (v *VARIANT) Clear() error {
 	return VariantClear(v)
 }
@@ -44,7 +45,10 @@ func VariantClear(v *VARIANT) (err error) {
 	return
 }
 
+// ToVariantCallback converts a Go value into a VARIANT.
 type ToVariantCallback func(any) *VARIANT
+
+// FromVariantCallback converts a VARIANT into a Go value.
 type FromVariantCallback func(*VARIANT) any
 
 // variantTypeContainer keeps track of mapping for type conversions.
@@ -492,18 +496,22 @@ func ErrorToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_ERROR, Val: int64(i.(windows.Handle))}
 }
 
+// VariantToError converts a VT_ERROR VARIANT into a Go error code value.
 func VariantToError(variant *VARIANT) any {
 	return windows.Handle(uintptr(variant.Val))
 }
 
+// VariantToHandle converts a pointer-sized VARIANT payload into a Windows handle.
 func VariantToHandle(variant *VARIANT) any {
 	return windows.Handle(uintptr(variant.Val))
 }
 
+// HandleToVariant wraps a Windows handle in a VT_INT_PTR VARIANT.
 func HandleToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_HRESULT, Val: int64(i.(windows.Handle))}
 }
 
+// IUnknownToVariant wraps an *IUnknown in a VT_UNKNOWN VARIANT.
 func IUnknownToVariant(i any) *VARIANT {
 	switch i.(type) {
 	case *IUnknown:
@@ -514,6 +522,7 @@ func IUnknownToVariant(i any) *VARIANT {
 	return nil
 }
 
+// IDispatchToVariant wraps an *IDispatch in a VT_DISPATCH VARIANT.
 func IDispatchToVariant(i any) *VARIANT {
 	switch i.(type) {
 	case *IDispatch:
@@ -524,6 +533,7 @@ func IDispatchToVariant(i any) *VARIANT {
 	return nil
 }
 
+// VariantToComObject extracts a COM interface pointer from a VT_UNKNOWN or VT_DISPATCH VARIANT.
 func VariantToComObject[T IsIUnknown](variant *VARIANT) *T {
 	return (*T)(unsafe.Pointer(uintptr(variant.Val)))
 }
@@ -582,18 +592,22 @@ func VariantToVoid[T any](variant *VARIANT) any {
 	return (*T)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// VariantToIntPtr converts a VT_INT_PTR VARIANT into a uintptr.
 func VariantToIntPtr(variant *VARIANT) any {
 	return (uintptr)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// IntPtrToVariant wraps a uintptr in a VT_INT_PTR VARIANT.
 func IntPtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_INT_PTR, Val: int64(uintptr(unsafe.Pointer(&i)))}
 }
 
+// VariantToUIntPtr converts a VT_UINT_PTR VARIANT into a uintptr.
 func VariantToUIntPtr(variant *VARIANT) any {
 	return (uintptr)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// UIntPtrToVariant wraps a uintptr in a VT_UINT_PTR VARIANT.
 func UIntPtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UINT_PTR, Val: int64(uintptr(unsafe.Pointer(&i)))}
 }
@@ -673,6 +687,7 @@ func TimeToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_DATE, Val: int64(number)}
 }
 
+// VariantToBool converts a VT_BOOL VARIANT into a Go bool.
 func VariantToBool(variant *VARIANT) any {
 	return variant.Val != int64(VariantTypeFalse)
 }
@@ -686,6 +701,7 @@ func BoolToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_BOOL, Val: int64(VariantTypeFalse)}
 }
 
+// VariantToBoolPtr converts a VT_BOOL|VT_BYREF VARIANT into a *bool.
 func VariantToBoolPtr(variant *VARIANT) any {
 	val := *(*int16)(unsafe.Pointer(uintptr(variant.Val)))
 	return val != VariantTypeFalse
@@ -708,6 +724,7 @@ func Int8ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I1, Val: int64(i.(int8))}
 }
 
+// VariantToInt8 converts a VT_I1 VARIANT into an int8.
 func VariantToInt8(variant *VARIANT) any {
 	return int8(variant.Val)
 }
@@ -717,14 +734,17 @@ func Int8PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I1 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*int8))))}
 }
 
+// VariantToInt8Ptr converts a VT_I1|VT_BYREF VARIANT into an *int8.
 func VariantToInt8Ptr(variant *VARIANT) any {
 	return (*int8)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// UInt8ToVariant wraps a uint8 in a VT_UI1 VARIANT.
 func UInt8ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI1, Val: int64(i.(uint8))}
 }
 
+// VariantToUInt8 converts a VT_UI1 VARIANT into a uint8.
 func VariantToUInt8(variant *VARIANT) any {
 	return uint8(variant.Val)
 }
@@ -734,14 +754,17 @@ func UInt8PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI1 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*uint8))))}
 }
 
+// VariantToUInt8Ptr converts a VT_UI1|VT_BYREF VARIANT into a *uint8.
 func VariantToUInt8Ptr(variant *VARIANT) any {
 	return (*uint8)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// Int16ToVariant wraps an int16 in a VT_I2 VARIANT.
 func Int16ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I2, Val: int64(i.(int16))}
 }
 
+// VariantToInt16 converts a VT_I2 VARIANT into an int16.
 func VariantToInt16(variant *VARIANT) any {
 	return int16(variant.Val)
 }
@@ -751,14 +774,17 @@ func Int16PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I2 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*int16))))}
 }
 
+// VariantToInt16Ptr converts a VT_I2|VT_BYREF VARIANT into an *int16.
 func VariantToInt16Ptr(variant *VARIANT) any {
 	return (*int16)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// UInt16ToVariant wraps a uint16 in a VT_UI2 VARIANT.
 func UInt16ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI2, Val: int64(i.(uint16))}
 }
 
+// VariantToUInt16 converts a VT_UI2 VARIANT into a uint16.
 func VariantToUInt16(variant *VARIANT) any {
 	return uint16(variant.Val)
 }
@@ -768,14 +794,17 @@ func UInt16PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI2 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*uint16))))}
 }
 
+// VariantToUInt16Ptr converts a VT_UI2|VT_BYREF VARIANT into a *uint16.
 func VariantToUInt16Ptr(variant *VARIANT) any {
 	return (*uint16)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// Int32ToVariant wraps an int32 in a VT_I4 VARIANT.
 func Int32ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I4, Val: int64(i.(int32))}
 }
 
+// VariantToInt32 converts a VT_I4 VARIANT into an int32.
 func VariantToInt32(variant *VARIANT) any {
 	return int32(variant.Val)
 }
@@ -785,14 +814,17 @@ func Int32PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*int32))))}
 }
 
+// VariantToInt32Ptr converts a VT_I4|VT_BYREF VARIANT into an *int32.
 func VariantToInt32Ptr(variant *VARIANT) any {
 	return (*int32)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// UInt32ToVariant wraps a uint32 in a VT_UI4 VARIANT.
 func UInt32ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI4, Val: int64(i.(uint32))}
 }
 
+// VariantToUInt32 converts a VT_UI4 VARIANT into a uint32.
 func VariantToUInt32(variant *VARIANT) any {
 	return uint32(variant.Val)
 }
@@ -802,14 +834,17 @@ func UInt32PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*uint16))))}
 }
 
+// VariantToUInt32Ptr converts a VT_UI4|VT_BYREF VARIANT into a *uint32.
 func VariantToUInt32Ptr(variant *VARIANT) any {
 	return (*uint32)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// Int64ToVariant wraps an int64 in a VT_I8 VARIANT.
 func Int64ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I8, Val: i.(int64)}
 }
 
+// VariantToInt64 converts a VT_I8 VARIANT into an int64.
 func VariantToInt64(variant *VARIANT) any {
 	return int64(variant.Val)
 }
@@ -819,14 +854,17 @@ func Int64PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_I8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*int64))))}
 }
 
+// VariantToInt64Ptr converts a VT_I8|VT_BYREF VARIANT into an *int64.
 func VariantToInt64Ptr(variant *VARIANT) any {
 	return (*int64)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// UInt64ToVariant wraps a uint64 in a VT_UI8 VARIANT.
 func UInt64ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI8, Val: int64(i.(uint64))}
 }
 
+// VariantToUInt64 converts a VT_UI8 VARIANT into a uint64.
 func VariantToUInt64(variant *VARIANT) any {
 	return uint64(variant.Val)
 }
@@ -836,64 +874,79 @@ func UInt64PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UI8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*uint64))))}
 }
 
+// VariantToUInt64Ptr converts a VT_UI8|VT_BYREF VARIANT into a uint64 value.
 func VariantToUInt64Ptr(variant *VARIANT) any {
 	return *(*uint64)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
+// IntToVariant wraps an int in a VT_INT VARIANT.
 func IntToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_INT, Val: int64(i.(int))}
 }
 
+// VariantToInt converts a VT_INT VARIANT into an int.
 func VariantToInt(variant *VARIANT) any {
 	return int(variant.Val)
 }
 
+// UIntToVariant wraps a uint in a VT_UINT VARIANT.
 func UIntToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_UINT, Val: int64(i.(uint))}
 }
 
+// VariantToUInt converts a VT_UINT VARIANT into a uint.
 func VariantToUInt(variant *VARIANT) any {
 	return uint(variant.Val)
 }
 
+// VariantToFloat32 converts a VT_R4 VARIANT into a float32.
 func VariantToFloat32(variant *VARIANT) any {
 	return math.Float32frombits(uint32(variant.Val))
 }
 
+// Float32ToVariant wraps a float32 in a VT_R4 VARIANT.
 func Float32ToVariant(i any) *VARIANT {
 	number := math.Float32bits(i.(float32))
 	return &VARIANT{VT: VT_R4, Val: int64(number)}
 }
 
+// VariantToFloat32Ptr converts a VT_R4|VT_BYREF VARIANT into a float32 value.
 func VariantToFloat32Ptr(variant *VARIANT) any {
 	return math.Float32frombits(*(*uint32)(unsafe.Pointer(uintptr(variant.Val))))
 }
 
+// Float32PtrToVariant wraps a *float32 in a VT_R4|VT_BYREF VARIANT.
 func Float32PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_R4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*float32))))}
 }
 
+// VariantToFloat64 converts a VT_R8 VARIANT into a float64.
 func VariantToFloat64(variant *VARIANT) any {
 	return math.Float64frombits(uint64(variant.Val))
 }
 
+// Float64ToVariant wraps a float64 in a VT_R8 VARIANT.
 func Float64ToVariant(i any) *VARIANT {
 	number := math.Float64bits(i.(float64))
 	return &VARIANT{VT: VT_R8, Val: int64(number)}
 }
 
+// Float64PtrToVariant wraps a *float64 in a VT_R8|VT_BYREF VARIANT.
 func Float64PtrToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_R8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*float64))))}
 }
 
+// VariantToFloat64Ptr converts a VT_R8|VT_BYREF VARIANT into a float64 value.
 func VariantToFloat64Ptr(variant *VARIANT) any {
 	return math.Float64frombits(*(*uint64)(unsafe.Pointer(uintptr(variant.Val))))
 }
 
+// VariantBStrToString converts a VT_BSTR VARIANT into a Go string.
 func VariantBStrToString(variant *VARIANT) any {
 	return windows.UTF16PtrToString((*uint16)(unsafe.Pointer(uintptr(variant.Val))))
 }
 
+// StringToBStrVariant wraps a Go string in a VT_BSTR VARIANT.
 func StringToBStrVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_BSTR, Val: int64(uintptr(unsafe.Pointer(SysAllocString(i.(string)))))}
 }

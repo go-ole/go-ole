@@ -2,6 +2,7 @@ package ole
 
 import "time"
 
+// VT identifies the value type stored in a VARIANT.
 type VT uint16
 
 const (
