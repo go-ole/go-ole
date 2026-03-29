@@ -8,6 +8,11 @@ import (
 	"unsafe"
 )
 
+type IProvideClassInfoAddresses interface {
+	IsIUnknown
+	GetClassInfoAddress() uintptr
+}
+
 type IProvideClassInfo struct {
 	VirtualTable *IProvideClassInfoVirtualTable
 }
@@ -29,6 +34,10 @@ func (obj *IProvideClassInfo) AddRefAddress() uintptr {
 
 func (obj *IProvideClassInfo) ReleaseAddress() uintptr {
 	return obj.VirtualTable.Release
+}
+
+func (obj *IProvideClassInfo) GetClassInfoAddress() uintptr {
+	return obj.VirtualTable.GetClassInfo
 }
 
 func (obj *IProvideClassInfo) AddRef() uint32 {

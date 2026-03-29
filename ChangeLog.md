@@ -1,22 +1,32 @@
-# Version 2.0-alpha
+# Version 2.0.0-alpha
 
-* Use `golang.org/x/sys/windows` package as a base instead of calling out to each COM DLL.
-* Reduce package size by removing unused COM interfaces and functions.
-  * These have been or will be moved to their own repository to preserve the functionality if you need it.
-* oleutil is top level and no longer a subpackage.
+This release is a major API and implementation overhaul. The v2 branch moves the Windows interop layer onto `golang.org/x/sys/windows`, introduces generic helpers for COM and `VARIANT` handling, restructures packages, and expands WinRT and SafeArray support.
 
-## Features
+## User-Facing Changes
 
-* `Initialize` provides additional information by wrapping the COM into golang constants.
-  * Added `InitializeMultithreaded` function to alias Multithreaded `CoInitializeEx()`.
-  * Added `InitializeApartmentThreaded` function to alias ApartmentThreaded `CoInitializeEx()`.
-  * Added `ConcurrencyModel` type to restrict values to Initialize (you may still cast a `uint32` to `ConcurrencyModel`).
-  * `Initialize()` will return `InitializeResult` type providing more information instead of an error as the result.
+### New and Expanded APIs
 
-    The return tuple gives `SuccessfullyInitialized`, `AlreadyInitialized`, or `IncompatibleConcurrencyModelAlreadyInitialized`
-    as success values. These should mean the COM was either already initialized or has initialized and is ready to proceed.
-    the second value is the error part of the tuple and means the Initialization failed.
-* 
+* `Initialize` now returns `InitializeResult` plus `error`, making COM initialization state explicit.
+  * Added `InitializeMultithreaded` and `InitializeApartmentThreaded` convenience helpers.
+  * Added `ConcurrencyModel` to constrain `Initialize` inputs.
+* Added generic COM querying helpers so callers can request concrete interface types directly from `IUnknown`.
+* Added a new generic `VARIANT` conversion model.
+  * `WrapVariant` and `UnwrapVariant` convert between native Go values and `*VARIANT`.
+  * Added registration and deregistration APIs for custom `VT` and Go-type conversions.
+* Added or expanded wrappers for WinRT and COM interfaces including `IInspectable`, `IActivationFactory`, `IEnumConnections`, `IRecordInfo`, `IConnectionPoint`, and `IConnectionPointContainer`.
+* Added WinRT helpers such as `RoInitialize`, `RoUninitialize`, `RoActivateInstance`, `RoGetActivationFactory`, and `HString`.
+* Added native Go date conversion improvements and broader scalar/variant coverage.
+
+### Package and Layout Changes
+
+* SafeArray support moved into the `safearray` package and gained broader conversion helpers.
+* Connection-point helpers moved into the `server` package.
+* Added lookup helpers such as `ClassIdFromProgramId`, `ClassIdFromGuidString`, `ClassIdFromString`, `ClassIdToString`, `InterfaceIdFromString`, and `InterfaceIdToString`.
+
+### Documentation and Tooling
+
+* Refreshed examples and README guidance for the v2 APIs, including multithreading guidance.
+* Added GitHub Actions workflows for x86 and x64 Windows testing and updated the COM test server download steps.
 
 ## Breaking Changes
 
@@ -30,13 +40,26 @@
 * `StringFromCLSID` is now `ClassIdToString`.
 * `StringFromIID` is now `InterfaceIdToString`.
 
+### Behavioral and Structural Changes
+
+* Many COM helper APIs now return strongly typed interface pointers directly instead of requiring intermediate `IUnknown` casts.
+* `IDispatch` helpers now operate on `*VARIANT` parameters directly instead of converting `interface{}` values internally.
+* Package layout changed substantially: helpers moved between the repository root, `safearray`, and `server`.
+* The project now targets the modern Go module/toolchain used by the v2 branch.
+
 ### Removed
 
-* `GUID`. Uses `golang.org/x/sys/windows` `GUID` instead.
-* `CoInitialize`. Use `Initialize()` instead.
-* `OleError` is gone. Uses `golang.org/x/sys/windows` package and its types which also implement `error`.
-  
-  You may also use `GetErrorDescription` to get the error message if the `sys/windows` does not provide this.
+* The custom `GUID` type was removed in favor of `golang.org/x/sys/windows`.`GUID`.
+* `CoInitialize` was removed; use `Initialize()` instead.
+* `OleError` and the older custom error plumbing were removed in favor of `golang.org/x/sys/windows` error values.
+* The previous `oleutil` layout and many legacy compatibility/helper files were removed during the refactor.
+
+## Internal Refactors
+
+* Reworked the Windows interop layer to use `golang.org/x/sys/windows` types and APIs throughout.
+* Replaced many older helper/shim files (`*_func.go`, `*_windows.go`, legacy error wrappers, and related glue code) with direct interface wrappers and syscall-based implementations.
+* Removed or consolidated a large number of older wrapper files while moving functionality into the new interface layout.
+* Expanded tests around WinRT, variants, SafeArray support, and interface wrappers during the overhaul.
 
 # Version 1.x.x
 

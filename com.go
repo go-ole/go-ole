@@ -180,12 +180,12 @@ func CoInitializeSecurity(cAuthSvc int32,
 }
 
 // CreateInstance of single uninitialized object with GUID.
-func CreateInstance[T IsIUnknown](clsid windows.GUID, iid windows.GUID) (unk *T, err error) {
+func CreateInstance[T IsIUnknown](classId windows.GUID, interfaceId windows.GUID) (unk *T, err error) {
 	hr, _, _ := procCoCreateInstance.Call(
-		uintptr(unsafe.Pointer(&clsid)),
+		uintptr(unsafe.Pointer(&classId)),
 		0,
 		CLSCTX_SERVER,
-		uintptr(unsafe.Pointer(&iid)),
+		uintptr(unsafe.Pointer(&interfaceId)),
 		uintptr(unsafe.Pointer(&unk)))
 	if hr != 0 {
 		err = windows.Errno(hr)

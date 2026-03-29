@@ -5,42 +5,43 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-ole/go-ole/legacy"
 	"time"
 
-	"github.com/go-ole/go-ole/oleutil"
+	"github.com/go-ole/go-ole"
 )
 
 func main() {
-	legacy.CoInitialize(0)
-	unknown, _ := oleutil.CreateObject("Microsoft.XMLHTTP")
-	xmlhttp, _ := unknown.QueryInterface(legacy.IID_IDispatch)
-	_, err := oleutil.CallMethod(xmlhttp, "open", "GET", "http://rss.slashdot.org/Slashdot/slashdot", false)
+	ole.Initialize(ole.Multithreaded)
+	defer ole.Uninitialize()
+	clsid, _ := ole.LookupClassId("Microsoft.XMLHTTP")
+	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	xmlhttp, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
+	_, err := xmlhttp.CallMethod("open", "GET", "http://rss.slashdot.org/Slashdot/slashdot", false)
 	if err != nil {
 		panic(err.Error())
 	}
-	_, err = oleutil.CallMethod(xmlhttp, "send", nil)
+	_, err = xmlhttp.CallMethod("send", nil)
 	if err != nil {
 		panic(err.Error())
 	}
 	state := -1
 	for state != 4 {
-		state = int(oleutil.MustGetProperty(xmlhttp, "readyState").Val)
+		state = int(xmlhttp.MustGetProperty("readyState").Val)
 		time.Sleep(10000000)
 	}
-	responseXml := oleutil.MustGetProperty(xmlhttp, "responseXml").ToIDispatch()
-	items := oleutil.MustCallMethod(responseXml, "selectNodes", "/rdf:RDF/item").ToIDispatch()
-	length := int(oleutil.MustGetProperty(items, "length").Val)
+	responseXml := xmlhttp.MustGetProperty("responseXml").ToIDispatch()
+	items := responseXml.MustCallMethod("selectNodes", "/rdf:RDF/item").ToIDispatch()
+	length := int(items.MustGetProperty("length").Val)
 
 	println(length)
 	for n := 0; n < length; n++ {
-		item := oleutil.MustGetProperty(items, "item", n).ToIDispatch()
+		item := items.MustGetProperty("item", n).ToIDispatch()
 
-		title := oleutil.MustCallMethod(item, "selectSingleNode", "title").ToIDispatch()
-		fmt.Println(oleutil.MustGetProperty(title, "text").ToString())
+		title := item.MustCallMethod("selectSingleNode", "title").ToIDispatch()
+		fmt.Println(title.MustGetProperty("text").ToString())
 
-		link := oleutil.MustCallMethod(item, "selectSingleNode", "link").ToIDispatch()
-		fmt.Println("  " + oleutil.MustGetProperty(link, "text").ToString())
+		link := item.MustCallMethod("selectSingleNode", "link").ToIDispatch()
+		fmt.Println("  " + link.MustGetProperty("text").ToString())
 
 		title.Release()
 		link.Release()

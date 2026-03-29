@@ -3,644 +3,260 @@
 package ole
 
 import (
-	"golang.org/x/sys/windows"
+	"errors"
+	"syscall"
 	"testing"
+	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
-func wrapCOMExecute(t *testing.T, callback func(*testing.T)) {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Error(r)
+func TestIDispatchHasTypeInfo(t *testing.T) {
+	t.Run("true", func(t *testing.T) {
+		virtualTable := &IDispatchVirtualTable{
+			GetTypeInfoCount: syscall.NewCallback(func(this uintptr, count uintptr) uintptr {
+				*(*uint)(unsafe.Pointer(count)) = 1
+				return uintptr(windows.S_OK)
+			}),
 		}
-	}()
+		dispatch := &IDispatch{VirtualTable: virtualTable}
 
-	err := Initialize()
-	if err != nil {
-		t.Fatal(err)
+		if !dispatch.HasTypeInfo() {
+			t.Fatal("HasTypeInfo() = false, want true")
+		}
+	})
+
+	t.Run("false on not impl", func(t *testing.T) {
+		virtualTable := &IDispatchVirtualTable{
+			GetTypeInfoCount: syscall.NewCallback(func(this uintptr, count uintptr) uintptr {
+				return uintptr(windows.E_NOTIMPL)
+			}),
+		}
+		dispatch := &IDispatch{VirtualTable: virtualTable}
+
+		if dispatch.HasTypeInfo() {
+			t.Fatal("HasTypeInfo() = true, want false")
+		}
+	})
+
+	t.Run("false on zero count", func(t *testing.T) {
+		virtualTable := &IDispatchVirtualTable{
+			GetTypeInfoCount: syscall.NewCallback(func(this uintptr, count uintptr) uintptr {
+				*(*uint)(unsafe.Pointer(count)) = 0
+				return uintptr(windows.S_OK)
+			}),
+		}
+		dispatch := &IDispatch{VirtualTable: virtualTable}
+
+		if dispatch.HasTypeInfo() {
+			t.Fatal("HasTypeInfo() = true, want false")
+		}
+	})
+}
+
+func TestIDispatchGetTypeInfo(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		want := &ITypeInfo{}
+		virtualTable := &IDispatchVirtualTable{
+			GetTypeInfo: syscall.NewCallback(func(this uintptr, index uintptr, lcid uintptr, info uintptr) uintptr {
+				*(**ITypeInfo)(unsafe.Pointer(info)) = want
+				return uintptr(windows.S_OK)
+			}),
+		}
+		dispatch := &IDispatch{VirtualTable: virtualTable}
+
+		got := dispatch.GetTypeInfo()
+		if got != want {
+			t.Fatalf("GetTypeInfo() = %p, want %p", got, want)
+		}
+	})
+
+	t.Run("bad index returns nil", func(t *testing.T) {
+		virtualTable := &IDispatchVirtualTable{
+			GetTypeInfo: syscall.NewCallback(func(this uintptr, index uintptr, lcid uintptr, info uintptr) uintptr {
+				return uintptr(windows.DISP_E_BADINDEX)
+			}),
+		}
+		dispatch := &IDispatch{VirtualTable: virtualTable}
+
+		if got := dispatch.GetTypeInfo(); got != nil {
+			t.Fatalf("GetTypeInfo() = %p, want nil", got)
+		}
+	})
+}
+
+func TestIDispatchGetIDsOfNames(t *testing.T) {
+	virtualTable := &IDispatchVirtualTable{
+		GetIDsOfNames: syscall.NewCallback(func(this uintptr, iid uintptr, names uintptr, count uintptr, lcid uintptr, ids uintptr) uintptr {
+			namePointers := unsafe.Slice((**uint16)(unsafe.Pointer(names)), int(count))
+			displayIDs := unsafe.Slice((*int32)(unsafe.Pointer(ids)), int(count))
+
+			for index, namePointer := range namePointers {
+				switch windows.UTF16PtrToString(namePointer) {
+				case "Alpha":
+					displayIDs[index] = 10
+				case "Beta":
+					displayIDs[index] = 20
+				default:
+					displayIDs[index] = DISPID_UNKNOWN
+				}
+			}
+
+			return uintptr(windows.S_OK)
+		}),
 	}
-	defer Uninitialize()
+	dispatch := &IDispatch{VirtualTable: virtualTable}
 
-	callback(t)
-}
-
-func wrapDispatch(t *testing.T, ClassID, UnknownInterfaceID, DispatchInterfaceID windows.GUID, callback func(*testing.T, *IUnknown, *IDispatch)) {
-	var unknown *IUnknown
-	var dispatch *IDispatch
-	var err error
-
-	unknown, err = CreateInstance(ClassID, UnknownInterfaceID)
+	got, err := dispatch.GetIDsOfNames([]string{"Alpha", "Beta"})
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatalf("GetIDsOfNames failed: %v", err)
 	}
-	defer unknown.Release()
+	if got["Alpha"] != 10 || got["Beta"] != 20 {
+		t.Fatalf("GetIDsOfNames() = %#v, want Alpha=10 Beta=20", got)
+	}
+}
 
-	dispatch, err = QueryInterfaceOnIUnknown[IDispatch](unknown, DispatchInterfaceID)
+func TestIDispatchGetSingleIDOfName(t *testing.T) {
+	virtualTable := &IDispatchVirtualTable{
+		GetIDsOfNames: syscall.NewCallback(func(this uintptr, iid uintptr, names uintptr, count uintptr, lcid uintptr, ids uintptr) uintptr {
+			*(*int32)(unsafe.Pointer(ids)) = 42
+			return uintptr(windows.S_OK)
+		}),
+	}
+	dispatch := &IDispatch{VirtualTable: virtualTable}
+
+	got, err := dispatch.GetSingleIDOfName("Answer")
 	if err != nil {
-		t.Error(err)
-		return
+		t.Fatalf("GetSingleIDOfName failed: %v", err)
 	}
-	defer dispatch.Release()
-
-	callback(t, unknown, dispatch)
+	if got != 42 {
+		t.Fatalf("GetSingleIDOfName() = %d, want 42", got)
+	}
 }
 
-func wrapGoOLETestCOMServerEcho(t *testing.T, callback func(*testing.T, *IUnknown, *IDispatch)) {
-	wrapCOMExecute(t, func(t *testing.T) {
-		wrapDispatch(t, CLSID_COMEchoTestObject, IID_IUnknown, IID_ICOMEchoTestObject, callback)
-	})
-}
+func TestIDispatchInvokeHelpers(t *testing.T) {
+	var gotDispatch int16
+	var gotDisplayID int32
+	var gotArgCount uint32
+	var gotNamedArgCount uint32
+	var gotNamedArg int32
 
-func wrapGoOLETestCOMServerScalar(t *testing.T, callback func(*testing.T, *IUnknown, *IDispatch)) {
-	wrapCOMExecute(t, func(t *testing.T) {
-		wrapDispatch(t, CLSID_COMTestScalarClass, IID_IUnknown, IID_ICOMTestTypes, callback)
-	})
-}
+	virtualTable := &IDispatchVirtualTable{
+		GetIDsOfNames: syscall.NewCallback(func(this uintptr, iid uintptr, names uintptr, count uintptr, lcid uintptr, ids uintptr) uintptr {
+			*(*int32)(unsafe.Pointer(ids)) = 99
+			return uintptr(windows.S_OK)
+		}),
+		Invoke: syscall.NewCallback(func(this uintptr, dispid uintptr, iid uintptr, lcid uintptr, dispatch uintptr, params uintptr, result uintptr, excepInfo uintptr, argErr uintptr) uintptr {
+			gotDisplayID = int32(dispid)
+			gotDispatch = int16(dispatch)
 
-func TestIDispatch_goolecomserver_stringfield(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "StringField"
-		expected := "Test String"
-		_, err := PutPropertyOnIDispatch(idispatch, method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(string)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "string", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
+			dispParams := (*DISPPARAMS)(unsafe.Pointer(params))
+			gotArgCount = dispParams.cArgs
+			gotNamedArgCount = dispParams.cNamedArgs
+			if dispParams.rgdispidNamedArgs != 0 {
+				gotNamedArg = *(*int32)(unsafe.Pointer(dispParams.rgdispidNamedArgs))
+			}
 
-func TestIDispatch_goolecomserver_int8field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "Int8Field"
-		expected := int8(2)
-		_, err := idispatch.PutProperty(method, expected)
+			return uintptr(windows.S_OK)
+		}),
+	}
+	dispatch := &IDispatch{VirtualTable: virtualTable}
+	param := NewVariant(VT_I4, 7)
+	defer param.Clear()
+
+	t.Run("CallMethod", func(t *testing.T) {
+		_, err := dispatch.CallMethod("Method", param)
 		if err != nil {
-			t.Error(err)
-			return
+			t.Fatalf("CallMethod failed: %v", err)
 		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int8)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int8", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
+		if gotDisplayID != 99 || gotDispatch != DISPATCH_METHOD || gotArgCount != 1 || gotNamedArgCount != 0 {
+			t.Fatalf("CallMethod captured dispid=%d dispatch=%d cArgs=%d cNamedArgs=%d", gotDisplayID, gotDispatch, gotArgCount, gotNamedArgCount)
 		}
 	})
-}
 
-func TestIDispatch_goolecomserver_uint8field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "UInt8Field"
-		expected := uint8(4)
-		_, err := idispatch.PutProperty(method, expected)
+	t.Run("GetProperty", func(t *testing.T) {
+		_, err := dispatch.GetProperty("Property", param)
 		if err != nil {
-			t.Error(err)
-			return
+			t.Fatalf("GetProperty failed: %v", err)
 		}
-		variant, err := idispatch.GetProperty(method)
+		if gotDispatch != DISPATCH_PROPERTYGET || gotArgCount != 1 || gotNamedArgCount != 0 {
+			t.Fatalf("GetProperty captured dispatch=%d cArgs=%d cNamedArgs=%d", gotDispatch, gotArgCount, gotNamedArgCount)
+		}
+	})
+
+	t.Run("PutProperty", func(t *testing.T) {
+		_, err := dispatch.PutProperty("Property", param)
 		if err != nil {
-			t.Error(err)
-			return
+			t.Fatalf("PutProperty failed: %v", err)
 		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint8)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint8", variant.VT, variant.Val)
-			return
+		if gotDispatch != DISPATCH_PROPERTYPUT || gotArgCount != 1 || gotNamedArgCount != 1 || gotNamedArg != DISPID_PROPERTYPUT {
+			t.Fatalf("PutProperty captured dispatch=%d cArgs=%d cNamedArgs=%d namedArg=%d", gotDispatch, gotArgCount, gotNamedArgCount, gotNamedArg)
 		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
+	})
+
+	t.Run("PutPropertyRef", func(t *testing.T) {
+		_, err := dispatch.PutPropertyRef("Property", param)
+		if err != nil {
+			t.Fatalf("PutPropertyRef failed: %v", err)
+		}
+		if gotDispatch != DISPATCH_PROPERTYPUTREF || gotArgCount != 1 || gotNamedArgCount != 1 || gotNamedArg != DISPID_PROPERTYPUT {
+			t.Fatalf("PutPropertyRef captured dispatch=%d cArgs=%d cNamedArgs=%d namedArg=%d", gotDispatch, gotArgCount, gotNamedArgCount, gotNamedArg)
 		}
 	})
 }
 
-func TestIDispatch_goolecomserver_int16field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "Int16Field"
-		expected := int16(4)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int16)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int16", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
+func TestInvokeOnIDispatchReturnsJoinedError(t *testing.T) {
+	testErr := uintptr(windows.E_POINTER)
+	virtualTable := &IDispatchVirtualTable{
+		Invoke: syscall.NewCallback(func(this uintptr, dispid uintptr, iid uintptr, lcid uintptr, dispatch uintptr, params uintptr, result uintptr, excepInfo uintptr, argErr uintptr) uintptr {
+			info := (*EXCEPINFO)(unsafe.Pointer(excepInfo))
+			info.bstrDescription = SysAllocString("dispatch failed")
+			return testErr
+		}),
+	}
+	dispatch := &IDispatch{VirtualTable: virtualTable}
+
+	_, err := InvokeOnIDispatch(dispatch, 55, DISPATCH_METHOD)
+	if !errors.Is(err, windows.Errno(testErr)) {
+		t.Fatalf("InvokeOnIDispatch error = %v, want wrapped %v", err, windows.Errno(testErr))
+	}
+	if err == nil || err.Error() != "The pointer is invalid.\ndispatch failed" {
+		t.Fatalf("InvokeOnIDispatch error text = %q", err)
+	}
 }
 
-func TestIDispatch_goolecomserver_uint16field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "UInt16Field"
-		expected := uint16(4)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint16)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint16", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
+func TestMakeDisplayParams(t *testing.T) {
+	param := NewVariant(VT_I4, 1)
+	defer param.Clear()
+
+	methodParams := MakeDisplayParams(DISPATCH_METHOD, param)
+	if methodParams.cArgs != 1 || methodParams.cNamedArgs != 0 {
+		t.Fatalf("MakeDisplayParams(method) = %#v", methodParams)
+	}
+
+	putParams := MakeDisplayParams(DISPATCH_PROPERTYPUT, param)
+	if putParams.cArgs != 1 || putParams.cNamedArgs != 1 {
+		t.Fatalf("MakeDisplayParams(property put) = %#v", putParams)
+	}
+	if got := *(*int32)(unsafe.Pointer(putParams.rgdispidNamedArgs)); got != DISPID_PROPERTYPUT {
+		t.Fatalf("MakeDisplayParams(property put) named arg = %d, want %d", got, DISPID_PROPERTYPUT)
+	}
+
+	putRefParams := MakeDisplayParams(DISPATCH_PROPERTYPUTREF, param)
+	if putRefParams.cArgs != 1 || putRefParams.cNamedArgs != 1 {
+		t.Fatalf("MakeDisplayParams(property putref) = %#v", putRefParams)
+	}
+	if got := *(*int32)(unsafe.Pointer(putRefParams.rgdispidNamedArgs)); got != DISPID_PROPERTYPUT {
+		t.Fatalf("MakeDisplayParams(property putref) named arg = %d, want %d", got, DISPID_PROPERTYPUT)
+	}
 }
 
-func TestIDispatch_goolecomserver_int32field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "Int32Field"
-		expected := int32(8)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int32)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int32", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_uint32field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "UInt32Field"
-		expected := uint32(16)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint32)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint32", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_int64field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "Int64Field"
-		expected := int64(32)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int64)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int64", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_uint64field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "UInt64Field"
-		expected := uint64(64)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint64)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint64", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_booleanfield_true(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "BooleanField"
-		expected := true
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(bool)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "bool", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_booleanfield_false(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "BooleanField"
-		expected := false
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(bool)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "bool", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_float32field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "Float32Field"
-		expected := float32(2.2)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(float32)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "float32", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_float64field(t *testing.T) {
-	wrapGoOLETestCOMServerScalar(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "Float64Field"
-		expected := float64(4.4)
-		_, err := idispatch.PutProperty(method, expected)
-		if err != nil {
-			t.Error(err)
-		}
-		variant, err := idispatch.GetProperty(method)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(float64)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "float64", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echostring(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoString"
-		expected := "Test String"
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(string)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "string", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echoboolean(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoBoolean"
-		expected := true
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(bool)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "bool", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echoint8(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoInt8"
-		expected := int8(1)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int8)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int8", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echouint8(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoUInt8"
-		expected := uint8(1)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint8)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint8", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echoint16(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoInt16"
-		expected := int16(1)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int16)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int16", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echouint16(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoUInt16"
-		expected := uint16(1)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint16)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint16", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echoint32(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoInt32"
-		expected := int32(2)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int32)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int32", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echouint32(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoUInt32"
-		expected := uint32(4)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint32)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint32", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echoint64(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoInt64"
-		expected := int64(1)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(int64)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "int64", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echouint64(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoUInt64"
-		expected := uint64(1)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(uint64)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "uint64", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echofloat32(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoFloat32"
-		expected := float32(2.2)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(float32)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "float32", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
-}
-
-func TestIDispatch_goolecomserver_echofloat64(t *testing.T) {
-	wrapGoOLETestCOMServerEcho(t, func(t *testing.T, unknown *IUnknown, idispatch *IDispatch) {
-		method := "EchoFloat64"
-		expected := float64(2.2)
-		variant, err := idispatch.CallMethod(method, expected)
-		if err != nil {
-			t.Error(err)
-			return
-		}
-		defer variant.Clear()
-		actual, passed := variant.Value().(float64)
-		if !passed {
-			t.Errorf("%s() did not convert to %s, variant is %s with %v value", method, "float64", variant.VT, variant.Val)
-			return
-		}
-		if actual != expected {
-			t.Errorf("%s() expected %v did not match %v", method, expected, actual)
-		}
-	})
+func TestQueryIDispatchFromIUnknownNil(t *testing.T) {
+	got, err := QueryIDispatchFromIUnknown(nil)
+	if got != nil {
+		t.Fatalf("QueryIDispatchFromIUnknown(nil) = %p, want nil", got)
+	}
+	if !errors.Is(err, ComInterfaceIsNilPointer) {
+		t.Fatalf("QueryIDispatchFromIUnknown(nil) error = %v, want %v", err, ComInterfaceIsNilPointer)
+	}
 }

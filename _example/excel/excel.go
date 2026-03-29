@@ -9,21 +9,21 @@ import (
 )
 
 func main() {
-	ole.Initialize()
+	ole.Initialize(ole.Multithreaded)
 	defer ole.Uninitialize()
 	excelCLSID, _ := ole.LookupClassId("Excel.Application")
 	excel, _ := ole.GetActiveObject[ole.IDispatch](excelCLSID)
-	ole.PutProperty(excel, "Visible", true)
-	workbooks := ole.MustGetProperty(excel, "Workbooks").ToIDispatch()
-	workbook := ole.MustCallMethod(workbooks, "Add", nil).ToIDispatch()
-	worksheet := ole.MustGetProperty(workbook, "Worksheets", 1).ToIDispatch()
-	cell := ole.MustGetProperty(worksheet, "Cells", 1, 1).ToIDispatch()
-	ole.PutProperty(cell, "Value", 12345)
+	defer excel.Release()
+	excel.PutProperty("Visible", true)
+	workbooks := excel.MustGetProperty("Workbooks").ToIDispatch()
+	workbook := workbooks.MustCallMethod("Add").ToIDispatch()
+	worksheet := workbook.MustGetProperty("Worksheets", 1).ToIDispatch()
+	cell := worksheet.MustGetProperty("Cells", 1, 1).ToIDispatch()
+	cell.PutProperty("Value", 12345)
 
 	time.Sleep(2000000000)
 
-	ole.PutProperty(workbook, "Saved", true)
-	ole.CallMethod(workbook, "Close", false)
-	ole.CallMethod(excel, "Quit")
-	excel.Release()
+	workbook.PutProperty("Saved", true)
+	workbook.CallMethod("Close", false)
+	excel.CallMethod("Quit")
 }

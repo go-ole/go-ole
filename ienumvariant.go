@@ -9,6 +9,14 @@ import (
 	"unsafe"
 )
 
+type IEnumVariantAddresses interface {
+	IsIUnknown
+	NextAddress() uintptr
+	SkipAddress() uintptr
+	ResetAddress() uintptr
+	CloneAddress() uintptr
+}
+
 type IEnumVariant struct {
 	VirtualTable *IEnumVariantVirtualTable
 }
@@ -39,6 +47,22 @@ func (v *IEnumVariant) AddRefAddress() uintptr {
 
 func (v *IEnumVariant) ReleaseAddress() uintptr {
 	return v.VirtualTable.Release
+}
+
+func (obj *IEnumVariant) NextAddress() uintptr {
+	return obj.VirtualTable.Next
+}
+
+func (obj *IEnumVariant) SkipAddress() uintptr {
+	return obj.VirtualTable.Skip
+}
+
+func (obj *IEnumVariant) ResetAddress() uintptr {
+	return obj.VirtualTable.Reset
+}
+
+func (obj *IEnumVariant) CloneAddress() uintptr {
+	return obj.VirtualTable.Clone
 }
 
 func (obj *IEnumVariant) AddRef() uint32 {

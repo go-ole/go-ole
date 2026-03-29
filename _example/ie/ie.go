@@ -4,35 +4,36 @@
 package main
 
 import (
-	"github.com/go-ole/go-ole/legacy"
 	"time"
 
-	"github.com/go-ole/go-ole/oleutil"
+	"github.com/go-ole/go-ole"
 )
 
 func main() {
-	legacy.CoInitialize(0)
-	unknown, _ := oleutil.CreateObject("InternetExplorer.Application")
-	ie, _ := unknown.QueryInterface(legacy.IID_IDispatch)
-	oleutil.PutProperty(ie, "Visible", true)
-	oleutil.CallMethod(ie, "Navigate", "http://www.google.com")
+	ole.Initialize(ole.Multithreaded)
+	defer ole.Uninitialize()
+	clsid, _ := ole.LookupClassId("InternetExplorer.Application")
+	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	ie, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
+	ie.PutProperty("Visible", true)
+	ie.CallMethod("Navigate", "http://www.google.com")
 	for {
-		if oleutil.MustGetProperty(ie, "Busy").Val == 0 {
+		if ie.MustGetProperty("Busy").Val == 0 {
 			break
 		}
 	}
 
 	time.Sleep(1e9)
 
-	document := oleutil.MustGetProperty(ie, "document").ToIDispatch()
+	document := ie.MustGetProperty("document").ToIDispatch()
 
 	// set 'golang' to text box.
-	elems := oleutil.MustCallMethod(document, "getElementsByName", "q").ToIDispatch()
-	q := oleutil.MustCallMethod(elems, "item", 0).ToIDispatch()
-	oleutil.MustPutProperty(q, "value", "golang")
+	elems := document.MustCallMethod("getElementsByName", "q").ToIDispatch()
+	q := elems.MustCallMethod("item", 0).ToIDispatch()
+	q.MustPutProperty("value", "golang")
 
 	// click btnK.
-	elems = oleutil.MustCallMethod(document, "getElementsByName", "btnK").ToIDispatch()
-	btnG := oleutil.MustCallMethod(elems, "item", 0).ToIDispatch()
-	oleutil.MustCallMethod(btnG, "click")
+	elems = document.MustCallMethod("getElementsByName", "btnK").ToIDispatch()
+	btnG := elems.MustCallMethod("item", 0).ToIDispatch()
+	btnG.MustCallMethod("click")
 }

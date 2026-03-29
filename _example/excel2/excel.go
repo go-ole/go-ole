@@ -8,54 +8,52 @@ import (
 	"github.com/go-ole/go-ole"
 	"log"
 	"os"
-
-	"github.com/go-ole/go-ole/oleutil"
 )
 
 func writeExample(excel, workbooks *ole.IDispatch, filepath string) {
 	// ref: https://msdn.microsoft.com/zh-tw/library/office/ff198017.aspx
 	// http://stackoverflow.com/questions/12159513/what-is-the-correct-xlfileformat-enumeration-for-excel-97-2003
 	const xlExcel8 = 56
-	workbook := oleutil.MustCallMethod(workbooks, "Add", nil).ToIDispatch()
+	workbook := workbooks.MustCallMethod("Add", nil).ToIDispatch()
 	defer workbook.Release()
-	worksheet := oleutil.MustGetProperty(workbook, "Worksheets", 1).ToIDispatch()
+	worksheet := workbook.MustGetProperty("Worksheets", 1).ToIDispatch()
 	defer worksheet.Release()
-	cell := oleutil.MustGetProperty(worksheet, "Cells", 1, 1).ToIDispatch()
-	oleutil.PutProperty(cell, "Value", 12345)
+	cell := worksheet.MustGetProperty("Cells", 1, 1).ToIDispatch()
+	cell.PutProperty("Value", 12345)
 	cell.Release()
-	activeWorkBook := oleutil.MustGetProperty(excel, "ActiveWorkBook").ToIDispatch()
+	activeWorkBook := excel.MustGetProperty("ActiveWorkBook").ToIDispatch()
 	defer activeWorkBook.Release()
 
 	os.Remove(filepath)
 	// ref: https://msdn.microsoft.com/zh-tw/library/microsoft.office.tools.excel.workbook.saveas.aspx
-	oleutil.MustCallMethod(activeWorkBook, "SaveAs", filepath, xlExcel8, nil, nil).ToIDispatch()
+	activeWorkBook.MustCallMethod("SaveAs", filepath, xlExcel8, nil, nil).ToIDispatch()
 
 	//time.Sleep(2 * time.Second)
 
 	// let excel could close without asking
-	// oleutil.PutProperty(workbook, "Saved", true)
-	// oleutil.CallMethod(workbook, "Close", false)
+	// workbook.PutProperty("Saved", true)
+	// workbook.CallMethod("Close", false)
 }
 
 func readExample(fileName string, excel, workbooks *ole.IDispatch) {
-	workbook, err := oleutil.CallMethod(workbooks, "Open", fileName)
+	workbook, err := workbooks.CallMethod("Open", fileName)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer workbook.ToIDispatch().Release()
 
-	sheets := oleutil.MustGetProperty(excel, "Sheets").ToIDispatch()
-	sheetCount := (int)(oleutil.MustGetProperty(sheets, "Count").Val)
+	sheets := excel.MustGetProperty("Sheets").ToIDispatch()
+	sheetCount := (int)(sheets.MustGetProperty("Count").Val)
 	fmt.Println("sheet count=", sheetCount)
 	sheets.Release()
 
-	worksheet := oleutil.MustGetProperty(workbook.ToIDispatch(), "Worksheets", 1).ToIDispatch()
+	worksheet := workbook.ToIDispatch().MustGetProperty("Worksheets", 1).ToIDispatch()
 	defer worksheet.Release()
 	for row := 1; row <= 2; row++ {
 		for col := 1; col <= 5; col++ {
-			cell := oleutil.MustGetProperty(worksheet, "Cells", row, col).ToIDispatch()
-			val, err := oleutil.GetProperty(cell, "Value")
+			cell := worksheet.MustGetProperty("Cells", row, col).ToIDispatch()
+			val, err := cell.GetProperty("Value")
 			if err != nil {
 				break
 			}
@@ -82,16 +80,17 @@ func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	ole.Initialize(ole.Multithreaded)
 	defer ole.Uninitialize()
-	unknown, _ := oleutil.CreateObject("Excel.Application")
-	excel, _ := unknown.QueryInterface(ole.IID_IDispatch)
-	oleutil.PutProperty(excel, "Visible", true)
+	clsid, _ := ole.LookupClassId("Excel.Application")
+	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	excel, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
+	excel.PutProperty("Visible", true)
 
-	workbooks := oleutil.MustGetProperty(excel, "Workbooks").ToIDispatch()
+	workbooks := excel.MustGetProperty("Workbooks").ToIDispatch()
 	cwd, _ := os.Getwd()
 	writeExample(excel, workbooks, cwd+"\\write.xls")
 	readExample(cwd+"\\excel97-2003.xls", excel, workbooks)
 	showMethodsAndProperties(workbooks)
 	workbooks.Release()
-	// oleutil.CallMethod(excel, "Quit")
+	// excel.CallMethod("Quit")
 	excel.Release()
 }

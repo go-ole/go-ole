@@ -9,6 +9,11 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+type IActivationFactoryAddresses interface {
+	IsIInspectable
+	ActivateInstanceAddress() uintptr
+}
+
 type IActivationFactory struct {
 	VirtualTable *IActivationFactoryVirtualTable
 }
@@ -45,6 +50,10 @@ func (obj *IActivationFactory) GetRuntimeClassNameAddress() uintptr {
 
 func (obj *IActivationFactory) GetTrustLevelAddress() uintptr {
 	return obj.VirtualTable.getTrustLevel
+}
+
+func (obj *IActivationFactory) ActivateInstanceAddress() uintptr {
+	return obj.VirtualTable.activateInstance
 }
 
 func (obj *IActivationFactory) AddRef() uint32 {

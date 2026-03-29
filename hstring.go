@@ -4,7 +4,7 @@ package ole
 
 import (
 	"reflect"
-	"unicode/utf8"
+	"unicode/utf16"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -22,10 +22,10 @@ type HString uintptr
 // NewHString returns a new HString for Go string.
 func NewHString(s string) (hstring HString, err error) {
 	u16 := windows.StringToUTF16Ptr(s)
-	len := uint32(utf8.RuneCountInString(s))
+	length := uint32(len(utf16.Encode([]rune(s))))
 	hr, _, _ := procWindowsCreateString.Call(
 		uintptr(unsafe.Pointer(u16)),
-		uintptr(len),
+		uintptr(length),
 		uintptr(unsafe.Pointer(&hstring)))
 	if hr != 0 {
 		err = windows.Errno(hr)

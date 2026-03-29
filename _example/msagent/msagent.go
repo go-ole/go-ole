@@ -4,22 +4,22 @@
 package main
 
 import (
-	"github.com/go-ole/go-ole/legacy"
+	"github.com/go-ole/go-ole"
 	"time"
-
-	"github.com/go-ole/go-ole/oleutil"
 )
 
 func main() {
-	legacy.CoInitialize(0)
-	unknown, _ := oleutil.CreateObject("Agent.Control.1")
-	agent, _ := unknown.QueryInterface(legacy.IID_IDispatch)
-	oleutil.PutProperty(agent, "Connected", true)
-	characters := oleutil.MustGetProperty(agent, "Characters").ToIDispatch()
-	oleutil.CallMethod(characters, "Load", "Merlin", "c:\\windows\\msagent\\chars\\Merlin.acs")
-	character := oleutil.MustCallMethod(characters, "Character", "Merlin").ToIDispatch()
-	oleutil.CallMethod(character, "Show")
-	oleutil.CallMethod(character, "Speak", "こんにちわ世界")
+	ole.Initialize(ole.Multithreaded)
+	defer ole.Uninitialize()
+	clsid, _ := ole.LookupClassId("Agent.Control.1")
+	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	agent, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
+	agent.PutProperty("Connected", true)
+	characters := agent.MustGetProperty("Characters").ToIDispatch()
+	characters.CallMethod("Load", "Merlin", "c:\\windows\\msagent\\chars\\Merlin.acs")
+	character := characters.MustCallMethod("Character", "Merlin").ToIDispatch()
+	character.CallMethod("Show")
+	character.CallMethod("Speak", "こんにちわ世界")
 
 	time.Sleep(4000000000)
 }

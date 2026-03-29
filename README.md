@@ -23,24 +23,97 @@ go run excel.go
 
 ## Guide
 
-The library provides an utility for accessing the COM and working around its unsafe execution. When designing your API
-on top of this library, it is recommended that you use native types and convert to the `ole.VARIANT` type in the wrapper
-function or function pointer.
+The library provides utilities for accessing COM and working around its unsafe execution. When designing your API on top of this library, it is recommended to use native types and convert to the `ole.VARIANT` type in wrapper functions.
 
 ### Upgrading from 1.x
 
-#### VARIANT
+The 2.x version introduces breaking changes to support Go Generics and improve type safety while reducing boilerplate.
 
-- There is a new API for registering and unregistering conversions for `ole.VT` and native go types.
-- `ole.VARIANT` no longer has function pointers.
-  - Use `ole.WrapVariant` to convert supported native Go types to `ole.VARIANT`.
-  - Use `ole.UnwrapVariant` to convert supported `ole.VT` to native Go types.
-  - The API uses Generics to directly cast to the native type instead of requiring additional redirection.
--`CoInitializeEx` is now `Initialize`.
--`CoUninitialize` is now `Uninitialize`.
-- `IUnknown` uses generics to convert directly to the OLE Automation object. COM/OLE functions will directly return the
-  provided OLE Automation Object instead of requiring indirection starting with `ole.IUnknown` to `ole.IDispatch`. You
-  may now directly go to `ole.IDispatch`.
+#### Core API Changes
+- `ole.CoInitializeEx` has been renamed to `ole.Initialize(model ConcurrencyModel)`.
+- `ole.CoUninitialize` has been renamed to `ole.Uninitialize()`.
+- `ole.IUnknown` and `ole.IDispatch` methods now use Generics. For example, `QueryInterface` can directly return the desired interface type.
+
+#### VARIANT System
+- **Registration Required**: You **must** call `ole.RegisterVariantConverters()` before using `IDispatch` or any automatic `VARIANT` conversions.
+- `ole.VARIANT` no longer contains function pointers for conversion.
+- Use `ole.WrapVariant(val)` to convert a native Go type to an `*ole.VARIANT`.
+- Use `ole.UnwrapVariant[T](variant)` to convert an `*ole.VARIANT` back to a native Go type `T`.
+- New API for registering custom type converters via `ole.RegisterVariantConverter[T](...)`.
+
+### Basic Usage
+
+#### Initializing COM
+Always initialize COM before use and uninitialize when finished. It's best to lock the OS thread if you're using `ApartmentThreaded`.
+
+```go
+runtime.LockOSThread()
+defer runtime.UnlockOSThread()
+
+ole.Initialize(ole.ApartmentThreaded)
+defer ole.Uninitialize()
+
+// Required for VARIANT automatic conversions
+ole.RegisterVariantConverters()
+```
+
+#### Working with IDispatch
+`IDispatch` is used for OLE Automation (e.g., controlling Excel, Internet Explorer, or custom COM objects).
+
+```go
+// Create an instance of a COM object
+unknown, err := ole.CreateInstance[ole.IUnknown](clsid, *ole.IID_IUnknown)
+if err != nil {
+    log.Fatal(err)
+}
+defer unknown.Release()
+
+// Query for IDispatch
+dispatch, err := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, *ole.IID_IDispatch)
+if err != nil {
+    log.Fatal(err)
+}
+defer dispatch.Release()
+
+// Call a method
+result, err := dispatch.CallMethod("SayHello", "World", 42)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println(result.Value()) // Value() helper converts VARIANT to go any
+```
+
+#### Inspecting Types with ITypeInfo
+If an object supports it, you can retrieve type information to inspect methods and properties at runtime.
+
+```go
+if dispatch.HasTypeInfo() {
+    typeInfo := dispatch.GetTypeInfo()
+    defer typeInfo.Release()
+
+    name, doc, helpFile, context, err := typeInfo.GetDocumentation(-1) // -1 for the interface itself
+    if err == nil {
+        fmt.Printf("Interface: %s, Doc: %s\n", name, doc)
+    }
+}
+```
+
+#### Message Loop
+The `Msg` struct is 64-bit safe and can be used for Windows message loops, which are essential for some COM event notifications (e.g., when using `ConnectObject`).
+
+```go
+runtime.LockOSThread()
+defer runtime.UnlockOSThread()
+
+var m ole.Msg
+for {
+    ret, err := ole.GetMessage(&m, 0, 0, 0)
+    if ret <= 0 { // 0 is WM_QUIT, -1 is error
+        break
+    }
+    ole.DispatchMessage(&m)
+}
+```
 
 ### VARIANT Types
 

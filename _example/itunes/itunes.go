@@ -5,22 +5,24 @@ package main
 
 import (
 	"github.com/go-ole/go-ole"
-	"github.com/go-ole/go-ole/legacy"
 	"log"
 	"os"
 	"strings"
 
-	"github.com/go-ole/go-ole/oleutil"
 	"github.com/gonuts/commander"
 )
 
 func iTunes() *ole.IDispatch {
-	legacy.CoInitialize(0)
-	unknown, err := oleutil.CreateObject("iTunes.Application")
+	ole.Initialize(ole.Multithreaded)
+	clsid, err := ole.LookupClassId("iTunes.Application")
 	if err != nil {
 		log.Fatal(err)
 	}
-	itunes, err := unknown.QueryInterface(legacy.IID_IDispatch)
+	unknown, err := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	if err != nil {
+		log.Fatal(err)
+	}
+	itunes, err := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,6 +30,7 @@ func iTunes() *ole.IDispatch {
 }
 
 func main() {
+	defer ole.Uninitialize()
 	command := &commander.Command{
 		UsageLine: os.Args[0],
 		Short:     "itunes cmd",
@@ -36,7 +39,9 @@ func main() {
 	for _, name := range []string{"Play", "Stop", "Pause", "Quit"} {
 		command.Subcommands = append(command.Subcommands, &commander.Command{
 			Run: func(cmd *commander.Command, args []string) error {
-				_, err := oleutil.CallMethod(iTunes(), name)
+				itunes := iTunes()
+				defer itunes.Release()
+				_, err := itunes.CallMethod(name)
 				return err
 			},
 			UsageLine: strings.ToLower(name),

@@ -13,6 +13,14 @@ type ConnectData struct {
 	Cookie  uint32
 }
 
+type IEnumConnectionsAddresses interface {
+	IsIUnknown
+	NextAddress() uintptr
+	SkipAddress() uintptr
+	ResetAddress() uintptr
+	CloneAddress() uintptr
+}
+
 type IEnumConnections struct {
 	VirtualTable *IEnumConnectionsVirtualTable
 }
@@ -39,6 +47,22 @@ func (obj *IEnumConnections) AddRefAddress() uintptr {
 
 func (obj *IEnumConnections) ReleaseAddress() uintptr {
 	return obj.VirtualTable.Release
+}
+
+func (obj *IEnumConnections) NextAddress() uintptr {
+	return obj.VirtualTable.Next
+}
+
+func (obj *IEnumConnections) SkipAddress() uintptr {
+	return obj.VirtualTable.Skip
+}
+
+func (obj *IEnumConnections) ResetAddress() uintptr {
+	return obj.VirtualTable.Reset
+}
+
+func (obj *IEnumConnections) CloneAddress() uintptr {
+	return obj.VirtualTable.Clone
 }
 
 func (obj *IEnumConnections) AddRef() uint32 {
@@ -104,8 +128,12 @@ func (obj *IEnumConnections) Skip(numSkip uint) bool {
 }
 
 func (obj *IEnumConnections) Next(numRetrieve uint32) (ret []ConnectData) {
+	if numRetrieve == 0 {
+		return nil
+	}
+
 	var length uint32
-	var array []ConnectData
+	array := make([]ConnectData, numRetrieve)
 	syscall.Syscall6(
 		obj.VirtualTable.Next,
 		4,
@@ -116,7 +144,7 @@ func (obj *IEnumConnections) Next(numRetrieve uint32) (ret []ConnectData) {
 		0,
 		0)
 
-	ret = unsafe.Slice(&array[0], length)
+	ret = array[:length]
 
 	return
 }
@@ -125,8 +153,8 @@ func (v *IEnumConnections) ForEach(callback func(v *ConnectData) error) (err err
 	v.Reset()
 	items := v.Next(100)
 	for len(items) > 0 {
-		for _, item := range items {
-			err = callback(&item)
+		for index := range items {
+			err = callback(&items[index])
 			if err != nil {
 				return err
 			}

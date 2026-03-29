@@ -82,22 +82,25 @@ func (obj *IInspectable) GetTrustLevel() TrustLevel {
 
 func GetInterfaceIdsOnIInspectable(obj IsIInspectable) (interfaceIds []windows.GUID, err error) {
 	var count uint32
-	var array []windows.GUID
+	var array *windows.GUID
 	hr, _, _ := syscall.Syscall(
 		obj.GetInterfaceIdsAddress(),
 		3,
 		uintptr(unsafe.Pointer(&obj)),
 		uintptr(unsafe.Pointer(&count)),
-		uintptr(unsafe.Pointer(&array[0])),
+		uintptr(unsafe.Pointer(&array)),
 	)
 
 	if windows.Handle(hr) != windows.S_OK {
 		err = windows.Errno(hr)
 		return
 	}
-	defer TaskMemoryFreePointer(unsafe.Pointer(&array[0]))
+	if array == nil || count == 0 {
+		return nil, nil
+	}
+	defer TaskMemoryFreePointer(unsafe.Pointer(array))
 
-	interfaceIds = unsafe.Slice(&array[0], count)
+	interfaceIds = unsafe.Slice(array, count)
 
 	return
 }

@@ -5,26 +5,26 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-ole/go-ole/legacy"
-
-	"github.com/go-ole/go-ole/oleutil"
+	"github.com/go-ole/go-ole"
 )
 
 func main() {
-	legacy.CoInitialize(0)
-	unknown, _ := oleutil.CreateObject("Outlook.Application")
-	outlook, _ := unknown.QueryInterface(legacy.IID_IDispatch)
-	ns := oleutil.MustCallMethod(outlook, "GetNamespace", "MAPI").ToIDispatch()
-	folder := oleutil.MustCallMethod(ns, "GetDefaultFolder", 10).ToIDispatch()
-	contacts := oleutil.MustCallMethod(folder, "Items").ToIDispatch()
-	count := oleutil.MustGetProperty(contacts, "Count").Value().(int32)
+	ole.Initialize(ole.Multithreaded)
+	defer ole.Uninitialize()
+	clsid, _ := ole.LookupClassId("Outlook.Application")
+	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	outlook, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
+	ns := outlook.MustCallMethod("GetNamespace", "MAPI").ToIDispatch()
+	folder := ns.MustCallMethod("GetDefaultFolder", 10).ToIDispatch()
+	contacts := folder.MustCallMethod("Items").ToIDispatch()
+	count := contacts.MustGetProperty("Count").Value().(int32)
 	for i := 1; i <= int(count); i++ {
-		item, err := oleutil.GetProperty(contacts, "Item", i)
-		if err == nil && item.VT == legacy.VT_DISPATCH {
-			if value, err := oleutil.GetProperty(item.ToIDispatch(), "FullName"); err == nil {
+		item, err := contacts.GetProperty("Item", i)
+		if err == nil && item.VT == ole.VT_DISPATCH {
+			if value, err := item.ToIDispatch().GetProperty("FullName"); err == nil {
 				fmt.Println(value.Value())
 			}
 		}
 	}
-	oleutil.MustCallMethod(outlook, "Quit")
+	outlook.MustCallMethod("Quit")
 }

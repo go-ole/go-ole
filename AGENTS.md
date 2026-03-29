@@ -1,0 +1,19 @@
+These instructions apply to the entire repository.
+- This repository provides Go bindings for Windows COM/OLE without cgo.
+- The module path is `github.com/go-ole/go-ole`.
+- Most functionality is Windows-specific; avoid changes that assume non-Windows runtime behavior unless clearly isolated.
+- Keep changes minimal, focused, and consistent with existing Go style.
+- Prefer preserving public API behavior unless the task explicitly requires a breaking change.
+- Avoid introducing `cgo` or new external dependencies unless explicitly requested.
+- Keep unsafe and pointer-related changes narrowly scoped and review them carefully.
+- When changing COM lifecycle behavior, ensure `Initialize`/`Uninitialize` and `Release` expectations remain balanced.
+- Core package files live at the repository root.
+- Examples and supporting code live under `_example/`, `safearray/`, `server/`, `build/`, and `data/`.
+- Place new files only where they naturally fit the existing layout.
+- Prefer targeted Go tests first, then broader test runs if needed.
+- Many tests are meaningful only on Windows or with a registered COM test server.
+- If you cannot fully verify behavior in the current environment, state that clearly in your handoff.
+- Use existing Go tooling when possible: `gofmt`, `go test`, and targeted package checks.
+- Do not update unrelated files or refactor broadly while addressing a narrow task.
+- Update `README.md` when behavior, setup, or public APIs change.
+- Keep documentation concise and practical.

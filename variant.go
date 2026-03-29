@@ -524,7 +524,7 @@ func IDispatchToVariant(i any) *VARIANT {
 	return nil
 }
 
-func VariantToComObject[T IsIUnknown](variant *VARIANT) any {
+func VariantToComObject[T IsIUnknown](variant *VARIANT) *T {
 	return (*T)(unsafe.Pointer(uintptr(variant.Val)))
 }
 
@@ -869,9 +869,8 @@ func VariantToFloat32Ptr(variant *VARIANT) any {
 	return math.Float32frombits(*(*uint32)(unsafe.Pointer(uintptr(variant.Val))))
 }
 
-func Float64PtrToVariant(i any) *VARIANT {
-	number := math.Float32bits(i.(float32))
-	return &VARIANT{VT: VT_R4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(&number)))}
+func Float32PtrToVariant(i any) *VARIANT {
+	return &VARIANT{VT: VT_R4 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*float32))))}
 }
 
 func VariantToFloat64(variant *VARIANT) any {
@@ -883,9 +882,8 @@ func Float64ToVariant(i any) *VARIANT {
 	return &VARIANT{VT: VT_R8, Val: int64(number)}
 }
 
-func Float32PtrToVariant(i any) *VARIANT {
-	number := math.Float64bits(i.(float64))
-	return &VARIANT{VT: VT_R8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(&number)))}
+func Float64PtrToVariant(i any) *VARIANT {
+	return &VARIANT{VT: VT_R8 | VT_BYREF, Val: int64(uintptr(unsafe.Pointer(i.(*float64))))}
 }
 
 func VariantToFloat64Ptr(variant *VARIANT) any {
@@ -897,6 +895,5 @@ func VariantBStrToString(variant *VARIANT) any {
 }
 
 func StringToBStrVariant(i any) *VARIANT {
-	str, _ := windows.UTF16PtrFromString(i.(string))
-	return &VARIANT{VT: VT_BSTR, Val: int64(uintptr(unsafe.Pointer(&str)))}
+	return &VARIANT{VT: VT_BSTR, Val: int64(uintptr(unsafe.Pointer(SysAllocString(i.(string)))))}
 }

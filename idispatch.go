@@ -324,7 +324,7 @@ func InvokeOnIDispatch(obj IDispatchAddresses, displayId int32, dispatch int16, 
 		uintptr(GetUserDefaultLCID()),
 		uintptr(dispatch),
 		uintptr(unsafe.Pointer(&dispParams)),
-		uintptr(unsafe.Pointer(&result)),
+		uintptr(unsafe.Pointer(result)),
 		uintptr(unsafe.Pointer(&excepInfo)),
 		0)
 	if hr != 0 {

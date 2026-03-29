@@ -5,26 +5,29 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-ole/go-ole/legacy"
+	"github.com/go-ole/go-ole"
 	"log"
-
-	"github.com/go-ole/go-ole/oleutil"
 )
 
 func main() {
-	legacy.CoInitialize(0)
-	unknown, err := oleutil.CreateObject("WMPlayer.OCX")
+	ole.Initialize(ole.Multithreaded)
+	defer ole.Uninitialize()
+	clsid, err := ole.LookupClassId("WMPlayer.OCX")
 	if err != nil {
 		log.Fatal(err)
 	}
-	wmp := unknown.MustQueryInterface(legacy.IID_IDispatch)
-	collection := oleutil.MustGetProperty(wmp, "MediaCollection").ToIDispatch()
-	list := oleutil.MustCallMethod(collection, "getAll").ToIDispatch()
-	count := int(oleutil.MustGetProperty(list, "count").Val)
+	unknown, err := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	if err != nil {
+		log.Fatal(err)
+	}
+	wmp, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
+	collection := wmp.MustGetProperty("MediaCollection").ToIDispatch()
+	list := collection.MustCallMethod("getAll").ToIDispatch()
+	count := int(list.MustGetProperty("count").Val)
 	for i := 0; i < count; i++ {
-		item := oleutil.MustGetProperty(list, "item", i).ToIDispatch()
-		name := oleutil.MustGetProperty(item, "name").ToString()
-		sourceURL := oleutil.MustGetProperty(item, "sourceURL").ToString()
+		item := list.MustGetProperty("item", i).ToIDispatch()
+		name := item.MustGetProperty("name").ToString()
+		sourceURL := item.MustGetProperty("sourceURL").ToString()
 		fmt.Println(name, sourceURL)
 	}
 }

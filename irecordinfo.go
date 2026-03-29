@@ -9,6 +9,26 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+type IRecordInfoAddresses interface {
+	IsIUnknown
+	RecordInitAddress() uintptr
+	RecordClearAddress() uintptr
+	RecordCopyAddress() uintptr
+	GetGuidAddress() uintptr
+	GetNameAddress() uintptr
+	GetSizeAddress() uintptr
+	GetTypeInfoAddress() uintptr
+	GetFieldAddress() uintptr
+	GetFieldNoCopyAddress() uintptr
+	PutFieldAddress() uintptr
+	PutFieldNoCopyAddress() uintptr
+	GetFieldNamesAddress() uintptr
+	IsMatchingTypeAddress() uintptr
+	RecordCreateAddress() uintptr
+	RecordCreateCopyAddress() uintptr
+	RecordDestroyAddress() uintptr
+}
+
 type IRecordInfo struct {
 	VirtualTable *IRecordInfoVirtualTable
 }
@@ -46,6 +66,70 @@ func (obj *IRecordInfo) AddRefAddress() uintptr {
 
 func (obj *IRecordInfo) ReleaseAddress() uintptr {
 	return obj.VirtualTable.Release
+}
+
+func (obj *IRecordInfo) RecordInitAddress() uintptr {
+	return obj.VirtualTable.RecordInit
+}
+
+func (obj *IRecordInfo) RecordClearAddress() uintptr {
+	return obj.VirtualTable.RecordClear
+}
+
+func (obj *IRecordInfo) RecordCopyAddress() uintptr {
+	return obj.VirtualTable.RecordCopy
+}
+
+func (obj *IRecordInfo) GetGuidAddress() uintptr {
+	return obj.VirtualTable.GetGuid
+}
+
+func (obj *IRecordInfo) GetNameAddress() uintptr {
+	return obj.VirtualTable.GetName
+}
+
+func (obj *IRecordInfo) GetSizeAddress() uintptr {
+	return obj.VirtualTable.GetSize
+}
+
+func (obj *IRecordInfo) GetTypeInfoAddress() uintptr {
+	return obj.VirtualTable.GetTypeInfo
+}
+
+func (obj *IRecordInfo) GetFieldAddress() uintptr {
+	return obj.VirtualTable.GetField
+}
+
+func (obj *IRecordInfo) GetFieldNoCopyAddress() uintptr {
+	return obj.VirtualTable.GetFieldNoCopy
+}
+
+func (obj *IRecordInfo) PutFieldAddress() uintptr {
+	return obj.VirtualTable.PutField
+}
+
+func (obj *IRecordInfo) PutFieldNoCopyAddress() uintptr {
+	return obj.VirtualTable.PutFieldNoCopy
+}
+
+func (obj *IRecordInfo) GetFieldNamesAddress() uintptr {
+	return obj.VirtualTable.GetFieldNames
+}
+
+func (obj *IRecordInfo) IsMatchingTypeAddress() uintptr {
+	return obj.VirtualTable.IsMatchingType
+}
+
+func (obj *IRecordInfo) RecordCreateAddress() uintptr {
+	return obj.VirtualTable.RecordCreate
+}
+
+func (obj *IRecordInfo) RecordCreateCopyAddress() uintptr {
+	return obj.VirtualTable.RecordCreateCopy
+}
+
+func (obj *IRecordInfo) RecordDestroyAddress() uintptr {
+	return obj.VirtualTable.RecordDestroy
 }
 
 func (obj *IRecordInfo) AddRef() uint32 {
@@ -96,12 +180,12 @@ func (obj *IRecordInfo) GetSize() (ret uint32, err error) {
 	return
 }
 
-func (obj *IRecordInfo) RecordInit() (ret uintptr, err error) {
+func (obj *IRecordInfo) RecordInit(newRecord uintptr) (err error) {
 	hr, _, _ := syscall.Syscall(
 		obj.VirtualTable.RecordInit,
 		2,
-		uintptr(unsafe.Pointer(&obj)),
-		uintptr(unsafe.Pointer(&ret)),
+		uintptr(unsafe.Pointer(obj)),
+		newRecord,
 		0)
 
 	switch windows.Handle(hr) {
@@ -133,13 +217,13 @@ func (obj *IRecordInfo) RecordClear(existing uintptr) (err error) {
 	}
 }
 
-func (obj *IRecordInfo) RecordCopy(existing uintptr) (copy uintptr, err error) {
+func (obj *IRecordInfo) RecordCopy(existing uintptr, newRecord uintptr) (err error) {
 	hr, _, _ := syscall.Syscall(
 		obj.VirtualTable.RecordCopy,
 		3,
 		uintptr(unsafe.Pointer(obj)),
 		existing,
-		uintptr(unsafe.Pointer(&copy)))
+		newRecord)
 
 	switch windows.Handle(hr) {
 	case windows.S_OK:
@@ -203,15 +287,17 @@ func (obj *IRecordInfo) RecordDestroy(existing uintptr) (err error) {
 	}
 }
 
-func (obj *IRecordInfo) Equals(recordInfo *IRecordInfo) (ret bool, err error) {
-	hr, _, err := syscall.Syscall(
+func (obj *IRecordInfo) IsMatchingType(recordInfo *IRecordInfo) bool {
+	hr, _, _ := syscall.Syscall(
 		obj.VirtualTable.IsMatchingType,
 		2,
 		uintptr(unsafe.Pointer(obj)),
-		uintptr(unsafe.Pointer(&recordInfo)),
+		uintptr(unsafe.Pointer(recordInfo)),
 		0)
 
-	ret = hr != 0
+	return hr != 0
+}
 
-	return
+func (obj *IRecordInfo) Equals(recordInfo *IRecordInfo) bool {
+	return obj.IsMatchingType(recordInfo)
 }
