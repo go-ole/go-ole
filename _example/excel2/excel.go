@@ -64,6 +64,18 @@ func readExample(fileName string, excel, workbooks *ole.IDispatch) {
 }
 
 func showMethodsAndProperties(i *ole.IDispatch) {
+	if i.HasTypeInfo() == false {
+		return
+	}
+
+	typeInfo := i.GetTypeInfo()
+
+	if typeInfo == nil {
+		return
+	}
+
+	i.VirtualTable().
+
 	n, err := i.GetTypeInfoCount()
 	if err != nil {
 		log.Fatalln(err)
@@ -78,19 +90,26 @@ func showMethodsAndProperties(i *ole.IDispatch) {
 
 func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
-	ole.Initialize(ole.Multithreaded)
+	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
-	clsid, _ := ole.LookupClassId("Excel.Application")
-	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
-	excel, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
-	excel.PutProperty("Visible", true)
+	ole.RegisterVariantConverters()
 
-	workbooks := excel.MustGetProperty("Workbooks").ToIDispatch()
+	clsid, err := ole.ClassIdFromString("Excel.Application")
+	if err != nil {
+		panic("Unable to get class ID for 'Excel.Application'")
+	}
+
+	excel, _ := ole.GetActiveObject[ole.IDispatch](clsid, ole.IID_IDispatch)
+	defer excel.Release()
+
+	excel.PutProperty("Visible", old.BoolToVariant(true))
+
+	workbooks := ole.VariantToComObject[ole.IDispatch](excel.MustGetProperty("Workbooks"))
+	defer workbooks.Release()
+
 	cwd, _ := os.Getwd()
 	writeExample(excel, workbooks, cwd+"\\write.xls")
 	readExample(cwd+"\\excel97-2003.xls", excel, workbooks)
 	showMethodsAndProperties(workbooks)
-	workbooks.Release()
 	// excel.CallMethod("Quit")
-	excel.Release()
 }

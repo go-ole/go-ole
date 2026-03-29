@@ -9,22 +9,41 @@ import (
 )
 
 func main() {
-	ole.Initialize(ole.Multithreaded)
+	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
-	clsid, _ := ole.LookupClassId("Outlook.Application")
+
+	clsid, _ := ole.ClassIdFromString("Outlook.Application")
+
 	unknown, _ := ole.CreateInstance[ole.IUnknown](clsid, ole.IID_IUnknown)
+	defer unknown.Release()
+
 	outlook, _ := ole.QueryInterfaceOnIUnknown[ole.IDispatch](unknown, ole.IID_IDispatch)
-	ns := outlook.MustCallMethod("GetNamespace", "MAPI").ToIDispatch()
-	folder := ns.MustCallMethod("GetDefaultFolder", 10).ToIDispatch()
-	contacts := folder.MustCallMethod("Items").ToIDispatch()
-	count := contacts.MustGetProperty("Count").Value().(int32)
+	defer unknown.Release()
+
+	ns := ole.VariantToComObject[ole.IDispatch](outlook.MustCallMethod("GetNamespace", ole.StringToBStrVariant("MAPI")))
+	defer ns.Release()
+
+	folder := ole.VariantToComObject[ole.IDispatch](ns.MustCallMethod("GetDefaultFolder", ole.Int32ToVariant(10)))
+	defer folder.Release()
+
+	contacts := ole.VariantToComObject[ole.IDispatch](folder.MustCallMethod("Items"))
+	defer contacts.Release()
+
+	count := ole.UnwrapVariant[int32](contacts.MustGetProperty("Count"))
 	for i := 1; i <= int(count); i++ {
-		item, err := contacts.GetProperty("Item", i)
+		item, err := contacts.GetProperty("Item", ole.Int32ToVariant(i))
 		if err == nil && item.VT == ole.VT_DISPATCH {
-			if value, err := item.ToIDispatch().GetProperty("FullName"); err == nil {
-				fmt.Println(value.Value())
+			value := ole.VariantToComObject[ole.IDispatch](item)
+			if value == nil {
+				continue
+			}
+			
+			fullName := ole.UnwrapVariant[string](value.GetProperty("FullName"))
+			if fullName != nil {
+				fmt.Println(fullName)
 			}
 		}
 	}
+
 	outlook.MustCallMethod("Quit")
 }

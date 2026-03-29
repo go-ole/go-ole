@@ -105,8 +105,9 @@ func Invoke(this *ole.IDispatch, dispid int, riid *windows.GUID, lcid int, flags
 }
 
 func main() {
-	ole.Initialize(ole.Multithreaded)
+	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
+	ole.RegisterVariantConverters()
 
 	clsid, _ := windows.GUIDFromString("{248DD896-BB45-11CF-9ABC-0080C7E7B78D}")
 	unknown, err := ole.CreateInstance[ole.IUnknown](clsid, *ole.IID_IUnknown)

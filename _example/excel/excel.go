@@ -9,21 +9,26 @@ import (
 )
 
 func main() {
-	ole.Initialize(ole.Multithreaded)
+	ole.InitializeMultithreaded()
 	defer ole.Uninitialize()
-	excelCLSID, _ := ole.LookupClassId("Excel.Application")
-	excel, _ := ole.GetActiveObject[ole.IDispatch](excelCLSID)
+	ole.RegisterVariantConverters()
+
+	excel, err := ole.GetActiveObjectFromString[ole.IDispatch]("Excel.Application", ole.IID_IDispatch)
+	if err != nil {
+		panic("unable to load Excel")
+	}
 	defer excel.Release()
-	excel.PutProperty("Visible", true)
-	workbooks := excel.MustGetProperty("Workbooks").ToIDispatch()
-	workbook := workbooks.MustCallMethod("Add").ToIDispatch()
-	worksheet := workbook.MustGetProperty("Worksheets", 1).ToIDispatch()
-	cell := worksheet.MustGetProperty("Cells", 1, 1).ToIDispatch()
-	cell.PutProperty("Value", 12345)
+
+	excel.PutProperty("Visible", ole.BoolToVariant(true))
+	workbooks := ole.VariantToComObject[ole.IDispatch](excel.MustGetProperty("Workbooks"))
+	workbook := ole.VariantToComObject[ole.IDispatch](workbooks.CallMethod("Add"))
+	worksheet := ole.VariantToComObject[ole.IDispatch](workbook.MustGetProperty("Worksheets", ole.Int64ToVariant(1)))
+	cell := ole.VariantToComObject[ole.IDispatch](worksheet.MustGetProperty("Cells", ole.Int64ToVariant(1), ole.Int64ToVariant(1)))
+	cell.PutProperty("Value", ole.Int64ToVariant(12345))
 
 	time.Sleep(2000000000)
 
-	workbook.PutProperty("Saved", true)
-	workbook.CallMethod("Close", false)
+	workbook.PutProperty("Saved", ole.BoolToVariant(true))
+	workbook.CallMethod("Close", ole.BoolToVariant(false))
 	excel.CallMethod("Quit")
 }
