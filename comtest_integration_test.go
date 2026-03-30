@@ -8,32 +8,26 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-// createTestDispatch creates an IDispatch from a test COM server class by ProgID.
+// createTestDispatch creates an IDispatch from a test COM server class by CLSID.
 // Skips the test if the COM server is not registered.
-func createTestDispatch(t *testing.T, progID string) (*IUnknown, *IDispatch, func()) {
+func createTestDispatch(t *testing.T, clsid windows.GUID) (*IUnknown, *IDispatch, func()) {
 	t.Helper()
 
 	if _, err := Initialize(Multithreaded); err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
 
-	classID, err := ClassIdFromProgramId(progID)
+	unknown, err := CreateInstance[IUnknown](clsid, IID_IUnknown)
 	if err != nil {
 		Uninitialize()
-		t.Skipf("COM server %s not registered: %v", progID, err)
-	}
-
-	unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
-	if err != nil {
-		Uninitialize()
-		t.Skipf("CreateInstance(%s) failed: %v", progID, err)
+		t.Skipf("COM server not registered (CLSID %v): %v", clsid, err)
 	}
 
 	dispatch, err := QueryIDispatchFromIUnknown(unknown)
 	if err != nil {
 		unknown.Release()
 		Uninitialize()
-		t.Fatalf("QueryIDispatchFromIUnknown(%s) failed: %v", progID, err)
+		t.Fatalf("QueryIDispatchFromIUnknown failed: %v", err)
 	}
 
 	return unknown, dispatch, func() {
@@ -52,17 +46,10 @@ func createTestUnknown(t *testing.T, clsid windows.GUID) (*IUnknown, func()) {
 		t.Fatalf("Initialize failed: %v", err)
 	}
 
-	// Probe whether the test COM server is registered at all
-	_, err := ClassIdFromProgramId("TestCOM.String")
-	if err != nil {
-		Uninitialize()
-		t.Skipf("Test COM server not registered: %v", err)
-	}
-
 	unknown, err := CreateInstance[IUnknown](clsid, IID_IUnknown)
 	if err != nil {
 		Uninitialize()
-		t.Fatalf("CreateInstance failed: %v", err)
+		t.Skipf("COM server not registered (CLSID %v): %v", clsid, err)
 	}
 
 	return unknown, func() {
@@ -72,31 +59,31 @@ func createTestUnknown(t *testing.T, clsid windows.GUID) (*IUnknown, func()) {
 }
 
 // TestCOMTestServer_CreateInstance_Types verifies that each type class
-// in the test COM server can be instantiated via its ProgId.
+// in the test COM server can be instantiated via its CLSID.
 func TestCOMTestServer_CreateInstance_Types(t *testing.T) {
 	typeClasses := []struct {
-		name   string
-		progID string
+		name  string
+		clsid windows.GUID
 	}{
-		{"Int8", "TestCOM.Int8"},
-		{"Int16", "TestCOM.Int16"},
-		{"Int32", "TestCOM.Int32"},
-		{"Int64", "TestCOM.Int64"},
-		{"Float32", "TestCOM.Float32"},
-		{"Float64", "TestCOM.Float64"},
-		{"String", "TestCOM.String"},
-		{"Boolean", "TestCOM.Boolean"},
-		{"Currency", "TestCOM.Currency"},
-		{"Date", "TestCOM.Date"},
-		{"Decimal", "TestCOM.Decimal"},
-		{"Error", "TestCOM.Error"},
-		{"Variant", "TestCOM.Variant"},
-		{"Unknown", "TestCOM.Unknown"},
-		{"Dispatch", "TestCOM.Dispatch"},
-		{"Empty", "TestCOM.Empty"},
-		{"Clsid", "TestCOM.Clsid"},
-		{"HResult", "TestCOM.HResult"},
-		{"FileTime", "TestCOM.FileTime"},
+		{"Int8", CLSID_COMTestInt8},
+		{"Int16", CLSID_COMTestInt16},
+		{"Int32", CLSID_COMTestInt32},
+		{"Int64", CLSID_COMTestInt64},
+		{"Float32", CLSID_COMTestFloat32},
+		{"Float64", CLSID_COMTestFloat64},
+		{"String", CLSID_COMTestString},
+		{"Boolean", CLSID_COMTestBoolean},
+		{"Currency", CLSID_COMTestCurrency},
+		{"Date", CLSID_COMTestDate},
+		{"Decimal", CLSID_COMTestDecimal},
+		{"Error", CLSID_COMTestError},
+		{"Variant", CLSID_COMTestVariant},
+		{"Unknown", CLSID_COMTestUnknown},
+		{"Dispatch", CLSID_COMTestDispatch},
+		{"Empty", CLSID_COMTestEmpty},
+		{"Clsid", CLSID_COMTestClsid},
+		{"HResult", CLSID_COMTestHResult},
+		{"FileTime", CLSID_COMTestFileTime},
 	}
 
 	_, err := Initialize(Multithreaded)
@@ -107,14 +94,9 @@ func TestCOMTestServer_CreateInstance_Types(t *testing.T) {
 
 	for _, tc := range typeClasses {
 		t.Run(tc.name, func(t *testing.T) {
-			classID, err := ClassIdFromProgramId(tc.progID)
+			unknown, err := CreateInstance[IUnknown](tc.clsid, IID_IUnknown)
 			if err != nil {
-				t.Skipf("%s not registered: %v", tc.progID, err)
-			}
-
-			unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
-			if err != nil {
-				t.Fatalf("CreateInstance failed: %v", err)
+				t.Skipf("%s not registered: %v", tc.name, err)
 			}
 			defer unknown.Release()
 
@@ -133,7 +115,7 @@ func TestCOMTestServer_CreateInstance_Types(t *testing.T) {
 
 // TestCOMTestServer_StringEcho tests string round-trip through CallMethod and GetProperty/PutProperty.
 func TestCOMTestServer_StringEcho(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.String")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestString)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -214,7 +196,7 @@ func TestCOMTestServer_StringEcho(t *testing.T) {
 
 // TestCOMTestServer_Int32Echo tests int32 round-trip.
 func TestCOMTestServer_Int32Echo(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Int32")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestInt32)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -284,7 +266,7 @@ func TestCOMTestServer_Int32Echo(t *testing.T) {
 
 // TestCOMTestServer_Int64Echo tests int64 round-trip.
 func TestCOMTestServer_Int64Echo(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Int64")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestInt64)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -309,7 +291,7 @@ func TestCOMTestServer_Int64Echo(t *testing.T) {
 
 // TestCOMTestServer_Int16Echo tests int16 round-trip.
 func TestCOMTestServer_Int16Echo(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Int16")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestInt16)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -334,7 +316,7 @@ func TestCOMTestServer_Int16Echo(t *testing.T) {
 
 // TestCOMTestServer_Int8Echo tests int8 round-trip.
 func TestCOMTestServer_Int8Echo(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Int8")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestInt8)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -359,7 +341,7 @@ func TestCOMTestServer_Int8Echo(t *testing.T) {
 
 // TestCOMTestServer_Float32Echo tests float32 round-trip.
 func TestCOMTestServer_Float32Echo(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Float32")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestFloat32)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -384,7 +366,7 @@ func TestCOMTestServer_Float32Echo(t *testing.T) {
 
 // TestCOMTestServer_Float64Echo tests float64 round-trip.
 func TestCOMTestServer_Float64Echo(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Float64")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestFloat64)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -409,7 +391,7 @@ func TestCOMTestServer_Float64Echo(t *testing.T) {
 
 // TestCOMTestServer_BooleanEcho tests boolean round-trip.
 func TestCOMTestServer_BooleanEcho(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Boolean")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestBoolean)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -442,7 +424,7 @@ func TestCOMTestServer_BooleanEcho(t *testing.T) {
 
 // TestCOMTestServer_Empty tests VT_EMPTY and VT_NULL handling.
 func TestCOMTestServer_Empty(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Empty")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestEmpty)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -505,7 +487,7 @@ func TestCOMTestServer_Empty(t *testing.T) {
 // TestCOMTestServer_DualInterface tests that dual interface classes support
 // both IUnknown and IDispatch, and methods can be called.
 func TestCOMTestServer_DualInterface(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Interface.Dual")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestDualInterface)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -525,7 +507,7 @@ func TestCOMTestServer_DualInterface(t *testing.T) {
 // TestCOMTestServer_DispatchOnly tests that dispatch-only interface classes
 // support IDispatch and methods can be called.
 func TestCOMTestServer_DispatchOnly(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Interface.DispatchOnly")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestDispatchOnly)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -542,8 +524,8 @@ func TestCOMTestServer_DispatchOnly(t *testing.T) {
 	}
 }
 
-// TestCOMTestServer_CreateInstanceFromCLSID creates an instance using the
-// CLSID directly (not ProgID) and verifies the object works.
+// TestCOMTestServer_CreateInstanceFromCLSID creates instances using CLSIDs
+// directly and verifies they support IDispatch with type info.
 func TestCOMTestServer_CreateInstanceFromCLSID(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -608,7 +590,7 @@ func TestCOMTestServer_CreateInstanceFromCLSID_WithCall(t *testing.T) {
 
 // TestCOMTestServer_HResult tests HResult round-trip via property accessors.
 func TestCOMTestServer_HResult(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.HResult")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestHResult)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -639,7 +621,7 @@ func TestCOMTestServer_HResult(t *testing.T) {
 // TestCOMTestServer_MultipleInterfaces tests that the primary dispatch
 // interface exposes GetValueA from the first interface.
 func TestCOMTestServer_MultipleInterfaces(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Interface.Multiple")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestMultipleInterfaces)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -659,7 +641,7 @@ func TestCOMTestServer_MultipleInterfaces(t *testing.T) {
 // TestCOMTestServer_InheritedInterface tests that both base and derived
 // interface methods are accessible through IDispatch.
 func TestCOMTestServer_InheritedInterface(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Interface.Inherited")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestInheritedInterface)
 	defer cleanup()
 
 	RegisterVariantConverters()
@@ -694,22 +676,8 @@ func TestCOMTestServer_InheritedInterface(t *testing.T) {
 // TestCOMTestServer_ConnectionPoint tests IConnectionPointContainer and
 // IConnectionPoint on the test COM server's connection point class.
 func TestCOMTestServer_ConnectionPoint(t *testing.T) {
-	_, err := Initialize(Multithreaded)
-	if err != nil {
-		t.Fatalf("Initialize failed: %v", err)
-	}
-	defer Uninitialize()
-
-	classID, err := ClassIdFromProgramId("TestCOM.Interface.ConnectionPoint")
-	if err != nil {
-		t.Skipf("TestCOM.Interface.ConnectionPoint not registered: %v", err)
-	}
-
-	unknown, err := CreateInstance[IUnknown](classID, IID_IUnknown)
-	if err != nil {
-		t.Fatalf("CreateInstance failed: %v", err)
-	}
-	defer unknown.Release()
+	unknown, cleanup := createTestUnknown(t, CLSID_COMTestConnectionPoint)
+	defer cleanup()
 
 	container, err := QueryIConnectionPointContainerFromIUnknown(unknown)
 	if err != nil {
@@ -735,7 +703,7 @@ func TestCOMTestServer_ConnectionPoint(t *testing.T) {
 
 // TestCOMTestServer_GetIDsOfNames tests name resolution through IDispatch.
 func TestCOMTestServer_GetIDsOfNames(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.String")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestString)
 	defer cleanup()
 
 	names := []string{"EchoString", "PutString", "GetString", "StringField"}
@@ -755,7 +723,7 @@ func TestCOMTestServer_GetIDsOfNames(t *testing.T) {
 // TestCOMTestServer_TypeInfo tests ITypeInfo retrieval and validates the
 // interface GUID matches ICOMTestString.
 func TestCOMTestServer_TypeInfo(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.String")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestString)
 	defer cleanup()
 
 	if !dispatch.HasTypeInfo() {
@@ -787,7 +755,8 @@ func TestCOMTestServer_TypeInfo(t *testing.T) {
 }
 
 // TestCOMTestServer_CreateInstanceFromString tests CreateInstanceFromString
-// using a ProgID to create and use a COM object.
+// using a ProgID. This requires ProgID registration (not available with
+// .NET 9 comhost regsvr32 alone), so it will skip in most CI environments.
 func TestCOMTestServer_CreateInstanceFromString(t *testing.T) {
 	_, err := Initialize(Multithreaded)
 	if err != nil {
@@ -797,7 +766,7 @@ func TestCOMTestServer_CreateInstanceFromString(t *testing.T) {
 
 	unknown, err := CreateInstanceFromString[IUnknown]("TestCOM.String", IID_IUnknown)
 	if err != nil {
-		t.Skipf("TestCOM.String not registered: %v", err)
+		t.Skipf("TestCOM.String ProgID not registered (expected with .NET 9 comhost): %v", err)
 	}
 	defer unknown.Release()
 
@@ -829,13 +798,13 @@ func TestCOMTestServer_CreateInstanceFromString(t *testing.T) {
 
 // TestCOMTestServer_FileTimeEcho tests int64 round-trip via FileTime methods.
 func TestCOMTestServer_FileTimeEcho(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.FileTime")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestFileTime)
 	defer cleanup()
 
 	RegisterVariantConverters()
 
 	// FILETIME is stored as int64 (100-nanosecond intervals since Jan 1, 1601)
-	fileTime := int64(132500000000000000) // some arbitrary FILETIME value
+	fileTime := int64(132500000000000000)
 
 	param, err := WrapVariant(fileTime)
 	if err != nil {
@@ -857,12 +826,11 @@ func TestCOMTestServer_FileTimeEcho(t *testing.T) {
 
 // TestCOMTestServer_CurrencyEcho tests Currency (VT_CY) round-trip.
 func TestCOMTestServer_CurrencyEcho(t *testing.T) {
-	_, dispatch, cleanup := createTestDispatch(t, "TestCOM.Currency")
+	_, dispatch, cleanup := createTestDispatch(t, CLSID_COMTestCurrency)
 	defer cleanup()
 
 	RegisterVariantConverters()
 
-	// Currency is int64 scaled by 10,000. 12345 = $1.2345
 	param, err := WrapVariant(int64(123450000))
 	if err != nil {
 		t.Fatalf("WrapVariant failed: %v", err)
