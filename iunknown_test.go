@@ -26,7 +26,7 @@ func TestIUnknown(t *testing.T) {
 
 	var unknown *IUnknown
 
-	unknown, err = CreateInstance[IUnknown](CLSID_COMEchoTestObject, IID_IUnknown)
+	unknown, err = CreateInstance[IUnknown](CLSID_COMTestString, IID_IUnknown)
 	if err == nil {
 		defer unknown.Release()
 	}
