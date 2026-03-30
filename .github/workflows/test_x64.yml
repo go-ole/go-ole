@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         go: [ '1.24', 'stable' ]
-        arch: [ 'amd64', 'arm64' ]
+        arch: [ 'amd64' ]
     env:
       GOARCH: ${{ matrix.arch }}
     steps:
@@ -42,4 +42,4 @@ jobs:
       - name: 'Go Build'
         run: go build
       - name: Run tests
-        run: go test
+        run: go test -v

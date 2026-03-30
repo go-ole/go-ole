@@ -45,4 +45,4 @@ jobs:
       - name: 'Go Build'
         run: go build
       - name: Run tests
-        run: go test
+        run: go test -v
