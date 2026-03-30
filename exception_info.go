@@ -52,17 +52,9 @@ func (e *EXCEPINFO) renderStrings() {
 }
 
 // Clear frees BSTR strings inside an EXCEPINFO and set it to NULL.
-// It renders the strings to Go values first so they remain accessible
-// via String() and Error() after the BSTRs are freed.
 func (e *EXCEPINFO) Clear() {
-	if !e.rendered {
-		e.renderStrings()
-	}
-
 	freeBSTR := func(s *uint16) {
-		// SysFreeString don't return errors and is safe for call's on NULL.
-		// https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-sysfreestring
-		_ = SysFreeString((*uint16)(unsafe.Pointer(s)))
+		_ = SysFreeString(s)
 	}
 
 	if e.bstrSource != nil {

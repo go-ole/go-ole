@@ -3,6 +3,7 @@
 package ole
 
 import (
+	"reflect"
 	"syscall"
 	"unsafe"
 
@@ -23,15 +24,11 @@ type IsIUnknown interface {
 
 // comPointer extracts the raw COM this pointer from an interface value.
 //
-// Go non-empty interfaces are laid out as { itab *itab; data unsafe.Pointer }.
-// For pointer-receiver types (all COM wrappers), data holds the concrete
-// pointer value directly — which is the COM this pointer.
+// All COM wrappers are pointer types to structs whose first field is the
+// vtable pointer. reflect.ValueOf unwraps any interface layering and
+// Pointer returns the underlying pointer value.
 func comPointer(iface any) uintptr {
-	type ifaceLayout struct {
-		_    uintptr        // itab
-		data unsafe.Pointer // concrete pointer
-	}
-	return uintptr((*ifaceLayout)(unsafe.Pointer(&iface)).data)
+	return reflect.ValueOf(iface).Pointer()
 }
 
 // IUnknown is the base COM interface shared by every COM object.

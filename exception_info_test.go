@@ -78,6 +78,7 @@ func TestEXCEPINFOClearPreservesRenderedStrings(t *testing.T) {
 	wantString := excepInfo.String()
 	wantError := excepInfo.Error()
 
+	excepInfo.renderStrings()
 	excepInfo.Clear()
 
 	if excepInfo.bstrSource != nil || excepInfo.bstrDescription != nil || excepInfo.bstrHelpFile != nil {
