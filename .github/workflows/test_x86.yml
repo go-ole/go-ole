@@ -3,26 +3,8 @@ name: Test 32-bit Architectures
 on: [pull_request, push, pull_request_target]
 
 jobs:
-  download:
-    runs-on: windows-latest
-    permissions:
-      contents: read
-    steps:
-      - name: 'Download COM Test Release'
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: 'go-ole/test-com-server'
-          latest: true
-          fileName: 'test-com-server-x86.zip'
-          out-file-path: 'test-com-server'
-          zipBall: true
-          extract: true
-      - name: 'Register Assembly'
-        run: 'c:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\x86\Release\TestCOMServer.dll'
-
   build:
     runs-on: windows-latest
-    needs: download
     permissions:
       contents: read
     strategy:
@@ -32,6 +14,20 @@ jobs:
     env:
       GOARCH: ${{ matrix.arch }}
     steps:
+      - name: 'Download COM Test Release'
+        uses: robinraju/release-downloader@v1
+        with:
+          repository: 'go-ole/test-com-server'
+          tag: 'v2.0.0'
+          fileName: 'TestCOMServer-x86.zip'
+          out-file-path: 'test-com-server'
+          extract: true
+      - name: 'Setup .NET 9'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+      - name: 'Register Assembly'
+        run: 'regsvr32 /s ${{ github.workspace }}\test-com-server\TestCOMServer.comhost.dll'
       - name: 'Checkout Project'
         uses: actions/checkout@v4
 

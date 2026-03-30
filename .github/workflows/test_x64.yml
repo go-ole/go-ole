@@ -19,13 +19,16 @@ jobs:
         uses: robinraju/release-downloader@v1
         with:
           repository: 'go-ole/test-com-server'
-          latest: true
-          fileName: 'test-com-server-x64.zip'
+          tag: 'v2.0.0'
+          fileName: 'TestCOMServer-x64.zip'
           out-file-path: 'test-com-server'
-          zipBall: true
           extract: true
+      - name: 'Setup .NET 9'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
       - name: 'Register Assembly'
-        run: 'c:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /codebase /nologo ${{ github.workspace }}\test-com-server\x64\Release\TestCOMServer.dll'
+        run: 'regsvr32 /s ${{ github.workspace }}\test-com-server\TestCOMServer.comhost.dll'
       - name: 'Checkout Project'
         uses: actions/checkout@v4
       - name: Setup go
