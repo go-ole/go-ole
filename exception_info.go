@@ -5,7 +5,6 @@ package ole
 import (
 	"fmt"
 	"strings"
-	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
