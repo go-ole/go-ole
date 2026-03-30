@@ -27,7 +27,7 @@ jobs:
         with:
           dotnet-version: '9.0'
       - name: 'Register Assembly'
-        run: 'regsvr32 /s ${{ github.workspace }}\test-com-server\TestCOMServer.comhost.dll'
+        run: 'regsvr32 ${{ github.workspace }}\test-com-server\TestCOMServer.comhost.dll'
       - name: 'Checkout Project'
         uses: actions/checkout@v4
       - name: Setup go
