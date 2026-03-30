@@ -9,9 +9,8 @@ jobs:
       contents: read
     strategy:
       matrix:
-        go: [ '1.25', 'stable' ]
+        go: [ '1.24', 'stable' ]
         arch: [ 'amd64', 'arm64' ]
-#        arch: [ 'amd64', 'arm64', 'loong64', 'mips64', 'mips64le', 'ppc64', 'ppc64le', 'riscv64', 's390x' ]
     env:
       GOARCH: ${{ matrix.arch }}
     steps:

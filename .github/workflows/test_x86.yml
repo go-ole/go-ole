@@ -9,8 +9,8 @@ jobs:
       contents: read
     strategy:
       matrix:
-        go: [ '1.25', 'stable' ]
-        arch: [ 'arm', '386' ]
+        go: [ '1.24', 'stable' ]
+        arch: [ '386' ]
     env:
       GOARCH: ${{ matrix.arch }}
     steps:
@@ -30,7 +30,9 @@ jobs:
         run: 'regsvr32 /s ${{ github.workspace }}\test-com-server\TestCOMServer.comhost.dll'
       - name: 'Checkout Project'
         uses: actions/checkout@v4
-
+      - name: 'Register Assembly'
+        shell: pwsh
+        run: .\build\register-assembly.ps1 -DllPath "${{ github.workspace }}\test-com-server\TestCOMServer.comhost.dll"
       - name: Setup go
         uses: actions/setup-go@v5
         with:
