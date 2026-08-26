@@ -63,8 +63,8 @@ func getTypeInfo(disp *IDispatch) (tinfo *ITypeInfo, err error) {
 func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
 	var dispparams DISPPARAMS
 	// bstrOut holds one BSTR cell per *string parameter. The server stores its
-	// BSTR in the cell; after Invoke returns the text is copied out and the
-	// BSTR is freed, since the caller of Invoke owns every string in rgvarg.
+	// BSTR in the cell; after Invoke returns the text is copied out and, when
+	// FreeByRefBSTR is set, the BSTR is released (see FreeByRefBSTR).
 	var bstrOut []*uint16
 
 	if dispatch&DISPATCH_PROPERTYPUT != 0 {
@@ -215,7 +215,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			if out, ok := params[n].(*string); ok {
 				bstr := bstrOut[n]
 				*out = LpOleStrToString(bstr)
-				if bstr != nil {
+				if FreeByRefBSTR && bstr != nil {
 					SysFreeString((*int16)(unsafe.Pointer(bstr)))
 				}
 			}
