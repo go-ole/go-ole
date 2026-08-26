@@ -4,24 +4,35 @@
 package ole
 
 import (
+	"fmt"
 	"syscall"
 	"testing"
 	"unsafe"
 )
 
 // fakeInvoke is an IDispatch::Invoke behaving like a spec-abiding Automation
-// server: it stores VARIANT_TRUE through every VT_BOOL|VT_BYREF argument and a
-// freshly allocated BSTR through every VT_BSTR|VT_BYREF one. It lets the
-// out-parameter marshaling in invoke be tested without a registered COM server.
+// server. Through every BYREF argument it writes a value that encodes the
+// argument's rgvarg position, so a mix-up between rgvarg order (reversed) and
+// parameter order shows up as a wrong value rather than a plausible one:
+//
+//	VT_BOOL|VT_BYREF  <- 0x0001 (what e.g. zkemkeeper writes; not VARIANT_TRUE)
+//	VT_I4|VT_BYREF    <- 100 + rgvarg index
+//	VT_BSTR|VT_BYREF  <- fresh BSTR "arg<rgvarg index>"
+//
+// It lets the out-parameter marshaling in invoke be tested without a
+// registered COM server.
 func fakeInvoke(this, dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr uintptr) uintptr {
 	dp := (*DISPPARAMS)(unsafe.Pointer(pDispParams))
 	args := (*[1 << 10]VARIANT)(unsafe.Pointer(dp.rgvarg))[:dp.cArgs:dp.cArgs]
 	for i := range args {
+		p := unsafe.Pointer(uintptr(args[i].Val))
 		switch args[i].VT {
 		case VT_BOOL | VT_BYREF:
-			*(*int16)(unsafe.Pointer(uintptr(args[i].Val))) = -1
+			*(*int16)(p) = 1
+		case VT_I4 | VT_BYREF:
+			*(*int32)(p) = int32(100 + i)
 		case VT_BSTR | VT_BYREF:
-			*(**uint16)(unsafe.Pointer(uintptr(args[i].Val))) = (*uint16)(unsafe.Pointer(SysAllocString("out")))
+			*(**uint16)(p) = (*uint16)(unsafe.Pointer(SysAllocString(fmt.Sprintf("arg%d", i))))
 		}
 	}
 	return S_OK
@@ -33,21 +44,23 @@ func newFakeDispatch() *IDispatch {
 	return (*IDispatch)(unsafe.Pointer(obj))
 }
 
-// rgvarg holds the parameters in reverse order. Out-parameters are placed so
-// that their params index and rgvarg index differ and are not mirror images of
-// another out-parameter of the same kind: an index mix-up between the two
-// orders then reads an untouched cell instead of another parameter's.
+// The shape of zkemkeeper's SSR_GetUserInfo(machine, id, &name, &password,
+// &privilege, &enabled): six parameters, out-parameters at positions 2..5.
+// rgvarg index = 5 - parameter index.
 func TestInvokeByRefOutParamsKeepTheirPosition(t *testing.T) {
 	disp := newFakeDispatch()
-	var name, other string
-	if _, err := invoke(disp, 1, DISPATCH_METHOD, &name, int32(7), "in", &other, int32(8)); err != nil {
+	var name, password string
+	var privilege int32
+	if _, err := invoke(disp, 1, DISPATCH_METHOD, int32(1), int32(4711), &name, &password, &privilege, int32(0)); err != nil {
 		t.Fatal(err)
 	}
-	if other != "out" {
-		t.Errorf("*string out-parameter at params[3] read back %q, want %q", other, "out")
+	if name != "arg3" {
+		t.Errorf("name (params[2]) = %q, want %q", name, "arg3")
 	}
-	if name != "out" {
-		t.Errorf("*string out-parameter at params[0] read back %q, want %q", name, "out")
+	if password != "arg2" {
+		t.Errorf("password (params[3]) = %q, want %q", password, "arg2")
+	}
+	if privilege != 101 {
+		t.Errorf("privilege (params[4]) = %d, want 101", privilege)
 	}
 }
-
