@@ -72,7 +72,8 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		dispparams.rgdispidNamedArgs = uintptr(unsafe.Pointer(&dispnames[0]))
 		dispparams.cNamedArgs = 1
 	}
-	// boolOut holds one VARIANT_BOOL (16 bits) per *bool parameter. A Go bool is
+	// boolOut holds one VARIANT_BOOL (16 bits) per *bool parameter, indexed by
+	// parameter position (not rgvarg position, which is reversed). A Go bool is
 	// a single byte, so the server must never write through the *bool itself.
 	var boolOut []int16
 	var vargs []VARIANT
@@ -94,9 +95,9 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 					boolOut = make([]int16, len(params))
 				}
 				if *vv {
-					boolOut[n] = -1 // VARIANT_TRUE
+					boolOut[i] = -1 // VARIANT_TRUE
 				}
-				vargs[n] = NewVariant(VT_BOOL|VT_BYREF, int64(uintptr(unsafe.Pointer(&boolOut[n]))))
+				vargs[n] = NewVariant(VT_BOOL|VT_BYREF, int64(uintptr(unsafe.Pointer(&boolOut[i]))))
 			case uint8:
 				vargs[n] = NewVariant(VT_UI1, int64(v.(uint8)))
 			case *uint8:
