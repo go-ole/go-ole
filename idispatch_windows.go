@@ -62,7 +62,8 @@ func getTypeInfo(disp *IDispatch) (tinfo *ITypeInfo, err error) {
 
 func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}) (result *VARIANT, err error) {
 	var dispparams DISPPARAMS
-	// bstrOut holds one BSTR cell per *string parameter. The server stores its
+	// bstrOut holds one BSTR cell per *string parameter, indexed by parameter
+	// position (not rgvarg position, which is reversed). The server stores its
 	// BSTR in the cell; after Invoke returns the text is copied out and, when
 	// FreeByRefBSTR is set, the BSTR is released (see FreeByRefBSTR).
 	var bstrOut []*uint16
@@ -148,7 +149,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 				if bstrOut == nil {
 					bstrOut = make([]*uint16, len(params))
 				}
-				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(&bstrOut[n]))))
+				vargs[n] = NewVariant(VT_BSTR|VT_BYREF, int64(uintptr(unsafe.Pointer(&bstrOut[i]))))
 			case time.Time:
 				s := vv.Format("2006-01-02 15:04:05")
 				vargs[n] = NewVariant(VT_BSTR, int64(uintptr(unsafe.Pointer(SysAllocStringLen(s)))))
